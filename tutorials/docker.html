@@ -2,79 +2,136 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Docker · 小白通关教程</title>
+<title>Docker · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Docker<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
+  <div class="tbrand">Docker<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 架构原理</a>
   <a href="#s3">3. 镜像与容器</a>
-  <a href="#s4">4. 第一个容器</a>
-  <a href="#s5">5. Dockerfile</a>
-  <a href="#s6">6. 编排与发布</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <a href="#s4">4. Dockerfile 实践</a>
+  <a href="#s5">5. 多阶段构建</a>
+  <a href="#s6">6. 网络与存储</a>
+  <a href="#s7">7. 编排 compose</a>
+  <a href="#s8">8. 安全与镜像</a>
+  <a href="#s9">9. 生产要点</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Docker</h1>
-  <p class="tsub">容器化技术 —— 把应用连同依赖打包成“容器”，一次构建到处运行，告别“我机器上能跑”。学完你能容器化部署自己的服务。</p>
+  <h1>Docker：从小白到资深</h1>
+  <p class="tsub"><strong>Docker</strong> 用容器把应用连同依赖打包，一次构建到处运行，告别“我机器上能跑”。本教程讲透<strong>容器 vs 虚拟机、镜像分层与写时复制、Dockerfile 最佳实践、多阶段构建、网络与卷、compose 编排、安全与镜像治理、生产要点</strong>——部署一致性的核心能力。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Docker</strong> 用容器把应用和它所需的环境（系统库、运行时）一起封装。相比虚拟机更轻量：共享宿主内核，秒级启动。</p>
-  <div class="box"><span class="bt">对比：</span>虚拟机带整套操作系统（GB 级、启动慢）；容器只隔离进程（MB 级、秒起）。</div>
-  <div class="box ok"><span class="bt">核心：</span><b>镜像</b>（模板，像类）与 <b>容器</b>（运行实例，像对象）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>环境差异常导致“本地能跑线上挂”。Docker 把代码+运行时+系统库封进镜像，环境即代码，部署可复现。</p>
+  <div class="box"><span class="bt">对比虚拟机：</span>VM 带整套 Guest OS（GB 级、启动慢）；容器共享宿主内核、只隔离进程（MB 级、秒起）。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>装 <strong>Docker Desktop</strong>（Win/Mac）或 Linux 上装 docker 引擎。验证：</p>
-  <pre><code>docker -v
-docker run hello-world</code></pre>
+  <h2 id="s2">2. 架构原理</h2>
+  <ul>
+    <li><b>守护进程 + CLI</b>：dockerd 管镜像/容器，CLI 发指令。</li>
+    <li><b>镜像分层</b>：每层是只读快照，<code>FROM</code> 继承；相同层只存一份。</li>
+    <li><b>写时复制 CoW</b>：容器在镜像层上盖一层可写层，改动只落在此层，删容器即丢（除非挂卷）。</li>
+    <li><b>Union FS</b>：overlay2 把多层合并成统一视图。</li>
+  </ul>
 
   <h2 id="s3">3. 镜像与容器</h2>
+  <pre><code>docker pull nginx
+docker run -d -p 8080:80 --name mynginx nginx   # -d 后台；-p 主机:容器端口
+docker ps -a              # 看容器（含已停）
+docker stop/rm mynginx</code></pre>
   <table>
     <tr><th>概念</th><th>说明</th></tr>
-    <tr><td>镜像 Image</td><td>只读模板，由 Dockerfile 构建</td></tr>
-    <tr><td>容器 Container</td><td>镜像的运行实例，可启停删</td></tr>
-    <tr><td>仓库 Registry</td><td>存镜像的地方（Docker Hub）</td></tr>
+    <tr><td>Image 镜像</td><td>只读模板，由 Dockerfile 构建</td></tr>
+    <tr><td>Container 容器</td><td>镜像的运行实例，可启停删</td></tr>
+    <tr><td>Registry 仓库</td><td>存镜像（Docker Hub / 私有）</td></tr>
   </table>
 
-  <h2 id="s4">4. 第一个容器</h2>
-  <pre><code>docker pull nginx
-docker run -d -p 8080:80 --name mynginx nginx
-# 浏览器访问 http://localhost:8080</code></pre>
-
-  <h2 id="s5">5. Dockerfile</h2>
-  <p>给 Node 服务写一份（存为 <code>Dockerfile</code>）：</p>
+  <h2 id="s4">4. Dockerfile 最佳实践</h2>
   <pre><code>FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci --omit=dev          # 用 lockfile 确定性安装
 COPY . .
+RUN addgroup -S app &amp;&amp; adduser -S app -G app   # 建非 root 用户
+USER app
 EXPOSE 3000
+HEALTHCHECK --interval=30s CMD node healthcheck.js
 CMD ["node", "server.js"]</code></pre>
-  <p>构建运行：<code>docker build -t myapp . &amp;&amp; docker run -p 3000:3000 myapp</code></p>
+  <ul>
+    <li><b>精简基础</b>：alpine/distroless 减小体积与攻击面。</li>
+    <li><b>层缓存</b>：先 COPY 依赖清单并安装，再 COPY 代码，改代码不重建依赖层。</li>
+    <li><b>非 root</b>：容器内降权，防逃逸提权。</li>
+    <li><b>.dockerignore</b>：排除 node_modules/.env，避免污染与泄密。</li>
+  </ul>
 
-  <h2 id="s6">6. 编排与发布</h2>
-  <p>多容器用 <code>docker-compose.yml</code> 一键拉起（如 应用+数据库）。部署到服务器时，把镜像推到仓库再 pull 运行。</p>
+  <h2 id="s5">5. 多阶段构建</h2>
+  <pre><code>FROM node:20 AS build
+WORKDIR /app
+COPY . .
+RUN npm ci &amp;&amp; npm run build
+FROM node:20-alpine AS run
+COPY --from=build /app/dist /app/dist
+CMD ["node", "/app/dist/server.js"]</code></pre>
+  <div class="box ok"><span class="bt">价值：</span>构建工具链留在 build 阶段，最终镜像只含产物，体积骤减、更安全。</div>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>容器里数据不持久化，删容器数据没了；用 <code>-v</code> 挂载卷。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>端口没映射（没 <code>-p</code>），外部访问不了。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>镜像越积越大；用多阶段构建 / 精简基础镜像（alpine）。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>容器一直在前台占用终端；加 <code>-d</code> 后台跑。</div>
+  <h2 id="s6">6. 网络与存储</h2>
+  <ul>
+    <li><b>网络</b>：bridge（默认，容器间互通需同网络）、host（共用宿主网络）、none。</li>
+    <li><b>存储</b>：<code>-v</code> 命名卷（docker 管理，持久化）优于 bind mount；数据库必须挂卷，否则删容器数据没了。</li>
+  </ul>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>把你的后端服务 Docker 化。</li>
-    <li>学 <a href="git.html">Git</a> 管理代码。</li>
-    <li>学 <a href="nginx.html">Nginx</a> + <a href="https.html">HTTPS</a> 部署。</li>
-    <li>看简历工坊，容器化部署思路。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能写 Dockerfile、构建运行容器、做数据卷与端口映射——环境一致性你已掌握。</div>
+  <h2 id="s7">7. 编排 compose</h2>
+  <pre><code># docker-compose.yml
+services:
+  app:
+    build: .
+    ports: ["3010:3010"]
+    environment:
+      - NODE_ENV=production
+    depends_on: [db]
+    restart: unless-stopped
+  db:
+    image: postgres:16
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+volumes: { pgdata: {} }</code></pre>
+
+  <h2 id="s8">8. 安全与镜像</h2>
+  <ul>
+    <li><b>最小镜像</b>：distroless / alpine，少装包少漏洞。</li>
+    <li><b>镜像扫描</b>：<code>docker scout cves</code> 或 Trivy 查已知 CVE。</li>
+    <li><b>密钥</b>：绝不进镜像；用 env/secret/外部 Vault。</li>
+    <li><b>基镜像固定版本</b>：别用 <code>latest</code> 漂流，保证可复现。</li>
+  </ul>
+
+  <h2 id="s9">9. 生产要点</h2>
+  <ul>
+    <li><code>restart: unless-stopped</code> 崩溃自启（或交给 <a href="systemd.html">systemd</a>/k8s）。</li>
+    <li>资源限制：<code>--memory</code>/<code>--cpus</code> 防单容器吃满。</li>
+    <li>日志驱动：接 json-file 限制大小或发到集中日志。</li>
+  </ul>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>容器数据不持久 → 挂卷。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>没 <code>-p</code> 映射，外部访问不了。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>镜像越积越大 → 多阶段 + 精简基础。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>用 <code>latest</code> 导致环境漂移、难回滚。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>root 跑容器 + 漏洞 = 提权风险；降权。</div>
+
+  <h2 id="s11">11. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能 build/run 容器、做端口映射</td></tr>
+    <tr><td>初级</td><td>Dockerfile 最佳实践、卷、compose</td></tr>
+    <tr><td>中级</td><td>多阶段构建、镜像扫描、资源限制</td></tr>
+    <tr><td>资深</td><td>镜像治理、CI 流水线、k8s 编排</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① Dockerfile 化你的服务（非 root）② 多阶段构建瘦身 ③ compose 拉起 应用+数据库 ④ 挂卷持久化 ⑤ 扫 CVE 修漏洞 ⑥ 设 restart 与资源限制。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解镜像分层与容器隔离，能构建安全精简镜像并用编排落地一致性部署——这是资深后端做云原生交付的标配。</div>
 </main>
 </div>
 <script>

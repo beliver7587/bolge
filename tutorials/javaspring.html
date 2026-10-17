@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Spring · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Java Spring<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个接口</a>
+  <a href="#s4">4. IoC / DI</a>
+  <a href="#s5">5. 分层架构</a>
+  <a href="#s6">6. 与数据库</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Java Spring</h1>
+  <p class="tsub">Java 企业级框架家族 —— 用 IoC/DI 解耦、注解驱动开发，含 Spring Boot 一键启动。学完你能用 Java 写后端服务。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Spring</strong> 是 Java 生态最主流的后端框架，核心思想 <strong>IoC（控制反转）</strong> 与 <strong>DI（依赖注入）</strong>：对象的创建和依赖由容器管理，你只管写业务逻辑。<strong>Spring Boot</strong> 在其上做“自动配置”，让你几乎零 XML 就能跑起来（详见 <a href="springboot.html">Spring Boot</a>）。</p>
+  <div class="box"><span class="bt">一句话：</span>Spring 负责“搭好一切”，你只填业务；Spring Boot 让你“开箱即跑”。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 JDK 17+ 与 Maven/Gradle。最简方式：用 <a href="https://start.spring.io" target="_blank">start.spring.io</a> 在线生成项目骨架，或用 IDE（IntelliJ IDEA）新建 Spring Boot 项目。</p>
+  <pre><code># 用 Spring Boot CLI 也可
+brew install springboot</code></pre>
+
+  <h2 id="s3">3. 第一个接口</h2>
+  <pre><code>@RestController
+public class HelloController {
+  @GetMapping("/hello")
+  public String hello() { return "Hello Spring"; }
+}</code></pre>
+  <p>启动后访问 <code>http://localhost:8080/hello</code> 即返回文字。</p>
+
+  <h2 id="s4">4. IoC / DI</h2>
+  <pre><code>@Service
+public class UserService { public String name() { return "小王"; } }
+
+@RestController
+public class C {
+  @Autowired private UserService svc;   // 容器自动注入
+  @GetMapping("/who") public String who() { return svc.name(); }
+}</code></pre>
+  <div class="box ok"><span class="bt">要点：</span><code>@Component/@Service/@Controller</code> 交给容器管理，<code>@Autowired</code> 注入依赖，解耦且易测试。</div>
+
+  <h2 id="s5">5. 分层架构</h2>
+  <p>经典三层：<code>Controller</code>（接收请求）→ <code>Service</code>（业务逻辑）→ <code>Repository/DAO</code>（数据）。配合 <a href="mybatisplus.html">MyBatis-Plus</a> 操作数据库。</p>
+
+  <h2 id="s6">6. 与数据库</h2>
+  <p>在 <code>application.properties</code> 配数据源，用 <code>Spring Data JPA</code> 或 MyBatis-Plus 写 CRUD，无需手写大量样板。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>循环依赖（A 注入 B、B 注入 A）；用构造器注入或拆分层解决。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>包扫描不到 Bean（类不在启动类同包或子包）；注意 <code>@SpringBootApplication</code> 位置。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>端口被占用启动失败；改 <code>server.port</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>JDK 版本与 Spring Boot 不匹配；Boot 3 需 JDK 17+。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>写一个带 Service 的 REST 接口。</li>
+    <li>学 <a href="springboot.html">Spring Boot</a> 自动配置。</li>
+    <li>学 <a href="mybatisplus.html">MyBatis-Plus</a> 接数据库。</li>
+    <li>看简历工坊，Spring Boot 实战。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能搭 Spring 项目、写接口、理解 IoC/DI 与分层——Java 后端你已入门。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

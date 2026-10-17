@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Java<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个程序</a>
+  <a href="#s4">4. 面向对象</a>
+  <a href="#s5">5. 集合</a>
+  <a href="#s6">6. 异常处理</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Java</h1>
+  <p class="tsub">一次编写、到处运行的面向对象语言 —— JVM 跨平台，企业后端与安卓的主力。学完你能用 Java 写程序与后端。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Java</strong> 是静态类型、面向对象的语言，靠 JVM（Java 虚拟机）实现“一次编译，到处运行”。它语法严谨、生态庞大，是银行/电商/安卓的默认选择。</p>
+  <div class="box"><span class="bt">对比：</span><a href="python.html">Python</a> 动态、简洁；Java 强类型、严谨、适合大型协作项目。</div>
+  <div class="box ok"><span class="bt">生态：</span><a href="javaspring.html">Spring</a> 家族是企业后端事实标准。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 JDK（建议 17+），配好 <code>JAVA_HOME</code>。验证：</p>
+  <pre><code>java -version
+javac -version</code></pre>
+
+  <h2 id="s3">3. 第一个程序</h2>
+  <pre><code>public class Hello {
+  public static void main(String[] args) {
+    System.out.println("Hello Java");
+  }
+}</code></pre>
+  <p>保存为 <code>Hello.java</code>，编译运行：<code>javac Hello.java &amp;&amp; java Hello</code></p>
+
+  <h2 id="s4">4. 面向对象</h2>
+  <pre><code>class Person {
+  String name;
+  Person(String n) { name = n; }
+  void say() { System.out.println("我是" + name); }
+}</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>类/对象、封装、继承、多态是 Java 核心；一切围绕对象组织。</div>
+
+  <h2 id="s5">5. 集合</h2>
+  <p>用 <code>List</code>、<code>Map</code>、<code>Set</code> 管理一组数据：</p>
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("a");
+Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
+map.put("age", 18);</code></pre>
+
+  <h2 id="s6">6. 异常处理</h2>
+  <pre><code>try {
+  int x = 1 / 0;
+} catch (Exception e) {
+  System.out.println("出错：" + e.getMessage());
+}</code></pre>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>类名与文件名必须一致（public 类）；否则编译失败。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>空指针 <code>NullPointerException</code>；调用前判空或用 Optional。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>==</code> 比较对象比的是引用而非内容；字符串用 <code>equals</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忘记释放资源（流/连接）；用 try-with-resources。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>写个面向对象的小程序。</li>
+    <li>学 <a href="javaspring.html">Java Spring</a> 做后端。</li>
+    <li>学 <a href="mysql.html">MySQL</a> 存数据。</li>
+    <li>看简历工坊，Java 技术栈。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 JDK、写并运行 Java 程序、理解 OOP——Java 入门你已完成。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

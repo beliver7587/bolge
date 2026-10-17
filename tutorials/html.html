@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">HTML<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个网页</a>
+  <a href="#s4">4. 常用标签</a>
+  <a href="#s5">5. 表单</a>
+  <a href="#s6">6. 语义化</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>HTML</h1>
+  <p class="tsub">网页的结构语言 —— 用标签搭出页面骨架（标题、段落、按钮、表单）。所有前端的根基。学完你能写出能跑的静态网页。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>HTML</strong>（超文本标记语言）用一对对标签描述页面结构：<code>&lt;h1&gt;</code> 是标题、<code>&lt;p&gt;</code> 是段落、<code>&lt;a&gt;</code> 是链接。浏览器读取它渲染成网页。</p>
+  <div class="box"><span class="bt">三者关系：</span>HTML 是骨架，<a href="css.html">CSS</a> 是皮肤（样式），<a href="react.html">JS</a>/<a href="vue3.html">Vue</a> 是肌肉（行为）。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>不需要安装任何东西！新建一个 <code>index.html</code>，用记事本或 VS Code 写，双击即可用浏览器打开。</p>
+
+  <h2 id="s3">3. 第一个网页</h2>
+  <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-CN"&gt;
+  &lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;我的第一个网页&lt;/title&gt;&lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;你好，世界&lt;/h1&gt;
+    &lt;p&gt;这是一段文字。&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h2 id="s4">4. 常用标签</h2>
+  <table>
+    <tr><th>标签</th><th>作用</th></tr>
+    <tr><td><code>h1~h6</code></td><td>标题层级</td></tr>
+    <tr><td><code>div / span</code></td><td>容器（块级/行内）</td></tr>
+    <tr><td><code>img</code></td><td>图片 <code>src</code></td></tr>
+    <tr><td><code>a</code></td><td>链接 <code>href</code></td></tr>
+    <tr><td><code>ul/ol/li</code></td><td>列表</td></tr>
+    <tr><td><code>button</code></td><td>按钮</td></tr>
+  </table>
+
+  <h2 id="s5">5. 表单</h2>
+  <pre><code>&lt;form action="/submit" method="post"&gt;
+  &lt;input name="user" placeholder="用户名"&gt;
+  &lt;input type="password" name="pwd"&gt;
+  &lt;button type="submit"&gt;登录&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+  <h2 id="s6">6. 语义化</h2>
+  <p>用 <code>header / nav / main / article / footer</code> 代替满屏 <code>div</code>，利于 SEO 与可读性。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>标签不闭合，布局错乱；养成成对书写习惯。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>中文乱码；务必 <code>&lt;meta charset="UTF-8"&gt;</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>用 <code>&lt;table&gt;</code> 做布局（已淘汰）；布局请用 CSS Flex/Grid。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>img 路径写错 404；注意相对路径起点。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>写一个含标题、图片、表单的个人介绍页。</li>
+    <li>学 <a href="css.html">CSS</a> 美化它。</li>
+    <li>学 JavaScript 加点交互。</li>
+    <li>看 <a href="react.html">React</a>/<a href="vue3.html">Vue</a> 进阶。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能写结构清晰的 HTML 页面——前端第一步你已迈出。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

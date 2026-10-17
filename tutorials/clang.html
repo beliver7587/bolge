@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C 语言 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">C 语言<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个程序</a>
+  <a href="#s4">4. 变量与类型</a>
+  <a href="#s5">5. 指针</a>
+  <a href="#s6">6. 一个例子</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>C 语言</h1>
+  <p class="tsub">贴近硬件的通用编程语言 —— 学指针、内存与编译，是理解操作系统、嵌入式、底层的第一步。学完你能写可运行的 C 程序。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>C 语言</strong> 诞生于 1972 年，至今仍是操作系统（Linux）、嵌入式、编译器的基石。它离硬件近、运行快，但需手动管理内存。</p>
+  <div class="box"><span class="bt">对比：</span><a href="python.html">Python</a> 替你管内存、语法简；C 要自己管，更底层也更难。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装编译器 gcc：Windows 装 MinGW 或 WSL；Mac 装 Xcode 命令行工具；Linux <code>sudo apt install gcc</code>。写代码用 VS Code 或记事本皆可。</p>
+
+  <h2 id="s3">3. 第一个程序</h2>
+  <pre><code>#include &lt;stdio.h&gt;
+int main() {
+  printf("Hello C\n");
+  return 0;
+}</code></pre>
+  <p>保存为 <code>hello.c</code>，编译运行：</p>
+  <pre><code>gcc hello.c -o hello
+./hello</code></pre>
+
+  <h2 id="s4">4. 变量与类型</h2>
+  <pre><code>int age = 18;
+float pi = 3.14;
+char c = 'A';
+int arr[3] = {1, 2, 3};</code></pre>
+
+  <h2 id="s5">5. 指针</h2>
+  <p>指针存“地址”，是 C 的灵魂也是难点：</p>
+  <pre><code>int x = 10;
+int *p = &amp;x;        // p 指向 x 的地址
+printf("%d", *p);  // 解引用得到 10</code></pre>
+  <div class="box ok"><span class="bt">要点：</span><code>&amp;</code> 取地址，<code>*</code> 解引用；理解指针是学通 C 的关键。</div>
+
+  <h2 id="s6">6. 一个例子</h2>
+  <pre><code>#include &lt;stdio.h&gt;
+int add(int a, int b) { return a + b; }
+int main() {
+  printf("3+4=%d\n", add(3, 4));
+  return 0;
+}</code></pre>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>数组越界不报错但会崩或改坏别的数据；时刻检查下标。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>return 0</code> 或 <code>main</code> 写错签名，行为未定义。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>scanf</code> 漏写 <code>&amp;</code>，读不入变量。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>内存泄漏/野指针（malloc 不 free、用已释放指针）。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>写个计算器或猜数字游戏。</li>
+    <li>深入指针与结构体。</li>
+    <li>学 <a href="java.html">Java</a> / <a href="python.html">Python</a> 体会高层语言。</li>
+    <li>看操作系统/嵌入式方向。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能编译运行 C 程序、理解变量与指针——底层编程第一步你已迈出。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

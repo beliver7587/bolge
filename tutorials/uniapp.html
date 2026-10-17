@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>uni-app · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">uni-app<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个页面</a>
+  <a href="#s4">4. 生命周期</a>
+  <a href="#s5">5. 条件编译</a>
+  <a href="#s6">6. 打包发布</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>uni-app</h1>
+  <p class="tsub">用 Vue 语法一套代码发到 H5 / 微信小程序 / App —— 跨端开发首选。学完你能一次开发多端上线。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>uni-app</strong> 是 DCloud 出的跨端框架：写一套基于 <a href="vue3.html">Vue</a> 的代码，可编译到微信/支付宝小程序、H5、安卓/iOS App、甚至快应用。</p>
+  <div class="box"><span class="bt">对比：</span>原生小程序要学各自语法；uni-app 统一用 Vue，省去多端重复开发。</div>
+  <div class="box ok"><span class="bt">适合：</span>创业 MVP、企业内部工具、想一套代码覆盖多端的产品。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 <strong>HBuilderX</strong>（官方 IDE，开箱即用）或 CLI：</p>
+  <pre><code>npm install -g @vue/cli
+vue create -p dcloudio/uni-preset-vue my-uniapp</code></pre>
+
+  <h2 id="s3">3. 第一个页面</h2>
+  <pre><code>&lt;template&gt;
+  &lt;view class="content"&gt;{{ title }}&lt;/view&gt;
+&lt;/template&gt;
+&lt;script&gt;
+export default {
+  data() { return { title: '你好 uni-app' }; }
+}
+&lt;/script&gt;
+&lt;style&gt;
+.content { padding: 20rpx; }
+&lt;/style&gt;</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>uni-app 用 <code>view</code> 代替 <code>div</code>，单位用 <code>rpx</code>（自适应屏幕宽度）。</div>
+
+  <h2 id="s4">4. 生命周期</h2>
+  <p>页面有 <code>onLoad</code>（加载）、<code>onShow</code>（显示）、<code>onPullDownRefresh</code>（下拉刷新）等，比 Web 多了端能力钩子。</p>
+
+  <h2 id="s5">5. 条件编译</h2>
+  <p>不同端写不同代码：</p>
+  <pre><code>// #ifdef MP-WEIXIN
+console.log('只在微信小程序生效');
+// #endif</code></pre>
+
+  <h2 id="s6">6. 打包发布</h2>
+  <p>HBuilderX 里：发行 → 小程序（上传代码到各平台后台）/ 发行 → 网站（H5）/ 发行 → App 云打包（生成安装包）。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把 Web 的 <code>div/window</code> 直接搬来，小程序不认；用 <code>view</code> 与 uni API。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>小程序不支持 DOM/BOM（如 <code>document</code>）；别用浏览器专属 API。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>rpx 与 px 混用导致尺寸偏差；统一用 rpx。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>跨端插件平台兼容性差异，发布前各端真机测试。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>做一个“待办清单”小程序跑通 H5 + 微信。</li>
+    <li>学 <a href="vue3.html">Vue 3</a> 基础。</li>
+    <li>看 <a href="vite.html">Vite</a> 构建思路。</li>
+    <li>对比原生小程序开发。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能搭 uni-app 项目、写页面、条件编译与多端发布——跨端开发你已入门。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

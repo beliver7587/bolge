@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Docker<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 镜像与容器</a>
+  <a href="#s4">4. 第一个容器</a>
+  <a href="#s5">5. Dockerfile</a>
+  <a href="#s6">6. 编排与发布</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Docker</h1>
+  <p class="tsub">容器化技术 —— 把应用连同依赖打包成“容器”，一次构建到处运行，告别“我机器上能跑”。学完你能容器化部署自己的服务。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Docker</strong> 用容器把应用和它所需的环境（系统库、运行时）一起封装。相比虚拟机更轻量：共享宿主内核，秒级启动。</p>
+  <div class="box"><span class="bt">对比：</span>虚拟机带整套操作系统（GB 级、启动慢）；容器只隔离进程（MB 级、秒起）。</div>
+  <div class="box ok"><span class="bt">核心：</span><b>镜像</b>（模板，像类）与 <b>容器</b>（运行实例，像对象）。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 <strong>Docker Desktop</strong>（Win/Mac）或 Linux 上装 docker 引擎。验证：</p>
+  <pre><code>docker -v
+docker run hello-world</code></pre>
+
+  <h2 id="s3">3. 镜像与容器</h2>
+  <table>
+    <tr><th>概念</th><th>说明</th></tr>
+    <tr><td>镜像 Image</td><td>只读模板，由 Dockerfile 构建</td></tr>
+    <tr><td>容器 Container</td><td>镜像的运行实例，可启停删</td></tr>
+    <tr><td>仓库 Registry</td><td>存镜像的地方（Docker Hub）</td></tr>
+  </table>
+
+  <h2 id="s4">4. 第一个容器</h2>
+  <pre><code>docker pull nginx
+docker run -d -p 8080:80 --name mynginx nginx
+# 浏览器访问 http://localhost:8080</code></pre>
+
+  <h2 id="s5">5. Dockerfile</h2>
+  <p>给 Node 服务写一份（存为 <code>Dockerfile</code>）：</p>
+  <pre><code>FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]</code></pre>
+  <p>构建运行：<code>docker build -t myapp . &amp;&amp; docker run -p 3000:3000 myapp</code></p>
+
+  <h2 id="s6">6. 编排与发布</h2>
+  <p>多容器用 <code>docker-compose.yml</code> 一键拉起（如 应用+数据库）。部署到服务器时，把镜像推到仓库再 pull 运行。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>容器里数据不持久化，删容器数据没了；用 <code>-v</code> 挂载卷。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>端口没映射（没 <code>-p</code>），外部访问不了。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>镜像越积越大；用多阶段构建 / 精简基础镜像（alpine）。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>容器一直在前台占用终端；加 <code>-d</code> 后台跑。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>把你的后端服务 Docker 化。</li>
+    <li>学 <a href="git.html">Git</a> 管理代码。</li>
+    <li>学 <a href="nginx.html">Nginx</a> + <a href="https.html">HTTPS</a> 部署。</li>
+    <li>看简历工坊，容器化部署思路。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能写 Dockerfile、构建运行容器、做数据卷与端口映射——环境一致性你已掌握。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

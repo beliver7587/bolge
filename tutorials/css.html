@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSS · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">CSS<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个样式</a>
+  <a href="#s4">4. 选择器</a>
+  <a href="#s5">5. 盒模型</a>
+  <a href="#s6">6. Flex 布局</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>CSS</h1>
+  <p class="tsub">层叠样式表 —— 给 HTML 穿上“皮肤”：颜色、间距、布局、动画。学完你能把丑页面变好看、把元素摆到位。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>CSS</strong> 用“选择器 + 声明”控制外观：<code>h1 { color: red; }</code> 表示所有 <code>h1</code> 文字变红。它和 <a href="html.html">HTML</a>（结构）、JS（行为）三足鼎立。</p>
+  <div class="box ok"><span class="bt">现代写法：</span>原子化如 <a href="tailwind.html">Tailwind</a> 直接用类名；传统写法则写在 <code>.css</code> 文件里。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>同样无需安装。在 HTML 里用 <code>&lt;link rel="stylesheet" href="style.css"&gt;</code> 引入，或写 <code>&lt;style&gt;</code> 内联。</p>
+
+  <h2 id="s3">3. 第一个样式</h2>
+  <pre><code>&lt;style&gt;
+  body { font-family: sans-serif; background: #0f1424; color: #fff; }
+  .card { padding: 16px; border-radius: 12px; background: #1a2138; }
+&lt;/style&gt;
+&lt;div class="card"&gt;我是一个卡片&lt;/div&gt;</code></pre>
+
+  <h2 id="s4">4. 选择器</h2>
+  <table>
+    <tr><th>写法</th><th>含义</th></tr>
+    <tr><td><code>.class</code></td><td>类选择器</td></tr>
+    <tr><td><code>#id</code></td><td>ID 选择器</td></tr>
+    <tr><td><code>div p</code></td><td>后代选择器</td></tr>
+    <tr><td><code>a:hover</code></td><td>悬停状态</td></tr>
+  </table>
+
+  <h2 id="s5">5. 盒模型</h2>
+  <p>每个元素是个盒子：内容 + 内边距(padding) + 边框(border) + 外边距(margin)。设 <code>box-sizing: border-box</code> 让尺寸更可控。</p>
+
+  <h2 id="s6">6. Flex 布局</h2>
+  <pre><code>.row { display: flex; gap: 12px; justify-content: center; align-items: center; }</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>Flex 是一维布局神器；二维网格用 <code>grid</code>。响应式用 <code>@media</code> 适配手机。</div>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>忘记 <code>box-sizing: border-box</code>，宽度算错导致换行。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>用 <code>float</code> 做整体布局（已淘汰）；用 Flex/Grid。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>样式被覆盖（层叠优先级）；ID &gt; 类 &gt; 标签，内联最高。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>单位混用，移动端错位；多用 <code>rem/%/vw</code>。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>给 <a href="html.html">HTML</a> 写的页面加样式。</li>
+    <li>学 <a href="tailwind.html">Tailwind</a> 原子化加速。</li>
+    <li>练 Flex/Grid 布局。</li>
+    <li>看 <a href="react.html">React</a> 项目里的样式方案。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能写选择器、盒模型与 Flex 布局——把页面变好看你已会。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

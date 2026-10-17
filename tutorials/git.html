@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Git<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个仓库</a>
+  <a href="#s4">4. 提交与查看</a>
+  <a href="#s5">5. 分支</a>
+  <a href="#s6">6. 远程协作</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Git</h1>
+  <p class="tsub">代码版本控制系统 —— 记录每次改动、随时回退、多人协作不打架。程序员必备。学完你能独自管理版本并与他人协作。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Git</strong> 给项目建一个“时光机”：每次提交（commit）存下完整快照，可随时回到任意版本。配合 <a href="https://github.com" target="_blank">GitHub</a> 还能多人协作、备份到云端。</p>
+  <div class="box"><span class="bt">对比：</span>网盘/U盘只存最新版；Git 存全部历史，且能并行开发（分支）。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 Git（Windows 装 Git for Windows；Mac <code>brew install git</code>；Linux <code>apt install git</code>）。配置身份：</p>
+  <pre><code>git config --global user.name "你的名字"
+git config --global user.email "you@example.com"</code></pre>
+
+  <h2 id="s3">3. 第一个仓库</h2>
+  <pre><code>cd my-project
+git init                 # 初始化仓库
+echo "# 我的项目" &gt; README.md
+git add README.md
+git commit -m "首次提交"</code></pre>
+
+  <h2 id="s4">4. 提交与查看</h2>
+  <pre><code>git status               # 看哪些文件改了
+git add -A               # 暂存全部改动
+git commit -m "改了首页"
+git log --oneline        # 看历史</code></pre>
+
+  <h2 id="s5">5. 分支</h2>
+  <pre><code>git branch feature       # 建分支
+git checkout feature     # 切过去
+# 改完合并回主分支
+git checkout main &amp;&amp; git merge feature</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>分支让你并行试错，不污染主线；开发完再合并。</div>
+
+  <h2 id="s6">6. 远程协作</h2>
+  <pre><code>git remote add origin https://github.com/你/仓库.git
+git push -u origin main     # 推到 GitHub
+git pull                    # 拉取他人改动</code></pre>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>提交前没 <code>git add</code>，改动没进版本；先 add 再 commit。</div>
+  <div class="box warn"><span class="bt">坑 2：</span><code>git push</code> 被拒（远程有别人提交）；先 <code>git pull</code> 再推。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>把密钥/.env 提交进仓库泄露；用 <code>.gitignore</code> 排除。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>强推 <code>git push --force</code> 覆盖他人历史；非必要时禁用。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>把自己的项目用 Git 管起来并推到 GitHub。</li>
+    <li>学 <a href="docker.html">Docker</a> 打包环境。</li>
+    <li>了解 <code>.gitignore</code>、rebase、stash。</li>
+    <li>看本博客仓库，就是 Git 管理的范例。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能 init/commit/分支/推远程——版本管理与协作你已入门。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

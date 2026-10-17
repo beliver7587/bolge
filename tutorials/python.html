@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Python<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个程序</a>
+  <a href="#s4">4. 基础语法</a>
+  <a href="#s5">5. 函数与库</a>
+  <a href="#s6">6. 实战：脚本</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Python</h1>
+  <p class="tsub">语法简洁、用途极广的脚本语言 —— AI、数据分析、自动化首选，初学者最友好。学完你能写自动化脚本与小工具。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Python</strong> 以可读性强著称，几乎不用写样板，几行就能干大事。它是 <a href="llm.html">AI</a>/机器学习、爬虫、运维脚本、后端（Django/FastAPI）的通用语言。</p>
+  <div class="box"><span class="bt">对比：</span>比 <a href="java.html">Java</a>/<a href="clang.html">C</a> 少很多仪式代码；适合快速实现想法。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 Python 3.10+（勾选 “Add to PATH”）。建议用虚拟环境隔离依赖：</p>
+  <pre><code>python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate</code></pre>
+
+  <h2 id="s3">3. 第一个程序</h2>
+  <pre><code>print("Hello Python")
+name = input("你叫什么？")
+print("你好", name)</code></pre>
+  <p>保存为 <code>hi.py</code>，运行：<code>python hi.py</code></p>
+
+  <h2 id="s4">4. 基础语法</h2>
+  <pre><code>nums = [1, 2, 3]
+for n in nums:
+    if n % 2 == 0:
+        print(n, "是偶数")
+# 字典
+d = {"age": 18}
+print(d.get("age"))</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>用缩进表示代码块（不用花括号）；变量无需声明类型。</div>
+
+  <h2 id="s5">5. 函数与库</h2>
+  <pre><code>def add(a, b):
+    return a + b
+
+import requests
+r = requests.get("https://api.github.com")
+print(r.status_code)</code></pre>
+
+  <h2 id="s6">6. 实战：脚本</h2>
+  <p>批量重命名文件、自动发请求、定时爬数据……Python 几行搞定。例如读 CSV：</p>
+  <pre><code>import csv
+with open("data.csv") as f:
+    for row in csv.reader(f):
+        print(row)</code></pre>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>缩进不一致（空格/Tab 混用）直接报错；统一用 4 个空格。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>可变默认参数陷阱：<code>def f(x=[])</code> 会共享；用 <code>x=None</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>全局装包污染；务必用虚拟环境。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>Python 2 与 3 语法不同；确认用 3。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>写一个自动处理文件的脚本。</li>
+    <li>学 <a href="llm.html">大模型</a> 调用做 AI 应用。</li>
+    <li>学 FastAPI 写后端。</li>
+    <li>看 Memora，Python/AI 生态。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装环境、写并运行 Python 脚本、用第三方库——自动化与 AI 第一步你已迈出。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

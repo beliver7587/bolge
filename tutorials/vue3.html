@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vue 3 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Vue 3<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个组件</a>
+  <a href="#s4">4. 响应式数据</a>
+  <a href="#s5">5. 事件与绑定</a>
+  <a href="#s6">6. 一个计数器</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Vue 3</h1>
+  <p class="tsub">渐进式前端框架 —— 用“数据驱动视图”，改数据页面自动变。国内项目、uni-app 都用它。学完你能写可交互的 Vue 页面。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Vue 3</strong> 是声明式框架：你描述“数据长什么样”，它负责把数据渲染成 DOM；数据一变，视图自动更新，不用手动操作 DOM。</p>
+  <div class="box"><span class="bt">对比：</span><a href="react.html">React</a> 用 JSX 写组件；Vue 用模板（HTML 风格）写，更贴近原生 HTML，上手更直观。</div>
+  <div class="box ok"><span class="bt">核心：</span>组合式 API（<code>ref</code>/<code>reactive</code>）+ 单文件组件（<code>.vue</code>）。</div>
+
+  <h2 id="s2">2. 环境准备</h2>
+  <p>用官方脚手架起项目（需装 <a href="nodejs.html">Node.js</a>）：</p>
+  <pre><code>npm create vue@latest my-app
+cd my-app &amp;&amp; npm install &amp;&amp; npm run dev</code></pre>
+  <p>浏览器打开提示的 <code>http://localhost:5173</code> 即看到页面。</p>
+
+  <h2 id="s3">3. 第一个组件</h2>
+  <pre><code>&lt;template&gt;
+  &lt;h1&gt;{{ msg }}&lt;/h1&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+const msg = '你好 Vue';
+&lt;/script&gt;</code></pre>
+
+  <h2 id="s4">4. 响应式数据</h2>
+  <p>用 <code>ref</code> 让数据变“响应式”，改它页面自动刷新：</p>
+  <pre><code>&lt;script setup&gt;
+import { ref } from 'vue';
+const count = ref(0);
+function add() { count.value++; }   // 注意 ref 要用 .value
+&lt;/script&gt;</code></pre>
+
+  <h2 id="s5">5. 事件与绑定</h2>
+  <pre><code>&lt;template&gt;
+  &lt;p&gt;计数：{{ count }}&lt;/p&gt;
+  &lt;button @click="add"&gt;+1&lt;/button&gt;
+  &lt;input v-model="text" placeholder="输入"&gt;
+&lt;/template&gt;</code></pre>
+  <div class="box ok"><span class="bt">要点：</span><code>@click</code> 绑定事件，<code>v-model</code> 双向绑定表单，<code>v-for</code> 列表渲染，<code>v-if</code> 条件渲染。</div>
+
+  <h2 id="s6">6. 一个计数器</h2>
+  <pre><code>&lt;template&gt;
+  &lt;button @click="add"&gt;点了 {{ count }} 次&lt;/button&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import { ref } from 'vue';
+const count = ref(0);
+const add = () =&gt; count.value++;
+&lt;/script&gt;</code></pre>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>ref 在 JS 里要 <code>.value</code>，模板里不用；混用导致读不到值。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>直接给 reactive 对象整体替换（<code>obj = {...}</code>）会丢失响应式；用 <code>Object.assign</code> 改属性。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>在 <code>setup</code> 外定义普通变量当状态，不会触发更新。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>v-for 没加 <code>:key</code>，列表重排错乱；用稳定唯一值作 key。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>用 Vue 做一个 Todolist（增删改）。</li>
+    <li>学 <a href="vite.html">Vite</a> 打包、状态管理（Pinia）。</li>
+    <li>学 <a href="uniapp.html">uni-app</a> 用 Vue 写跨端应用。</li>
+    <li>对比 <a href="react.html">React</a>。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能搭 Vue 项目、写组件、用 ref 做响应式交互——前端框架你已入门。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

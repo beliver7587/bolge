@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas 2D · 从小白到资深前端</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Canvas 2D<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 绘图基础</a>
+  <a href="#s4">4. 变换与坐标系</a>
+  <a href="#s5">5. 文本与图像</a>
+  <a href="#s6">6. 动画循环</a>
+  <a href="#s7">7. 交互与命中</a>
+  <a href="#s8">8. 性能优化</a>
+  <a href="#s9">9. 与 Pixi 边界</a>
+  <a href="#s10">10. 图像处理</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试</a>
+  <a href="#s13">13. 成长路线</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Canvas 2D：从小白到资深前端</h1>
+  <p class="tsub">Canvas 2D 是浏览器原生的<strong>像素级绘图 API</strong>，用来画图表、做小游戏、处理图像。本教程讲透<strong>坐标系与变换栈、清屏重绘的动画循环、坐标命中、高清屏适配与性能</strong>——这是资深做轻量图形/可视化的基本功。</p>
+
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>DOM 适合“结构化 UI”，但画几千个点/做逐帧动画就吃力；SVG 是矢量但节点多也慢。Canvas 给你一块<strong>位图画布</strong>，用 JS 直接画像素，轻量、可控、无 DOM 开销。</p>
+  <div class="box"><span class="bt">一句话：</span>Canvas 是“命令式逐帧绘制”的画布，适合图表、小游戏、图像滤镜；复杂 UI 仍交给 DOM。</div>
+  <div class="box ok"><span class="bt">对比：</span>少量动态图形 → Canvas 2D；海量精灵/游戏 → <a href="pixijs.html">PixiJS</a>（WebGL 批渲染）。</div>
+
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code">const canvas = document.querySelector('canvas');
+const ctx = canvas.getContext('2d');
+// 高清屏适配：用 DPR 放大画布、CSS 缩回
+const dpr = window.devicePixelRatio || 1;
+canvas.width = 800 * dpr;  canvas.height = 600 * dpr;
+canvas.style.width = '800px'; canvas.style.height = '600px';
+ctx.scale(dpr, dpr);</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>不处理 DPR，高分屏上画布发虚。上面是标准解法。</div>
+
+  <h2 id="s3">3. 绘图基础</h2>
+  <pre><code">ctx.fillStyle = '#6366f1';
+ctx.fillRect(10, 10, 100, 50);          // 填充矩形
+ctx.strokeStyle = '#fff'; ctx.strokeRect(10, 10, 100, 50);
+ctx.beginPath(); ctx.arc(200, 100, 30, 0, Math.PI * 2); ctx.fill();  // 圆</code></pre>
+  <ul>
+    <li><code>fillStyle/strokeStyle</code> 是“状态”，会影响后续绘制，用 <code>save/restore</code> 隔离。</li>
+    <li><b>状态栈</b>：<code>ctx.save()</code> 压入当前状态，<code>ctx.restore()</code> 弹出——避免样式串台。</li>
+  </ul>
+
+  <h2 id="s4">4. 变换与坐标系</h2>
+  <pre><code">ctx.save();
+ctx.translate(400, 300);   // 把原点移到中心
+ctx.rotate(Math.PI / 4);   // 旋转坐标系
+ctx.fillRect(-25, -25, 50, 50);
+ctx.restore();             // 还原，不影响后续</code></pre>
+  <div class="box ok"><span class="bt">心智：</span>变换作用于“之后的绘制”，且可叠加。配平 save/restore 是基本功——不还原会越套越乱。</div>
+
+  <h2 id="s5">5. 文本与图像</h2>
+  <pre><code">ctx.font = '20px sans-serif'; ctx.fillText('你好', 50, 50);
+const img = new Image();
+img.onload = () =&gt; ctx.drawImage(img, 0, 0);
+img.src = '/pic.png';   // 注意跨域：跨域图需 crossOrigin 否则污染画布</code></pre>
+
+  <h2 id="s6">6. 动画循环</h2>
+  <pre><code">function frame() {
+  ctx.clearRect(0, 0, 800, 600);   // 清屏（关键！否则拖影）
+  // ...重绘当前帧
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>不清屏 → 上一帧残留成“拖影”；用 <code>clearRect</code> 或重绘背景每帧覆盖。</div>
+
+  <h2 id="s7">7. 交互与命中</h2>
+  <ul>
+    <li>监听 canvas 的 <code>mousemove/click</code>，用 <code>getBoundingClientRect</code> 把屏幕坐标换算成画布坐标。</li>
+    <li><b>命中检测</b>：简单图形用几何判断（点到圆/矩形）；复杂用 <code>ctx.isPointInPath(path, x, y)</code>。</li>
+  </ul>
+
+  <h2 id="s8">8. 性能优化</h2>
+  <ul>
+    <li><b>离屏 Canvas</b>：把静态背景画一次存到离屏 canvas，每帧直接 <code>drawImage</code> 贴上去。</li>
+    <li><b>分层 Canvas</b>：静态层（背景）与动态层（动画）分开，静态层不重绘。</li>
+    <li>减少 <code>save/restore</code> 与状态切换；批量同色绘制。</li>
+  </ul>
+
+  <h2 id="s9">9. 与 Pixi 边界</h2>
+  <div class="box ok"><span class="bt">选型：</span>图表、签名板、小游戏、图像裁剪 → Canvas 2D 足够轻；上千动态对象/粒子 → 上 PixiJS 走 WebGL。</div>
+
+  <h2 id="s10">10. 图像处理</h2>
+  <pre><code">const data = ctx.getImageData(0, 0, w, h);  // 拿到像素数组
+// data.data 是 RGBA，可逐像素做灰度/滤镜
+ctx.putImageData(data, 0, 0);</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>跨域图片未设 <code>crossOrigin</code>，画布会被“污染”，<code>getImageData</code> 抛安全错误。</div>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>高分屏不处理 DPR → 模糊。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>save/restore 不配平，变换/样式串到后续绘制。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>动画不清屏，出现拖影。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>动画循环在组件卸载后没停 → 内存/CPU 泄漏（React 里要在 cleanup 取消 rAF）。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>跨域图污染画布，取像素报错。</div>
+
+  <h2 id="s12">12. 调试</h2>
+  <ul>
+    <li>在循环里 <code>console.log</code> 帧率；DevTools Performance 看每帧耗时。</li>
+    <li>临时 <code>ctx.strokeRect</code> 画命中框验证坐标。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会画矩形/圆、做简单动画</td></tr>
+    <tr><td>初级</td><td>会变换、文本、交互命中</td></tr>
+    <tr><td>中级</td><td>高清适配、离屏/分层优化</td></tr>
+    <tr><td>资深</td><td>稳定动画架构、性能调优、与 WebGL 取舍</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 Canvas 做一个弹球动画（含清屏）② 适配 DPR 让文字清晰 ③ 用离屏 canvas 优化静态背景 ④ 实现点击命中一个圆。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解命令式绘制的“清屏-重绘”循环、坐标系与性能分层——这是资深图形前端的底色。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

@@ -9,51 +9,95 @@
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">大模型 LLM<small>小白通关教程</small></div>
+  <div class="tbrand">LLM<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. Token 与计费</a>
-  <a href="#s3">3. 三种角色</a>
-  <a href="#s4">4. 幻觉与截止</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一次调用</a>
+  <a href="#s4">4. 消息与角色</a>
+  <a href="#s5">5. 关键参数</a>
+  <a href="#s6">6. 流式输出</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>大模型 LLM</h1>
-  <p class="tsub">“超级自动补全” —— 读懂语言规律生成文本，是一切 AI 能力的起点。</p>
+  <p class="tsub">大语言模型 —— 能理解并生成自然语言的 AI，是 Agent/RAG/客服的大脑。学完你能用 API 调通第一个 AI 对话。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>大语言模型（LLM）本质上是一个<strong>“超级自动补全”</strong>：给它前半句，它根据海量文本训练出的统计规律，预测“下一个最可能出现的字/词”，一个一个往外吐，连成回答。它不是搜索引擎（不会现查），而是“凭记忆生成”——所以会记错、会编造。</p>
+  <p><strong>LLM（Large Language Model）</strong> 是用海量文本训练出的模型，能续写、问答、总结、写代码。我们用它的 API 来“对话”。</p>
+  <div class="box"><span class="bt">一句话：</span>你发一段“提示（prompt）”，它返回“补全/回答”。本质是预测下一个最合理的词。</div>
+  <div class="box ok"><span class="bt">供应商：</span>OpenAI、Anthropic、Google，以及国产（通义/智谱/DeepSeek 等），见 <a href="provider.html">供应商抽象</a>。</div>
 
-  <h2 id="s2">2. Token 与计费</h2>
-  <p>模型不吃原始汉字，而是先切成 <strong>token</strong>（中文通常 1~2 字一个 token）。成本 = 输入 token + 输出 token。一次对话成本随上下文增长——这正是要做“精准检索只取 5 段”（<a href="rag.html">RAG</a>）的原因。</p>
-  <pre><code>// 调用（以 OpenAI 风格为例）
-const res = await client.chat.completions.create({
-  model:'gpt-4o-mini',
-  messages:[{role:'user', content:'你好'}]
-});</code></pre>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>装 SDK（以 OpenAI 兼容为例）并准备 API Key：</p>
+  <pre><code">npm install openai
+export OPENAI_API_KEY=sk-xxxx   # 在环境变量里，别硬编码进代码</code></pre>
 
-  <h2 id="s3">3. 三种角色</h2>
+  <h2 id="s3">3. 第一次调用</h2>
+  <pre><code">import OpenAI from 'openai';
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const r = await client.chat.completions.create({
+  model: 'gpt-4o-mini',
+  messages: [{ role: 'user', content: '用一句话解释什么是数据库' }]
+});
+console.log(r.choices[0].message.content);</code></pre>
+
+  <h2 id="s4">4. 消息与角色</h2>
   <table>
-    <tr><th>角色</th><th>谁说</th><th>作用</th></tr>
-    <tr><td>system</td><td>开发者</td><td>人设、规则、底线</td></tr>
-    <tr><td>user</td><td>用户</td><td>真正的问题</td></tr>
-    <tr><td>assistant</td><td>模型</td><td>上一轮回答（多轮延续）</td></tr>
+    <tr><th>角色</th><th>作用</th></tr>
+    <tr><td><code>system</code></td><td>系统指令（人设/规则），常放最前</td></tr>
+    <tr><td><code>user</code></td><td>用户说的话</td></tr>
+    <tr><td><code>assistant</code></td><td>模型的回复（多轮对话要回传）</td></tr>
   </table>
+  <pre><code">messages = [
+  { role:'system', content:'你是严谨的中文助手' },
+  { role:'user', content:'你好' },
+  { role:'assistant', content:'你好，有什么可以帮你？' },
+  { role:'user', content:'继续…' }
+];</code></pre>
 
-  <h2 id="s4">4. 幻觉与截止</h4>
+  <h2 id="s5">5. 关键参数</h2>
   <ul>
-    <li><b>幻觉</b>：一本正经编错误内容（本质是“猜下一个字”）。</li>
-    <li><b>知识截止</b>：只知训练时见过的，新事/公司内部规定一概不知。</li>
+    <li><code>temperature</code>：0 更确定/保守，1 更发散/创意。</li>
+    <li><code>max_tokens</code>：单次最多生成多少 token（≈字）。</li>
+    <li><code>top_p</code>：核采样，控制多样性。</li>
+    <li><code>stop</code>：遇到指定串停止。</li>
   </ul>
-  <div class="box ok"><span class="bt">解法：</span>用 <a href="rag.html">RAG</a> 外挂知识库现查现用，而非微调。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>把密钥写死在前端代码——必须走后端 + 环境变量（见 <a href="provider.html">供应商抽象</a>）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>上下文过长烧钱且变傻——做摘要/检索截断。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>轻信输出当事实——关键场景要核实与引用。</div>
+  <h2 id="s6">6. 流式输出</h2>
+  <pre><code">const stream = await client.chat.completions.create({ model, messages, stream: true });
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}</code></pre>
+  <div class="box ok"><span class="bt">搭配：</span>流式输出常配合 <a href="sse.html">SSE</a> 推到前端做打字机效果。</div>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把 API Key 写死在前端代码，泄露被盗刷；Key 只在服务端用，并走环境变量。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>多轮对话没回传历史，模型“失忆”；把完整 messages 传回去。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>上下文超长报 400；做截断或摘要（见 <a href="memory.html">四层记忆</a>）。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>temperature 太高回答乱；确定性任务设 0。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>不同供应商参数/模型名不同，直接搬运代码易错；用 <a href="provider.html">供应商抽象</a> 隔离。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>跑通第一个对话，调调 temperature。</li>
+    <li>学 <a href="provider.html">供应商抽象</a> 不绑死一家。</li>
+    <li>学 <a href="rag.html">RAG</a>、<a href="agent.html">Agent</a>、<a href="sse.html">SSE</a> 构建应用。</li>
+    <li>看 Memora，LLM 调用与流式实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 SDK、构造 messages、调通对话与流式——使用大模型你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

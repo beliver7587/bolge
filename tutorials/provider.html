@@ -11,42 +11,85 @@
 <nav class="tside" id="tside">
   <div class="tbrand">供应商抽象<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么抽象</a>
-  <a href="#s3">3. 配置示例</a>
-  <a href="#s4">4. 代码形态</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 为什么需要</a>
+  <a href="#s3">3. 定义接口</a>
+  <a href="#s4">4. 实现两家</a>
+  <a href="#s5">5. 工厂切换</a>
+  <a href="#s6">6. 实战</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>供应商抽象</h1>
-  <p class="tsub">把“用哪家风模型”做成配置 —— 换供应商只改 .env，业务代码零改动。</p>
+  <p class="tsub">把“用哪家大模型”从业务里抽出来 —— 换 OpenAI/国产模型只需改配置，不重写代码。学完你能让 AI 应用不被一家厂商绑死。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>我们一般不自己训练模型，而是<strong>调用别人家的大模型 API</strong>（智谱、OpenAI、SiliconFlow…），按量付费。调用要带 API Key（像门票）。<strong>供应商抽象</strong>就是把“到底用哪家模型”做成可配置项，业务代码通过一个统一接口调用，换家供应商只改配置、不碰代码。</p>
+  <p><strong>供应商抽象</strong> 是设计模式：定义一个统一的接口（如 <code>chat(messages)</code>），再为每家大模型写实现，业务代码只依赖接口，不依赖具体厂商 SDK。</p>
+  <div class="box"><span class="bt">一句话：</span>业务说“去聊天”，至于用 OpenAI 还是 DeepSeek 去聊，由配置决定。</div>
 
-  <h2 id="s2">2. 为什么抽象</h2>
-  <div class="box ok"><span class="bt">价值：</span>各家 API 格式不一、价格与稳定性波动。抽象后，今天用智谱、明天换 SiliconFlow 的 Qwen，只改 <code>.env</code> 几行，检索与编排层完全不动——避免被单一供应商绑定。</div>
+  <h2 id="s2">2. 为什么需要</h2>
+  <ul>
+    <li>各家 API 参数、返回结构不同，直接调会写死。</li>
+    <li>价格/稳定性波动，需要能随时切换或做降级（一家挂了换另一家）。</li>
+    <li>合规要求用国产/私有模型。</li>
+  </ul>
 
-  <h2 id="s3">3. 配置示例</h2>
-  <pre><code># .env —— 设计写智谱，线上实际跑 Qwen
-AI_PROVIDER=zhipu
-ZHIPU_BASE_URL=https://api.siliconflow.cn/v1
-ZHIPU_MODEL=Qwen/Qwen2.5-7B-Instruct
-ZHIPU_EMBED_MODEL=BAAI/bge-m3
-EMBED_DIM=1024</code></pre>
+  <h2 id="s3">3. 定义接口</h2>
+  <pre><code">// llm/provider.js
+export interface LLMProvider {
+  chat(messages: {role:string; content:string}[]): Promise&lt;string&gt;;
+  stream(messages: any[]): AsyncIterable&lt;string&gt;;
+}</code></pre>
 
-  <h2 id="s4">4. 代码形态</h2>
-  <pre><code>// 统一入口，内部按 AI_PROVIDER 选择具体实现
-const llm = createLLM(process.env.AI_PROVIDER);
-const ans = await llm.chat(messages);</code></pre>
+  <h2 id="s4">4. 实现两家</h2>
+  <pre><code">// openaiProvider.js
+import OpenAI from 'openai';
+export class OpenAIProvider implements LLMProvider {
+  constructor(key) { this.c = new OpenAI({ apiKey: key }); }
+  async chat(messages) {
+    const r = await this.c.chat.completions.create({ model:'gpt-4o-mini', messages });
+    return r.choices[0].message.content;
+  }
+}
+// 再写一个 DeepSeekProvider，同样实现 LLMProvider（内部换 baseURL/模型名）</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>把 Key 写死在代码里提交到 Git——务必走环境变量（Memora 的红线）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>各家模型能力/价格不同，切换后不回归测试就上生产。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>只抽象对话不抽象嵌入，换家还得改向量代码——两层都要抽。</div>
+  <h2 id="s5">5. 工厂切换</h2>
+  <pre><code">function createLLM() {
+  const name = process.env.LLM_PROVIDER || 'openai';
+  if (name === 'openai') return new OpenAIProvider(process.env.OPENAI_API_KEY);
+  if (name === 'deepseek') return new DeepSeekProvider(process.env.DEEPSEEK_KEY);
+  throw new Error('未知供应商');
+}</code></pre>
+
+  <h2 id="s6">6. 实战</h2>
+  <p>业务层只写 <code>const llm = createLLM(); await llm.chat(messages)</code>。要换厂商，只改环境变量 <code>LLM_PROVIDER</code>，代码一行不动。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>只抽象了 chat 没抽象 stream，切换时发现一家不支持流式；把常用能力都纳入接口。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>没统一“消息格式”，某家用 <code>content</code> 某家用数组；在接口层归一。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>错误没兜底，一家超时直接 500；加超时 + 自动切备胎。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>把 Key 写死，失去抽象意义；配置化。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>给自己项目定义一个 LLM 接口并接两家。</li>
+    <li>配合 <a href="llm.html">LLM</a> 基础调用。</li>
+    <li>学 <a href="agent.html">Agent</a> / <a href="rag.html">RAG</a> 用统一接口。</li>
+    <li>看 Memora，供应商抽象实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能定义统一 LLM 接口、为多家写实现并用工厂切换——AI 应用不被厂商绑死，你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

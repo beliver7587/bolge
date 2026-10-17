@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RRF 融合排序 · 小白通关教程</title>
+<title>RRF · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,48 +11,78 @@
 <nav class="tside" id="tside">
   <div class="tbrand">RRF<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么按排名</a>
-  <a href="#s3">3. 公式与代码</a>
-  <a href="#s4">4. 在 RAG 的位置</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 为什么需要</a>
+  <a href="#s3">3. 融合公式</a>
+  <a href="#s4">4. 代码实现</a>
+  <a href="#s5">5. 实战用法</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>RRF 融合排序</h1>
-  <p class="tsub">按“排名”而非“分数”融合多路召回 —— 规避分数量纲不一致。</p>
+  <h1>RRF</h1>
+  <p class="tsub">倒数排名融合（Reciprocal Rank Fusion）—— 把多个检索结果（BM25、向量）简单又好用地合在一起。RAG 混合检索的关键一步。学完你能把不同检索“取长补短”。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>RRF = Reciprocal Rank Fusion（倒数排名融合）</strong>。当你有两路（或多路）检索结果——比如 <a href="embedding.html">向量检索</a>一路、<a href="bm25.html">BM25</a>一路——怎么把它们的排序合到一起？RRF 用“排名”而非“分数”来融合，避免两路分数不可比的问题。</p>
+  <p><strong>RRF</strong> 是一种“融合多个排序列表”的算法。它不看各列表的原始分数（因为不同算法分数尺度不同），只看“排名位置”。</p>
+  <div class="box"><span class="bt">一句话：</span>不管 BM25 打 9.3 分还是向量打 0.81 分，RRF 只看“排第几”，再按排名给分相加。</div>
 
-  <h2 id="s2">2. 为什么按排名</h2>
-  <div class="box"><span class="bt">痛点：</span>向量路的分数在 0~1，BM25 可能是 0~20，直接加权平均不公平。但“第 1 名”“第 3 名”这种排名是量纲无关的，所以按排名融合最稳。</div>
+  <h2 id="s2">2. 为什么需要</h2>
+  <p>BM25 和向量检索返回的是不同尺度的分数，没法直接加权。RRF 用排名规避尺度问题，且对各列表“平等对待”，鲁棒性高。</p>
 
-  <h2 id="s3">3. 公式与代码</h2>
-  <p>每个文档的得分 = Σ 1/(k + 排名)，k 一般取 60 防止第一名权重过大。</p>
-  <pre><code>function rrfFusion(rankLists, k=60){
-  const merged = new Map();
-  for(const list of rankLists){
-    list.forEach((item, rank) =&gt; {
-      const key = item.id;
-      const cur = merged.get(key) || { score:0 };
-      cur.score += 1/(k + rank + 1);   // 排名越靠前，贡献越大
-      merged.set(key, cur);
+  <h2 id="s3">3. 融合公式</h2>
+  <div class="diagram">RRF_score(d) = Σ  over each rank list L
+               1 / (k + rank_L(d))
+k 为常数（常取 60），rank_L(d) 是文档 d 在列表 L 中的名次（第1名=1）
+最终按 RRF 总分降序输出</div>
+
+  <h2 id="s4">4. 代码实现</h2>
+  <pre><code">function rrf(lists, k = 60) {
+  const score = new Map();
+  for (const list of lists) {            // 每个 list 是 [{id}, {id}, ...] 名次从1开始
+    list.forEach((item, i) =&gt; {
+      const id = item.id ?? item;
+      score.set(id, (score.get(id) || 0) + 1 / (k + i + 1));
     });
   }
-  return [...merged.values()].sort((a,b)=&gt;b.score-a.score);
-}</code></pre>
+  return [...score.entries()].sort((a, b) =&gt; b[1] - a[1]);
+}
+// 用法
+const merged = rrf([bm25Hits, vectorHits]);</code></pre>
 
-  <h2 id="s4">4. 在 RAG 的位置</h2>
-  <div class="diagram">向量召回 Top-K ┐
-BM25 召回 Top-K ┼─→ RRF 融合 ─→ 取 Top-5 ─→ 大模型精排 ─→ 生成</div>
+  <h2 id="s5">5. 实战用法</h2>
+  <p>在 <a href="rag.html">RAG</a> 中：</p>
+  <pre><code">const bm25 = bm25Search(q, 20);       // 关键词检索 Top20
+const vec  = vectorSearch(q, 20);     // 语义检索 Top20
+const fused = rrf([bm25, vec], 60);    // 融合
+const top = fused.slice(0, 5);         // 取前 5 送大模型</code></pre>
+  <div class="box ok"><span class="bt">效果：</span>BM25 补精确词命中，向量补语义；RRF 把两者都靠前的结果推上去，召回更稳。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>直接把两路分数加权平均，结果被分数大的那路主导——用 RRF 而非加权。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>k 太小会让头部过强、尾部噪声；60 是经验值，可按效果微调。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>融合后要再让大模型精排，RRF 只是粗排。</div>
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>直接把不同算法的原始分相加，尺度不一导致某一路独大；用排名而非分数。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>k 太小（如 1）让第1名压倒一切，丧失融合意义；常用 60。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>某路返回过多（如 1000）稀释融合；各路取相同较小窗口（如 20~50）。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忘了去重同一文档在不同列表的 id，分数重复计算错乱。</div>
+
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>把 BM25 与向量结果用 RRF 融合试试。</li>
+    <li>学 <a href="bm25.html">BM25</a>、<a href="embedding.html">向量检索</a>。</li>
+    <li>学 <a href="rag.html">RAG</a> 完整链路。</li>
+    <li>看 Memora，混合检索实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能用 RRF 融合多路检索结果——混合检索的“合”你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

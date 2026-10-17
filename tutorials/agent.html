@@ -2,53 +2,96 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent 智能体 · 小白通关教程</title>
+<title>AI Agent · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Agent 智能体<small>小白通关教程</small></div>
+  <div class="tbrand">AI Agent<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 思考循环</a>
-  <a href="#s3">3. 与工具配合</a>
-  <a href="#s4">4. 防止死循环</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 三大件</a>
+  <a href="#s3">3. 运行循环</a>
+  <a href="#s4">4. 工具调用</a>
+  <a href="#s5">5. 实战示例</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Agent 智能体</h1>
-  <p class="tsub">会“思考→行动→观察”的 AI —— 自主调用工具完成多步任务。</p>
+  <h1>AI Agent</h1>
+  <p class="tsub">会“自己想办法”的 AI —— 能调用工具、查资料、多步推理去完成任务，而不只是聊一句。Memora 就是这样一个 Agent。学完你能搭一个能办事的 AI。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>普通聊天是“一问一答”；<strong>Agent（智能体）</strong>是给大模型配上“手脚”（工具）和“循环”：它能自己规划、连续调用多个工具、根据中间结果调整策略，直到把任务做完。比如“帮我查订单并建工单”这种多步活，Agent 能一气呵成。</p>
+  <p><strong>Agent（智能体）</strong> = 大模型（大脑）+ 工具（手脚）+ 循环（思考→行动→观察）。它不再一次性回答，而是“先想清楚要做什么，再一步步做，直到完成”。</p>
+  <div class="box"><span class="bt">对比：</span>普通聊天：你问一句，它答一句；Agent：你给目标，它自己拆步骤、调工具、最后交结果。</div>
+  <div class="box ok"><span class="bt">适合：</span>自动客服、数据分析、代码助手、工作流自动化。</div>
 
-  <h2 id="s2">2. 思考循环</h2>
-  <div class="diagram">想：用户要啥？该调哪个工具？
- → 做：执行工具（查知识/查订单/建工单）
- → 看：拿到工具返回
- → 再想：够了吗？不够继续调
- → 收口：生成最终回答</div>
+  <h2 id="s2">2. 三大件</h2>
+  <ul>
+    <li><b>规划/推理</b>：LLM 决定下一步做什么（用 <a href="llm.html">LLM</a>）。</li>
+    <li><b>工具（Tools）</b>：查数据库、调 API、算数、发邮件等能力，见 <a href="functioncalling.html">Function Calling</a>。</li>
+    <li><b>记忆（Memory）</b>：记住上下文与历史，见 <a href="memory.html">四层记忆</a>。</li>
+  </ul>
 
-  <h2 id="s3">3. 与工具配合</h2>
-  <p>Agent 通过 <a href="functioncalling.html">Function Calling</a> 决定调哪个工具、传什么参数。Memora 把这条链路做成“8 个节点”的可视化编排：意图路由→记忆→知识→工具→生成。</p>
+  <h2 id="s3">3. 运行循环</h2>
+  <div class="diagram">用户目标
+   │
+   ▼
+[LLM 思考：要做什么] → 若需要工具 → 调用 Tool → 得到结果 → 再思考
+   │                                         ↑________│
+   ▼
+[任务完成] → 返回最终答案</div>
 
-  <h2 id="s4">4. 防止死循环</h2>
-  <div class="box warn"><span class="bt">关键：</span>必须设“迭代上限”（如最多 5 轮）。到上限强制收回工具让模型收口，否则可能无限调用掏空 token。</div>
-  <pre><code>for(let i=0; i&lt;maxIter; i++){
-  const decision = await callLLMWithTools();
-  if(!decision.tool_calls?.length){ answer=decision.content; break; }
-  // 执行工具、把结果回传模型，进入下一轮
+  <h2 id="s4">4. 工具调用</h2>
+  <p>把工具描述给模型，模型返回“要调哪个函数、参数是什么”，你执行后再把结果喂回模型：</p>
+  <pre><code">tools = [{
+  name: 'getWeather',
+  description: '查询某城市天气',
+  parameters: { type:'object', properties:{ city:{type:'string'} } }
+}];
+// 模型返回 tool_calls → 你执行 getWeather('北京') → 把结果作为 tool 消息回传</code></pre>
+
+  <h2 id="s5">5. 实战示例</h2>
+  <pre><code">let messages = [{ role:'user', content:'北京今天适合出门吗？' }];
+while (true) {
+  const res = await llm.chat({ messages, tools });
+  const toolCalls = res.tool_calls;
+  if (!toolCalls) { console.log(res.content); break; }   // 不再需要工具，结束
+  for (const tc of toolCalls) {
+    const result = await runTool(tc.name, tc.arguments);
+    messages.push({ role:'tool', tool_call_id: tc.id, content: result });
+  }
 }</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>这就是 Agent 的“思考-行动-观察”循环，直到模型不再请求工具。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>没设迭代上限 → 死循环烧钱。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>工具报错直接整条链崩——要把异常转成结构化错误回传模型，让它自我纠正。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>工具太多模型选错——用意图路由先收窄范围（见 Memora 手册）。</div>
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>无限循环：模型反复调工具停不下来；设最大步数上限（如 10 步）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>工具返回过大撑爆上下文；只回传必要字段。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>工具出错没兜底，Agent 崩溃；对工具调用做 try/catch 并回传错误。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忽略 <a href="promptinject.html">提示注入防护</a>，工具/资料里的恶意指令可能操纵 Agent。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>没有 <a href="memory.html">记忆</a> 约束，长对话丢失关键信息或越界。</div>
+
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>写一个“能查天气/算账”的小 Agent。</li>
+    <li>学 <a href="functioncalling.html">Function Calling</a>、<a href="memory.html">四层记忆</a>。</li>
+    <li>学 <a href="sse.html">SSE</a> 把 Agent 过程流式展示。</li>
+    <li>看 Memora，Agent + 工具 + 记忆完整实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能搭一个“思考-调工具-再思考”的循环 Agent——让 AI 真正办事，你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BM25 关键词检索 · 小白通关教程</title>
+<title>BM25 · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,45 +11,72 @@
 <nav class="tside" id="tside">
   <div class="tbrand">BM25<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 与向量检索互补</a>
-  <a href="#s3">3. 中文分词</a>
-  <a href="#s4">4. RAG 里的角色</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 核心思想</a>
+  <a href="#s3">3. 快速使用</a>
+  <a href="#s4">4. 原理简述</a>
+  <a href="#s5">5. 与向量检索</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>BM25 关键词检索</h1>
-  <p class="tsub">经典相关性算法 —— 擅长订单号/型号等精确匹配，与向量检索互补。</p>
+  <h1>BM25</h1>
+  <p class="tsub">经典的关键词相关性算法 —— 搜“怎么退款”能精准命中含“退款”的文档。它是 RAG 混合检索里的关键词主力。学完你能实现靠谱的关键词搜索。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>BM25 是搜索引擎（如 Elasticsearch）背后的经典算法，按“关键词在文档里出现的频率、罕见程度”给文档打分排序。<strong>它不懂语义，但精确匹配极强</strong>：订单号 <code>A10086</code>、型号、错误码，必须字面对上才召回。</p>
+  <p><strong>BM25</strong> 是搜索引擎同款的相关性打分算法，根据“关键词在文档中出现频率、文档长度、词稀有度”给文档打分排序。</p>
+  <div class="box"><span class="bt">对比：</span><a href="embedding.html">向量检索</a> 看语义（意思像）；BM25 看字面（词命中）。两者互补。</div>
 
-  <h2 id="s2">2. 与向量检索互补</h2>
-  <table>
-    <tr><th>方式</th><th>强项</th><th>弱项</th></tr>
-    <tr><td>向量检索</td><td>懂语义，"无法充电"匹配"充不进电"</td><td>对专名/编号迟钝</td></tr>
-    <tr><td>BM25</td><td>精确匹配专名/订单号/错误码</td><td>不懂同义改写</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">结论：</span>两者融合（见 <a href="rrf.html">RRF</a>）才是最稳的检索方案，Memora 正是这么做的。</div>
+  <h2 id="s2">2. 核心思想</h2>
+  <ul>
+    <li><b>词频</b>：某词在文档出现越多，越相关（但会饱和，不是越多越好）。</li>
+    <li><b>逆文档频率</b>：越罕见的词（如“退款”）权重越高，常见词（如“的”）权重低。</li>
+    <li><b>长度归一</b>：长文档天然词多，做惩罚避免长文占便宜。</li>
+  </ul>
 
-  <h2 id="s3">3. 中文分词</h2>
-  <p>中文没有空格，BM25 要先把句子切成词。轻量做法是用 <strong>1-gram + 2-gram</strong>（单字+双字），免引分词器也能得到可用召回：</p>
-  <pre><code>// "手机充不进电" → 手、机、充、不、进、电、手机、机充、充不、不进、进电
-for(let i=0;i&lt;seg.length;i++){
-  tokens.push(seg[i]);
-  if(i+1&lt;seg.length) tokens.push(seg.slice(i,i+2));
-}</code></pre>
+  <h2 id="s3">3. 快速使用</h2>
+  <p>Node 用现成库：</p>
+  <pre><code>npm install flexsearch   # 或 lunr / minisearch
+import { Index } from 'flexsearch';
+const idx = new Index({ tokenize: 'forward' });
+docs.forEach((d, i) =&gt; idx.add(i, d.text));
+const hits = idx.search('退款流程');   // 返回命中文档 id</code></pre>
 
-  <h2 id="s4">4. RAG 里的角色</h2>
-  <p>在 Memora 的 RAG 链路里，BM25 作为一路召回，与向量路并行，最后用 RRF 融合排序，再交大模型精排。即使向量接口被限流，也能单独降级为只用 BM25，对话不崩。</p>
+  <h2 id="s4">4. 原理简述</h2>
+  <div class="diagram">score(D, q) = Σ  IDF(qi) · (f · (k+1)) / (f + k·(1 - b + b·|D|/avgDL))
+f: 词在文档 D 的频率
+|D|: 文档长度  avgDL: 平均长度
+k,b: 调参（常 k=1.5, b=0.75）</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>中文不分词直接按字，召回质量差——至少上 2-gram。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>停用词（的、了）要在索引时过滤，否则噪声大。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>别只用 BM25 而放弃向量，会丢失语义召回能力。</div>
+  <h2 id="s5">5. 与向量检索</h2>
+  <p>在 <a href="rag.html">RAG</a> 里，BM25 负责“精确关键词命中”，向量负责“语义相近”。两者结果用 <a href="rrf.html">RRF</a> 融合，效果比单用任一种更好。</p>
+  <div class="box ok"><span class="bt">经验：</span>混合检索（BM25 + 向量 + RRF）是生产级 RAG 的标配。</div>
+
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>中文不分词直接搜，命中率极低；要用中文分词（jieba 等）或选支持中文的引擎。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>没做停用词/小写归一，无关词干扰排序。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>只靠 BM25 做语义搜索会漏“同义不同词”；必须配向量。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>大文档集每次全量建索引慢；增量更新索引。</div>
+
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>给知识库加一个关键词搜索。</li>
+    <li>学 <a href="embedding.html">向量检索</a> 与 <a href="rrf.html">RRF</a> 做混合。</li>
+    <li>学 <a href="rag.html">RAG</a> 整体闭环。</li>
+    <li>看 Memora，BM25 在检索链路中的角色。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能用一个 BM25 库实现关键词搜索——检索系统的关键词半边你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

@@ -12,42 +12,76 @@
   <div class="tbrand">四层记忆<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
   <a href="#s2">2. 四层分别</a>
-  <a href="#s3">3. 写入与检索</a>
-  <a href="#s4">4. 隐私隔离</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s3">3. 工作记忆</a>
+  <a href="#s4">4. 情景记忆</a>
+  <a href="#s5">5. 语义记忆</a>
+  <a href="#s6">6. 程序记忆</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>四层记忆</h1>
-  <p class="tsub">让 AI 跨会话记得你 —— 会话/情景/语义/程序四层记忆的设计与实现。</p>
+  <p class="tsub">给 AI 设计“像人一样分层记忆”的方案 —— 短期上下文、对话历史、长期事实、固定技能。Memora 凭它记住你是谁、聊过什么。学完你能让 AI 真正“记得”。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>普通聊天机器人每刷新一次就变回陌生人。<strong>长期记忆</strong>让 AI 跨多次会话都记得你。Memora 把记忆拆成四层，分层管理、按需检索，是它“有记忆”的核心。</p>
+  <p><strong>四层记忆</strong> 是把 AI 的记忆按“时效与用途”分成四层，分别用不同技术存储与检索，而不是把所有历史一股脑塞进提示。</p>
+  <div class="box"><span class="bt">一句话：</span>上下文窗口有限，不能啥都塞；分四层管理，该短期的不留痕、该长期的精准召回。</div>
 
   <h2 id="s2">2. 四层分别</h2>
   <table>
-    <tr><th>层</th><th>载体</th><th>说明</th></tr>
-    <tr><td>会话记忆</td><td>本次对话记录</td><td>短期，当前会话的完整问答</td></tr>
-    <tr><td>情景记忆</td><td>事件摘要</td><td>从对话总结的“事件”（如“上周投诉过物流”）</td></tr>
-    <tr><td>语义记忆</td><td>事实/画像</td><td>抽取的“事实”（如“VIP3、在深圳”）</td></tr>
-    <tr><td>程序记忆</td><td>规则话术</td><td>固定行为规则，可后台增删改</td></tr>
+    <tr><th>层</th><th>存什么</th><th>时效</th><th>技术</th></tr>
+    <tr><td>工作记忆</td><td>当前对话的 messages</td><td>本轮</td><td>内存</td></tr>
+    <tr><td>情景记忆</td><td>历史对话记录</td><td>中短期</td><td>DB + 摘要</td></tr>
+    <tr><td>语义记忆</td><td>提炼出的长期事实（偏好/资料）</td><td>长期</td><td>向量库 <a href="embedding.html">Embedding</a></td></tr>
+    <tr><td>程序记忆</td><td>固定指令/技能/工具描述</td><td>永久</td><td>系统提示 + 配置</td></tr>
   </table>
 
-  <h2 id="s3">3. 写入与检索</h2>
-  <p>每轮对话后<strong>异步</strong>抽取事实写入语义记忆（不阻塞首字响应）；检索时按“相似度 × 时间衰减 + 关键词”排序，越久远的记忆权重越低。</p>
-  <pre><code>const decay = Math.pow(0.5, ageDays/30);        // 半衰期 30 天
-const score = sim*(0.7+0.3*decay) + 0.15*kw;    // 越久越淡</code></pre>
+  <h2 id="s3">3. 工作记忆</h2>
+  <p>就是当前发给模型的 <code>messages</code> 数组。过长就截断或摘要，避免超窗口。</p>
+  <pre><code">// 超过 N 轮就摘要压缩
+if (messages.length &gt; 20) messages = await summarize(messages);</code></pre>
 
-  <h2 id="s4">4. 隐私隔离</h2>
-  <div class="box ok"><span class="bt">铁律：</span>记忆与知识<strong>物理分表、检索路径完全分开</strong>，杜绝用户 A 的隐私被知识检索命中；所有记忆查询强制带 <code>user_id</code>，隔离下沉到 SQL 层。</div>
+  <h2 id="s4">4. 情景记忆</h2>
+  <p>每轮对话落库，需要时按时间/关键词取回最近若干轮：</p>
+  <pre><code">await db.insert('turn', { user: q, ai: a, ts: Date.now() });
+const recent = await db.query('SELECT * FROM turn ORDER BY ts DESC LIMIT 10');</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>记忆写入阻塞主响应导致慢——务必异步（setImmediate/Worker）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>冲突不处理——“我换工作了”会被当成矛盾；应标记旧事实失效而非删除。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>忘记按 user_id 隔离，串号泄露隐私。</div>
+  <h2 id="s5">5. 语义记忆</h2>
+  <p>把“用户偏好、关键事实”提炼成句子，生成向量存库；对话时检索相关事实拼进提示，让 AI 长期“记得你”：</p>
+  <pre><code">facts = extractFacts(history);            // 抽取“用户喜欢简洁回答”等
+for (f of facts) vecDB.add(embed(f), f);
+// 对话时
+const rel = vecDB.search(embed(question), 5);   // 召回相关长期事实</code></pre>
+
+  <h2 id="s6">6. 程序记忆</h2>
+  <p>固定的系统指令、可用工具列表、业务规则，放在 system 提示或配置里，每次都带，不随对话变化。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>不分层的把所有历史塞进上下文，既超窗口又烧钱；按层取舍。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>语义记忆抽取质量差，召回无关事实；用更强的抽取提示或人工校验。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>情景记忆不清理，隐私/过期信息长期留存；设保留期与删除能力。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忘记 <a href="promptinject.html">提示注入防护</a>，记忆里混入恶意指令。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>给 AI 加一层“用户偏好”长期记忆。</li>
+    <li>学 <a href="embedding.html">向量检索</a>、<a href="rag.html">RAG</a>。</li>
+    <li>学 <a href="agent.html">Agent</a> 串联记忆与工具。</li>
+    <li>看 Memora，四层记忆实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能用四层结构管理 AI 记忆——让 AI 短期不丢、长期不忘、技能稳定，你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RAG 检索增强生成 · 小白通关教程</title>
+<title>RAG · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,47 +11,86 @@
 <nav class="tside" id="tside">
   <div class="tbrand">RAG<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么需要它</a>
-  <a href="#s3">3. RAG 四步</a>
-  <a href="#s4">4. 分块与混合检索</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 整体流程</a>
+  <a href="#s3">3. 切块与入库</a>
+  <a href="#s4">4. 检索</a>
+  <a href="#s5">5. 组装 Prompt</a>
+  <a href="#s6">6. 生成答案</a>
+  <a href="#s7">7. 常用坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>RAG 检索增强生成</h1>
-  <p class="tsub">让 AI“开卷考试”而不是“闭卷” —— 解决幻觉与知识截止。</p>
+  <h1>RAG</h1>
+  <p class="tsub">检索增强生成（Retrieval-Augmented Generation）—— 让大模型先查资料再回答，避免胡说。Memora 的核心能力。学完你能做一个“基于自己文档的问答”。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>RAG = Retrieval-Augmented Generation（检索增强生成）</strong>。一句话：在让大模型回答前，先去“资料库”里翻出最相关的几段，贴到问题旁边，再让模型基于这些资料作答并标注出处。相当于让 AI 开卷考试。</p>
+  <p><strong>RAG</strong> = 先<strong>检索</strong>相关资料，再把资料喂给大模型<strong>生成</strong>答案。它解决大模型“不知道你私有数据、且会编造”的问题。</p>
+  <div class="box"><span class="bt">一句话：</span>不让模型凭记忆编，而是先翻出真文档，再让模型照着回答。</div>
+  <div class="box ok"><span class="bt">适合：</span>企业知识库、客服、个人文档问答、法律/医疗辅助。</div>
 
-  <h2 id="s2">2. 为什么需要它</h2>
-  <table>
-    <tr><th>闭卷（纯大模型）</th><th>开卷（RAG）</th></tr>
-    <tr><td>只靠记忆答，遇公司规定/最新政策就瞎编（幻觉）</td><td>现查现答，有据可依</td></tr>
-    <tr><td>不知道你公司的内部信息</td><td>你给什么资料它就懂什么</td></tr>
-    <tr><td>答案不可溯源</td><td>带 [1][2] 引用，可查出处</td></tr>
-  </table>
-
-  <h2 id="s3">3. RAG 四步</h2>
+  <h2 id="s2">2. 整体流程</h2>
   <div class="diagram">用户提问
- → ① 把问题向量化（见 Embedding）
- → ② 在知识库找语义最相近的片段（向量检索）
- → ③ 把“问题 + 检索片段”拼成提示词
- → ④ 模型基于片段生成答案，标注出处</div>
+   │
+   ▼
+[向量化问题] → [向量库检索 Top-K 相关段落]   ← 离线的“建库”：文档切块→向量→入库
+   │
+   ▼
+[把 问题+检索段落 拼成 Prompt]
+   │
+   ▼
+[大模型生成答案（只依据给定资料）]</div>
 
-  <h2 id="s4">4. 分块与混合检索</h2>
-  <ul>
-    <li><b>分块</b>：文档太大先切小块（如 180 字）去检索，命中小块再返回所属大块（700 字）给模型读，叫 Small-to-Big。</li>
-    <li><b>混合检索</b>：向量（懂语义）+ <a href="bm25.html">BM25</a>（精确词）两路召回，用 <a href="rrf.html">RRF</a> 融合，取长补短。</li>
-  </ul>
+  <h2 id="s3">3. 切块与入库</h2>
+  <p>见 <a href="embedding.html">向量检索</a>：把文档切成 300~800 字的小块，每块生成 embedding 存入向量库。</p>
+  <pre><code>// 伪代码
+chunks = split(doc, size=500, overlap=80)
+for c in chunks:
+    vec = embed(c)
+    vectorDB.add(vec, c)</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>把整本文档塞进提示词，成本和噪声爆炸——要“精准召回 Top-5”。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>检索到的资料被投毒（含恶意指令），要加 <a href="promptinject.html">提示注入防护</a>。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>向量接口挂了就 500——做好降级到 BM25（Memora 实测）。</div>
+  <h2 id="s4">4. 检索</h2>
+  <pre><code>qvec = embed(question)
+hits = vectorDB.search(qvec, topK=4)    // 返回最相关 4 段</code></pre>
+  <div class="box ok"><span class="bt">提升：</span>纯向量检索不够，常叠加 <a href="bm25.html">BM25</a> 关键词，用 <a href="rrf.html">RRF</a> 融合排序。</div>
+
+  <h2 id="s5">5. 组装 Prompt</h2>
+  <pre><code>const context = hits.map(h =&gt; h.text).join('\n---\n');
+const prompt = `你是基于资料的助手，只根据下面资料回答，资料没有就如实说不知道。
+资料：
+${context}
+问题：${question}`;</code></pre>
+
+  <h2 id="s6">6. 生成答案</h2>
+  <pre><code>const ans = await llm.chat([{ role:'user', content: prompt }]);
+return ans;</code></pre>
+
+  <h2 id="s7">7. 常用坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>切块太大/太小导致检索不准；按语义边界（段落/标题）切更好。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>只喂检索结果却不说“依据资料”，模型仍会编造；务必在 prompt 里约束。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>检索召回无关内容，答案跑偏；加重排（rerank）或混合检索。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>上下文超长超出模型窗口；控制 Top-K 与块大小。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>忽视 <a href="promptinject.html">提示注入防护</a>，资料里藏的指令可能劫持模型。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>用 RAG 做一个“产品手册问答”。</li>
+    <li>学 <a href="embedding.html">向量检索</a>、<a href="bm25.html">BM25</a>、<a href="rrf.html">RRF</a>。</li>
+    <li>学 <a href="agent.html">Agent</a> 让模型能调用工具。</li>
+    <li>看 Memora，RAG + 记忆完整实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能搭一条“检索→拼 Prompt→生成”链路——让大模型基于你的资料回答，你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

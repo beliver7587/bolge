@@ -2,55 +2,85 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SSE 流式输出 · 小白通关教程</title>
+<title>SSE · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">SSE 流式输出<small>小白通关教程</small></div>
+  <div class="tbrand">SSE<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. SSE vs WebSocket</a>
-  <a href="#s3">3. 服务端(Node)</a>
-  <a href="#s4">4. 前端接收</a>
-  <a href="#s5">5. Nginx 关键</a>
+  <a href="#s2">2. 服务端</a>
+  <a href="#s3">3. 浏览器端</a>
+  <a href="#s4">4. 与 WebSocket</a>
+  <a href="#s5">5. 实战：打字机</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>SSE 流式输出</h1>
-  <p class="tsub">服务端一边生成一边推字 —— ChatGPT 打字机效果的本源。</p>
+  <h1>SSE</h1>
+  <p class="tsub">服务端推送事件（Server-Sent Events）—— 服务端能一条条把数据推给浏览器，用来做“打字机式”的 AI 回复、实时进度条。Memora 用它流式输出。学完你能做流式界面。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>SSE = Server-Sent Events</strong>，是一种“服务器向浏览器单向持续推送”的协议。模型一个字一个字往外生成，服务器就一个事件一个事件推给前端，于是你看到“打字机”效果。用户首字等待极短，体验远好于“等半天才吐一整段”。</p>
+  <p><strong>SSE</strong> 是基于 HTTP 的单向（服务端→客户端）流式推送：浏览器建一条长连接，服务端随时推文本片段，自动重连。</p>
+  <div class="box"><span class="bt">对比：</span><a href="websocket.html">WebSocket</a> 双向全双工；SSE 只下不上、走普通 HTTP，更易与现有 Web 框架/反代兼容。</div>
+  <div class="box ok"><span class="bt">典型用途：</span>大模型逐字输出、日志流、行情推送。</div>
 
-  <h2 id="s2">2. SSE vs WebSocket</h2>
+  <h2 id="s2">2. 服务端</h2>
+  <p>用 <a href="express.html">Express</a>：</p>
+  <pre><code">app.get('/stream', (req, res) =&gt; {
+  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  let i = 0;
+  const timer = setInterval(() =&gt; {
+    res.write(`data: 第${i++}条\n\n`);   // 每条以 \n\n 结尾
+    if (i &gt; 5) { clearInterval(timer); res.end(); }
+  }, 1000);
+});</code></pre>
+
+  <h2 id="s3">3. 浏览器端</h2>
+  <pre><code">const es = new EventSource('/stream');
+es.onmessage = (e) =&gt; console.log('收到：', e.data);
+es.onerror = () =&gt; { es.close(); };</code></pre>
+
+  <h2 id="s4">4. 与 WebSocket</h2>
   <table>
     <tr><th></th><th>SSE</th><th>WebSocket</th></tr>
-    <tr><td>方向</td><td>服务器→浏览器（单向）</td><td>双向</td></tr>
-    <tr><td>协议</td><td>基于 HTTP，简单</td><td>独立握手协议</td></tr>
-    <tr><td>适用</td><td>流式文本/通知</td><td>实时双向（游戏/聊天）</td></tr>
+    <tr><td>方向</td><td>服务端→客户端</td><td>双向</td></tr>
+    <tr><td>协议</td><td>HTTP（好兼容）</td><td>独立 ws 协议</td></tr>
+    <tr><td>重连</td><td>浏览器自动</td><td>自己写</td></tr>
+    <tr><td>适合</td><td>流式输出</td><td>实时交互/游戏</td></tr>
   </table>
 
-  <h2 id="s3">3. 服务端（Node/Express）</h2>
-  <pre><code>function openSSE(res){
-  res.setHeader('Content-Type','text/event-stream; charset=utf-8');
-  res.setHeader('Cache-Control','no-cache, no-transform');
-  res.setHeader('Connection','keep-alive');
-  res.setHeader('X-Accel-Buffering','no');   // ★ 关 Nginx 缓冲
-}
-// 每生成一段就：
-res.write(`data: ${JSON.stringify(chunk)}\n\n`);</code></pre>
+  <h2 id="s5">5. 实战：打字机</h2>
+  <p>大模型返回按 token 切片，服务端用 SSE 逐片 <code>data:</code> 推送，前端把 <code>e.data</code> 累加到页面，就是聊天机器人“逐字出现”的效果。</p>
 
-  <h2 id="s4">4. 前端接收</h2>
-  <pre><code>const es = new EventSource('/api/chat/stream');
-es.onmessage = (e) =&gt; { const c = JSON.parse(e.data); appendText(c.token); };</code></pre>
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>每条消息必须以空行 <code>\n\n</code> 结束，否则浏览器不触发 onmessage。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>经 <a href="nginx.html">Nginx</a> 反代时缓冲会延迟推送；设 <code>proxy_buffering off</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>连接数限制：浏览器对同域 EventSource 并发有限；注意及时 <code>close()</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>需要带鉴权时，EventSource 不能直接设自定义 Header；用 cookie 或 URL 参数。</div>
 
-  <h2 id="s5">5. Nginx 关键</h2>
-  <div class="box danger"><span class="bt">必配：</span>经过 <a href="nginx.html">Nginx</a> 反代时必须 <code>proxy_buffering off</code> + 响应头 <code>X-Accel-Buffering: no</code>，否则 Nginx 缓冲、前端看不到逐字流式（Memora 真实踩坑）。并把 <code>proxy_read_timeout</code> 调大到 300s+。</div>
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>用 SSE 做一个“逐字输出”的小 demo。</li>
+    <li>对比 <a href="websocket.html">WebSocket</a> 双向场景。</li>
+    <li>学 <a href="llm.html">LLM</a> 的流式接口。</li>
+    <li>看 Memora，SSE 流式回答实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能用 SSE 从服务端流式推数据到前端——实时/打字机界面你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

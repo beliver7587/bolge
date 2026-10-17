@@ -2,70 +2,103 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>端侧权威运算 · 小白通关教程</title>
+<title>端侧权威运算 · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">端侧权威运算<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么需要</a>
+  <div class="tbrand">端侧权威运算<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 两种权威</a>
   <a href="#s3">3. 基本模式</a>
-  <a href="#s4">4. 与服务器对账</a>
-  <a href="#s5">5. 实战：联机判定</a>
-  <a href="#s6">6. 常见坑</a>
-  <a href="#s7">7. 下一步</a>
+  <a href="#s4">4. 预测与和解</a>
+  <a href="#s5">5. 同步模型</a>
+  <a href="#s6">6. 服务器对账</a>
+  <a href="#s7">7. 延迟隐藏</a>
+  <a href="#s8">8. 带宽优化</a>
+  <a href="#s9">9. 房主/中转实战</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>端侧权威运算</h1>
-  <p class="tsub">把“谁说了算”放在客户端/边缘侧的架构思想 —— 让玩家的设备本地算物理/碰撞，服务器只做校验与同步，降低延迟、提升手感。联机游戏常用。学完你能理解游戏网络架构。</p>
+  <h1>端侧权威运算：从小白到资深</h1>
+  <p class="tsub"><strong>端侧权威（Client/Edge Authority）</strong> 是把关键运算（移动、<a href="aabb.html">碰撞</a>、物理）放在玩家设备或边缘侧直接算，服务器只做校验与同步的架构思想。本教程讲透<strong>客户端 vs 服务器权威取舍、客户端预测与和解、状态/帧同步、服务器对账反作弊、延迟隐藏、带宽优化，以及房主/中转实战（一台 2 核扛上百房间）</strong>——联机游戏网络架构的核心。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>端侧权威（Client/Edge Authority）</strong> 指游戏的关键运算（移动、<a href="aabb.html">碰撞</a>、物理）由客户端（玩家设备）或边缘节点直接计算，而不是全交服务器。</p>
-  <div class="box"><span class="bt">对比：</span><b>服务器权威</b>：所有逻辑在服务器算，客户端只发输入；最防作弊但延迟高、手感钝。<b>端侧权威</b>：本地即算即现，顺滑但需防作弊。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>联机游戏要决定“谁说了算”：运算放哪、状态以谁为准。这直接决定延迟手感、服务器成本与作弊风险。</p>
+  <div class="box"><span class="bt">核心权衡：</span>把运算越靠近玩家 → 手感越顺、服务器越省；但越易被外挂篡改，需对账兜底。</div>
 
-  <h2 id="s2">2. 为什么需要</h2>
-  <ul>
-    <li><b>低延迟手感</b>：本地立即响应，不用等服务器往返（RTT）。</li>
-    <li><b>省服务器算力</b>：大量客户端各自算，服务器只校验。</li>
-    <li><b>弱网友好</b>：先本地跑，网络差也不卡。</li>
-  </ul>
+  <h2 id="s2">2. 两种权威</h2>
+  <table>
+    <tr><th></th><th>服务器权威</th><th>端侧权威</th></tr>
+    <tr><td>逻辑位置</td><td>服务器算，客户端发输入</td><td>客户端算，服务器校验</td></tr>
+    <tr><td>手感</td><td>有 RTT 延迟，钝</td><td>本地即时，顺滑</td></tr>
+    <tr><td>防作弊</td><td>强</td><td>弱，需对账</td></tr>
+    <tr><td>成本</td><td>服务器吃算力</td><td>服务器只中转/复核，省</td></tr>
+  </table>
 
   <h2 id="s3">3. 基本模式</h2>
   <div class="diagram">玩家输入 → 客户端立即本地模拟（移动/碰撞）
-   │
-   ├─ 本地直接渲染（顺滑）
-   │
+   ├─ 本地直接渲染（零等待，顺滑）
    └─ 把“输入 + 结果摘要”发给服务器 → 服务器校验/对账 → 有争议以服务器为准广播</div>
 
-  <h2 id="s4">4. 与服务器对账</h2>
-  <p>端侧权威不能“完全信客户端”（会作弊），所以要：</p>
+  <h2 id="s4">4. 客户端预测与和解</h2>
   <ul>
-    <li>服务器定期用确定性算法重算，发现偏差就纠正/踢人。</li>
-    <li>关键结果（如击杀、得分）由服务器最终裁定。</li>
-    <li>用固定步长（deterministic tick）保证两端算出来一致。</li>
+    <li><b>预测</b>：按下即本地移动，不等服务器，消除操作延迟感。</li>
+    <li><b>和解（Reconciliation）</b>：收到服务器真值时，把“本地预测之后的操作”重新应用到真值上，纠正偏差。</li>
+    <li><b>回弹</b>：预测与真值差太大，画面会“弹回”；用插值/缓动平滑，避免突跳。</li>
   </ul>
 
-  <h2 id="s5">5. 实战：联机判定</h2>
-  <p>玩家本地用 <a href="aabb.html">AABB</a> 算出“我打中了敌人”，把事件上报；服务器用相同规则复核，确认命中才扣血并广播。这样既顺滑又难作弊。</p>
+  <h2 id="s5">5. 同步模型</h2>
+  <ul>
+    <li><b>状态同步</b>：服务器定期广播全量/增量状态，客户端插值渲染；通用、好调试。</li>
+    <li><b>帧同步（锁步）</b>：只同步输入，各端用相同确定性逻辑算出一致结果；带宽极低，但要求<strong>确定性</strong>（同输入同输出）。</li>
+  </ul>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>完全信任客户端，外挂横行；必须有服务器对账。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>浮点/帧率不一致导致两端结果不同；用固定步长与整数/定点运算。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>只端侧不算最终状态，断网后状态分歧；服务器持有“真值”并定期同步。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>本地预测与服务器纠正打架，画面“回弹”；用平滑插值缓解释放。</div>
+  <h2 id="s6">6. 服务器对账与反作弊</h2>
+  <p>端侧权威不能全信客户端，否则外挂横行：</p>
+  <ul>
+    <li><b>确定性 tick</b>：用固定步长 + 整数/定点运算，保证服务器重算与客户端一致。</li>
+    <li><b>服务器复核</b>：对关键事件（击杀、得分、命中）用相同规则重算，偏差即纠正/踢人。</li>
+    <li><b>真值持有</b>：最终状态以服务器为准，定期下发同步，防断网后分歧。</li>
+  </ul>
 
-  <h2 id="s7">7. 下一步</h2>
-  <ol>
-    <li>用 <a href="aabb.html">AABB</a> + 本地预测做一个单机判定。</li>
-    <li>学 <a href="socketio.html">Socket.IO</a> / <a href="websocket.html">WebSocket</a> 做联机同步。</li>
-    <li>了解服务器权威与反作弊。</li>
-    <li>看网页游戏平台，端侧权威实现。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能区分端侧/服务器权威、用本地预测+服务器对账做联机——游戏网络架构你已入门。</div>
+  <h2 id="s7">7. 延迟隐藏</h2>
+  <ul>
+    <li><b>插值/外推</b>：渲染其他玩家时用上一帧位置插值，掩盖网络抖动。</li>
+    <li><b>延迟补偿</b>：射击类按 shooter 的延迟回滚世界状态再判定，保证“我瞄的瞬间”公平。</li>
+  </ul>
+
+  <h2 id="s8">8. 带宽优化</h2>
+  <ul>
+    <li>只发<strong>输入</strong>（帧同步）或<strong>增量/变更</strong>（状态同步），不发全量。</li>
+    <li>序列化压缩（变长编码、位压缩）、降低 tick 频率。</li>
+    <li>兴趣管理（AOI）：只同步视野内对象。</li>
+  </ul>
+
+  <h2 id="s9">9. 房主/中转实战</h2>
+  <div class="box ok"><span class="bt">Memora 游戏案例：</span>运算放玩家设备（端侧权威），服务器只做消息中转与轻量对账——一台 2 核机即可扛上百房间，极大省成本。代价是反作弊靠服务器对关键结果复核 + 风控，而非全量服务器权威。</div>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>完全信客户端 → 外挂；必须有服务器对账。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>浮点/帧率不一致导致两端结果不同 → 固定步长 + 定点运算。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>只端侧不算真值，断网后状态分歧 → 服务器持有真值并定期同步。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>预测与纠正打架，画面回弹 → 插值缓动。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>每帧全量广播 → 带宽爆炸；发输入/增量。</div>
+
+  <h2 id="s11">11. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>区分端侧/服务器权威</td></tr>
+    <tr><td>初级</td><td>客户端预测、状态同步</td></tr>
+    <tr><td>中级</td><td>和解、延迟补偿、带宽优化</td></tr>
+    <tr><td>资深</td><td>反作弊对账、帧同步确定性、架构选型</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 <a href="aabb.html">AABB</a>+本地预测做单机判定 ② 实现预测+和解 ③ 状态同步插值 ④ 服务器用确定性 tick 复核命中 ⑤ 带宽改发输入/增量 ⑥ 用房主/中转架构扛多房间。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解网络架构中“权威方”的决策与代价，能设计低延迟、低成本、可反作弊的联机方案——这是资深游戏后端/网络工程师的核心能力。</div>
 </main>
 </div>
 <script>

@@ -1,6 +1,31 @@
-/* 教程页动态粒子背景（与首页同款） */
+/* 教程页动态粒子背景 + 导航增强 */
 (function () {
   'use strict';
+
+  // 注入返回教程库按钮
+  (function injectNav() {
+    var side = document.querySelector('.tside');
+    if (side && !side.querySelector('.tback-dt')) {
+      var backDt = document.createElement('a');
+      backDt.className = 'tback-dt';
+      backDt.href = '../index.html';
+      backDt.textContent = '← 返回教程库';
+      side.insertBefore(backDt, side.firstChild);
+    }
+    var burger = document.getElementById('tburger');
+    if (burger && !burger.parentElement.classList.contains('tbar')) {
+      var bar = document.createElement('div');
+      bar.className = 'tbar';
+      burger.parentNode.insertBefore(bar, burger);
+      bar.appendChild(burger);
+      var backM = document.createElement('a');
+      backM.className = 'tback-m';
+      backM.href = '../index.html';
+      backM.textContent = '← 返回';
+      bar.insertBefore(backM, burger);
+    }
+  })();
+
   var canvas = document.getElementById('bg');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');

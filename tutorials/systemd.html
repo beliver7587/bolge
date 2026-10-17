@@ -2,74 +2,129 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>systemd · 小白通关教程</title>
+<title>systemd · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">systemd<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 写 unit 文件</a>
-  <a href="#s4">4. 启停与开机</a>
-  <a href="#s5">5. 看日志</a>
-  <a href="#s6">6. 常见坑</a>
-  <a href="#s7">7. 下一步</a>
+  <div class="tbrand">systemd<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. unit 类型</a>
+  <a href="#s3">3. unit 文件</a>
+  <a href="#s4">4. 关键指令</a>
+  <a href="#s5">5. 依赖与顺序</a>
+  <a href="#s6">6. 定时 timer</a>
+  <a href="#s7">7. 日志 journald</a>
+  <a href="#s8">8. 资源限制</a>
+  <a href="#s9">9. 排查</a>
+  <a href="#s10">10. 与 PM2 取舍</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>systemd</h1>
-  <p class="tsub">Linux 的系统与服务管理器 —— 让后端进程开机自启、崩溃重启、统一管日志。比 <a href="pm2.html">PM2</a> 更底层、更通用。学完你能用系统自带方式守护服务。</p>
+  <h1>systemd：从小白到资深</h1>
+  <p class="tsub"><strong>systemd</strong> 是现代 Linux 的初始化与服务管理系统，接管启动流程、进程生命周期、日志与定时任务。本教程讲透<strong>unit 类型、service 文件结构、依赖顺序、timer 定时、journald 日志、资源限制与排查</strong>——比 <a href="pm2.html">PM2</a> 更底层、语言无关的 productions 守护方案。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>systemd</strong> 是现代 Linux 的初始化系统，负责启动和管理服务（叫 unit）。你写的后端可以注册成一个 service，由系统接管生命周期。</p>
-  <div class="box"><span class="bt">对比：</span><a href="pm2.html">PM2</a> 是 Node 专属；systemd 是系统级、语言无关，更适合生产长期驻留服务。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>系统启动后要拉起一堆服务，并崩溃重启、开机自启、统一日志。systemd 用声明式 unit 文件管理这一切，替代老旧 SysV init 脚本。</p>
+  <div class="box"><span class="bt">对比：</span><a href="pm2.html">PM2</a> 是 Node 专属；systemd 系统级、任何进程都能管，且天然开机自启、纳管日志。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>主流 Linux（Ubuntu/CentOS/Debian）默认自带 systemd，无需安装。</p>
+  <h2 id="s2">2. unit 类型</h2>
+  <ul>
+    <li><code>.service</code>：守护进程（最常见）。</li>
+    <li><code>.socket</code>：按需激活（端口有连接才拉服务，省资源）。</li>
+    <li><code>.timer</code>：定时任务，替代 cron。</li>
+    <li><code>.path</code>：文件/目录变化时触发。</li>
+  </ul>
 
-  <h2 id="s3">3. 写 unit 文件</h2>
-  <p>新建 <code>/etc/systemd/system/my-api.service</code>：</p>
+  <h2 id="s3">3. unit 文件</h2>
+  <p>放 <code>/etc/systemd/system/my-api.service</code>：</p>
   <pre><code>[Unit]
-Description=My API Service
-After=network.target
+Description=My API
+After=network.target            # 网络就绪后再起
+Wants=postgresql.service        # 弱依赖
 
 [Service]
+Type=exec                       # 主进程即 ExecStart
 User=ubuntu
 WorkingDirectory=/home/ubuntu/app
 ExecStart=/usr/bin/node /home/ubuntu/app/server.js
-Restart=on-failure        # 崩溃自动重启
 Environment=NODE_ENV=production
+EnvironmentFile=/etc/my-api/env   # 密钥放这里，权限 600
+Restart=on-failure             # 非零退出才重启
+RestartSec=5
+MemoryMax=512M                  # 防内存泄漏拖垮整机
 
 [Install]
-WantedBy=multi-user.target</code></pre>
+WantedBy=multi-user.target      # enable 后开机自启</code></pre>
 
-  <h2 id="s4">4. 启停与开机</h2>
-  <pre><code>sudo systemctl daemon-reload         # 改了配置先重载
+  <h2 id="s4">4. 关键指令</h2>
+  <pre><code>sudo systemctl daemon-reload    # 改了 unit 必执行
 sudo systemctl start my-api
-sudo systemctl enable my-api         # 开机自启
-sudo systemctl status my-api</code></pre>
+sudo systemctl enable my-api     # 开机自启（建软链到 multi-user.target.wants）
+sudo systemctl status my-api
+sudo systemctl restart / stop my-api</code></pre>
+  <div class="box ok"><span class="bt">Type 选择：</span>simple/exec（前台主进程）/forking（传统 daemon 自己 fork）/notify（启动后发 READY 信号，配合健康检查）。</div>
 
-  <h2 id="s5">5. 看日志</h2>
-  <pre><code>journalctl -u my-api -f               # 实时看该服务日志</code></pre>
+  <h2 id="s5">5. 依赖与顺序</h2>
+  <ul>
+    <li><code>After</code>/<code>Before</code>：仅排序，不保证存在。</li>
+    <li><code>Requires</code>：硬依赖，依赖挂了本服务也停。</li>
+    <li><code>Wants</code>：软依赖，最好一起起，失败不影响。</li>
+  </ul>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>改了 service 文件没 <code>daemon-reload</code>，不生效。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>User/路径/权限不对，服务起不来；确认 WorkingDirectory 与 ExecStart 路径可访问。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>环境变量没在 unit 里设，应用读不到；用 <code>Environment=</code> 或 <code>EnvironmentFile=</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>Restart 设了 always 但程序启动即退出，systemd 会疯狂重启；用 <code>on-failure</code> 或排查启动错误。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>端口被占用或没放行防火墙，服务起了但访问不了。</div>
+  <h2 id="s6">6. 定时 timer</h2>
+  <pre><code># my-backup.timer
+[Timer]
+OnCalendar=*-*-* 03:00:00      # 每天 3 点
+Persistent=true                # 错过也补跑
+[Install]
+WantedBy=timers.target</code></pre>
+  <p>配同名 <code>my-backup.service</code> 执行实际任务，<code>systemctl enable --now my-backup.timer</code>。</p>
 
-  <h2 id="s7">7. 下一步</h2>
-  <ol>
-    <li>把你的后端注册成 systemd 服务并 enable。</li>
-    <li>配合 <a href="nginx.html">Nginx</a> 反代 + <a href="https.html">HTTPS</a>。</li>
-    <li>对比 <a href="pm2.html">PM2</a> 选择守护方案。</li>
-    <li>看简历工坊部署。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能写 service 文件、启停/开机自启、查日志——用系统级方式守护服务你已掌握。</div>
+  <h2 id="s7">7. 日志 journald</h2>
+  <pre><code>journalctl -u my-api -f          # 实时跟踪该服务
+journalctl -u my-api --since "1 hour ago" --no-pager
+# 持久化：改 /etc/systemd/journald.conf 中 Storage=persistent</code></pre>
+
+  <h2 id="s8">8. 资源限制</h2>
+  <p>生产务必加护栏，避免一个服务拖垮整机：</p>
+  <ul>
+    <li><code>MemoryMax</code> / <code>MemoryHigh</code>：内存上限。</li>
+    <li><code>CPUQuota</code>：CPU 占比上限（如 50%）。</li>
+    <li><code>TasksMax</code>：最大线程/进程数。</li>
+  </ul>
+
+  <h2 id="s9">9. 排查</h2>
+  <ul>
+    <li><code>systemctl status my-api</code> 看激活状态与最近日志。</li>
+    <li><code>journalctl -xe</code> 看失败详情（如权限、端口占用）。</li>
+    <li>手动以同 User 跑 ExecStart 命令，确认路径/依赖无误。</li>
+  </ul>
+
+  <h2 id="s10">10. 与 PM2 取舍</h2>
+  <p>纯 Node 快速迭代用 PM2 方便（集群/日志面板）；要求系统级纳管、语言无关、与 OS 启动深度集成，用 systemd。两者也可结合：systemd 拉起 PM2（<code>pm2 startup</code> 底层就是写 systemd unit）。</p>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>改 unit 没 <code>daemon-reload</code> → 不生效。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>User/路径/权限不对，起不来。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>环境变量没在 unit 设 → 用 Environment/EnvironmentFile。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>Restart=always 且启动即崩 → 疯狂重启；用 on-failure 或修启动错误。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>没资源限制，内存泄漏拖垮整机。</div>
+
+  <h2 id="s12">12. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会写 service、start/enable/status</td></tr>
+    <tr><td>初级</td><td>依赖顺序、EnvironmentFile、日志</td></tr>
+    <tr><td>中级</td><td>timer 定时、资源限制、socket 激活</td></tr>
+    <tr><td>资深</td><td>故障排查、与容器/PM2 协同治理</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 写 service 管你的后端 ② enable 开机自启 ③ 加 MemoryMax/CPUQuota ④ 用 timer 替代 cron 跑备份 ⑤ journalctl -f 查一次崩溃 ⑥ 把密钥移进 EnvironmentFile。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解声明式服务管理，能给任意进程做开机自启、崩溃重启、资源护栏与统一日志——这是资深后端在 Linux 上做生产守护的底层能力。</div>
 </main>
 </div>
 <script>

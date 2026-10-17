@@ -2,103 +2,144 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Socket.IO · 小白通关教程</title>
+<title>Socket.IO · 从小白到资深实时后端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Socket.IO<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 服务端</a>
-  <a href="#s4">4. 客户端</a>
-  <a href="#s5">5. 收发消息</a>
-  <a href="#s6">6. 房间与广播</a>
-  <a href="#s7">7. 实战：聊天</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 下一步</a>
+  <div class="tbrand">Socket.IO<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 连接生命周期</a>
+  <a href="#s4">4. 收发消息</a>
+  <a href="#s5">5. 房间与命名空间</a>
+  <a href="#s6">6. 鉴权</a>
+  <a href="#s7">7. 横向扩展</a>
+  <a href="#s8">8. 部署</a>
+  <a href="#s9">9. 安全</a>
+  <a href="#s10">10. 架构与性能</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试</a>
+  <a href="#s13">13. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Socket.IO</h1>
-  <p class="tsub">基于 WebSocket 的实时双向通信库 —— 自动重连、降级、房间广播，做聊天/联机游戏首选。网页游戏平台用它做实时对战。学完你能做实时应用。</p>
+  <h1>Socket.IO：从小白到资深实时后端</h1>
+  <p class="tsub">Socket.IO 是在 <a href="websocket.html">WebSocket</a> 之上的<strong>实时双向通信库</strong>：自动重连、不支持 WS 时降级为长轮询、内置房间/命名空间/广播。本教程讲透<strong>连接生命周期、鉴权、Redis Adapter 横向扩展、Nginx 部署、安全与无状态架构</strong>——这是做生产级实时系统（聊天、协作、联机游戏）的关键。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Socket.IO</strong> 封装了 WebSocket，并补充了浏览器兼容、自动重连、断线降级（退化到轮询）、房间/命名空间、广播等能力。</p>
-  <div class="box"><span class="bt">对比：</span><a href="websocket.html">WebSocket</a> 是底层协议；Socket.IO 是“更好用的封装”，开箱即用。</div>
-  <div class="box ok"><span class="bt">适合：</span>聊天室、实时通知、多人协作、联机游戏。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>原生 WebSocket 只管“长连接”，重连、心跳、降级、房间广播都得自己写。Socket.IO 把它包好：</p>
+  <ul>
+    <li><b>自动重连</b> + 断线恢复；<b>降级</b>（WS 不通时走 HTTP 长轮询）。</li>
+    <li><b>房间/命名空间</b>：天然支持“按组发消息”。</li>
+    <li><b>ACK 回调</b>：emit 可带确认，知道对方收到。</li>
+  </ul>
+  <div class="box warn"><span class="bt">重要：</span>Socket.IO 是<strong>自定义协议</strong>，不能用原生 WebSocket 客户端直连它的服务端（反之亦然）——两端必须都用 Socket.IO 或都原生 WS。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>服务端基于 <a href="nodejs.html">Node.js</a> + <a href="express.html">Express</a>。安装：</p>
+  <h2 id="s2">2. 工程化起步</h2>
   <pre><code>npm install socket.io
-# 客户端在浏览器里用（也可 npm i socket.io-client）</code></pre>
-
-  <h2 id="s3">3. 服务端</h2>
+# 若前端单独打包：npm i socket.io-client</code></pre>
+  <p>服务端基于 <a href="nodejs.html">Node.js</a> + <a href="express.html">Express</a>，把 Socket.IO 挂在同一 http.Server 上（共享端口）。</p>
   <pre><code>import express from 'express';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
-
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer);
-
-io.on('connection', (socket) =&gt; {
-  console.log('有客户端连上：', socket.id);
-  socket.on('disconnect', () =&gt; console.log('断开'));
-});
-
+const io = new Server(httpServer, { cors: { origin: 'https://你的域名' } }); // 别用 '*' 生产
 httpServer.listen(3000);</code></pre>
 
-  <h2 id="s4">4. 客户端</h2>
-  <p>HTML 里直接引 CDN：</p>
-  <pre><code>&lt;script src="https://cdn.socket.io/4.7.5/socket.io.min.js"&gt;&lt;/script&gt;
-&lt;script&gt;
-  const socket = io('http://localhost:3000');  // 连接到服务端
-&lt;/script&gt;</code></pre>
+  <h2 id="s3">3. 连接生命周期</h2>
+  <ul>
+    <li><b>Handshake</b>：客户端先发 HTTP 请求协商，服务端可在此阶段鉴权（见第 6 节）。</li>
+    <li><code>connection</code>：连上拿到 <code>socket</code>；<code>disconnect</code>：断线（含原因 reason）。</li>
+    <li><b>重连</b>：客户端自动指数退避重连；服务端用 socket.id 会变——用“业务用户标识”而非 socket.id 做状态键。</li>
+  </ul>
 
-  <h2 id="s5">5. 收发消息</h2>
-  <pre><code>// 客户端发，服务端收
-socket.emit('chat', '你好');
-// 服务端收
-socket.on('chat', (msg) =&gt; console.log(msg));</code></pre>
+  <h2 id="s4">4. 收发消息</h2>
+  <pre><code>socket.on('chat', (msg, ack) =&gt; {          // ack 是客户端传来的回调
+  console.log(msg);
+  ack({ ok: true });                         // 确认收到
+});
+socket.emit('chat', '你好', (res) =&gt; console.log('对方确认', res));</code></pre>
+  <ul>
+    <li>事件名即“通道”，避免用通用名（如 <code>data</code>），按业务语义命名。</li>
+    <li>二进制（ArrayBuffer/TypedArray）直接传，无需 base64。</li>
+  </ul>
 
-  <h2 id="s6">6. 房间与广播</h2>
-  <pre><code>socket.join('room1');                    // 加入房间
-io.to('room1').emit('msg', '只对 room1 发');  // 房间广播
-socket.broadcast.emit('msg', '给其他所有人发'); // 排除自己
-io.emit('msg', '给所有人发');               // 全服广播</code></pre>
+  <h2 id="s5">5. 房间与命名空间</h2>
+  <pre><code>socket.join('room-123');                     // 加入房间
+io.to('room-123').emit('msg', '房间内广播');  // 仅房间
+socket.broadcast.emit('msg', '除自己外全服'); // 广播（排除自己）
+io.emit('msg', '全服');                        // 所有人</code></pre>
+  <ul>
+    <li><b>Namespace</b>（<code>io.of('/admin')</code>）隔离不同应用/权限，省端口。</li>
+    <li>理清作用域：<code>socket</code> 单连接、<code>io</code> 全局、<code>broadcast</code> 排除自己、<code>to</code> 限定房间。</li>
+  </ul>
 
-  <h2 id="s7">7. 实战：聊天</h2>
-  <p>服务端：</p>
-  <pre><code>io.on('connection', (socket) =&gt; {
-  socket.on('chat', (txt) =&gt; io.emit('chat', txt));   // 收到转发给所有人
+  <h2 id="s6">6. 鉴权</h2>
+  <p>在握手阶段就把 token 带上，拒绝非法的连接：</p>
+  <pre><code>io.use((socket, next) =&gt; {
+  const token = socket.handshake.auth.token;
+  if (!verify(token)) return next(new Error('unauthorized'));
+  socket.userId = decode(token).id;          // 挂到 socket 供后续用
+  next();
 });</code></pre>
-  <p>客户端：</p>
-  <pre><code>const input = document.getElementById('msg');
-document.getElementById('send').onclick = () =&gt; {
-  socket.emit('chat', input.value); input.value = '';
-};
-socket.on('chat', (txt) =&gt; {
-  const li = document.createElement('li'); li.textContent = txt;
-  document.getElementById('list').appendChild(li);
-});</code></pre>
+  <div class="box warn"><span class="bt">别在业务消息里才鉴权：</span>连接即资源，应在 handshake 拦截；且禁止客户端自报“我是谁”，要以服务端校验的身份为准。</div>
 
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>前端连不上：跨域。服务端 <code>new Server(httpServer, { cors: { origin: '*' } })</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>用了 WebSocket 客户端却接 Socket.IO 服务端，协议不兼容；要配对使用。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>生产环境需把 Socket.IO 路径也经 <a href="nginx.html">Nginx</a> 反代（支持 Upgrade），否则长连接断开。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>广播写错作用域，消息发重复或漏发；理清 <code>socket</code>/<code>io</code>/<code>broadcast</code>/<code>to</code>。</div>
+  <h2 id="s7">7. 横向扩展</h2>
+  <p>单进程有上限。多实例时，A 进程连的 socket 收不到 B 进程的广播——需 <strong>Adapter</strong> 把事件在节点间转发：</p>
+  <pre><code>import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+const pub = createClient(), sub = createClient();
+io.adapter(createAdapter(pub, sub));   // 经 <a href="redis.html">Redis</a> 发布订阅转发</code></pre>
+  <div class="box ok"><span class="bt">关键点：</span>用了多节点必须配 Adapter；且前置 <a href="nginx.html">Nginx</a> 要“粘滞会话（ip_hash）”或用 Adapter 让任意节点都能服务。</div>
 
-  <h2 id="s9">9. 下一步</h2>
-  <ol>
-    <li>做一个两人实时聊天页。</li>
-    <li>学 <a href="websocket.html">WebSocket</a> 理解底层。</li>
-    <li>配合 <a href="redis.html">Redis</a> 做多进程消息分发。</li>
-    <li>看网页游戏平台，Socket.IO 实时对战范例。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能建 Socket.IO 服务、写客户端、收发消息、用房间广播——实时通信你已掌握。</div>
+  <h2 id="s8">8. 部署</h2>
+  <ul>
+    <li><b>Nginx 反代</b>必须放行 Upgrade：<code>proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade";</code>，否则长连接被切断。</li>
+    <li>心跳 <code>pingInterval/pingTimeout</code> 控制存活检测；超时自动断。</li>
+  </ul>
+
+  <h2 id="s9">9. 安全</h2>
+  <ul>
+    <li><b>origin</b> 校验：只允许可信域名，防跨站 WebSocket。</li>
+    <li><b>限流</b>：连接频率/事件频率做节流，防刷连接。</li>
+    <li><b>不信任客户端</b>：房间号、目标用户要服务端校验，防越权广播。</li>
+  </ul>
+
+  <h2 id="s10">10. 架构与性能</h2>
+  <div class="box warn"><span class="bt">架构红线：</span>把“谁在哪个房间”这类状态存进 <a href="redis.html">Redis</a>，而不是进程内存——否则多实例/重启就丢。socket 对象本身只代表一个连接，重启即失。</div>
+  <ul>
+    <li>不要在 socket 上挂大量监听器或闭包，避免内存泄漏。</li>
+    <li>高频消息合并/节流；大房间广播考虑分片。</li>
+  </ul>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>跨域连不上 → 正确配置 <code>cors.origin</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>原生 WS 客户端接 Socket.IO 服务端 → 协议不兼容，两端要配对。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>多进程没配 Adapter → 消息收不全。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>Nginx 没放行 Upgrade → 长连接秒断。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>用 socket.id 当业务主键 → 重连后 id 变，状态错乱。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>监听器反复注册（每次连接叠加 on）→ 内存泄漏、重复处理。</div>
+
+  <h2 id="s12">12. 调试</h2>
+  <ul>
+    <li>服务端 <code>DEBUG=socket.io* node app.js</code> 看协议细节。</li>
+    <li>客户端 <code>localStorage.debug = 'socket.io-client:socket'</code> 看连接日志。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能建服务、收发消息、房间广播</td></tr>
+    <tr><td>初级</td><td>会鉴权、命名空间、客户端集成</td></tr>
+    <tr><td>中级</td><td>Redis Adapter 多节点、Nginx 部署</td></tr>
+    <tr><td>资深</td><td>无状态架构、安全限流、性能与排障</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 做带鉴权的聊天室 ② 用 Redis Adapter 跑两个进程验证跨节点广播 ③ 配 Nginx Upgrade 反代 ④ 故意跨域看报错并修复 ⑤ 压测连接数并调心跳。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解实时系统的鉴权、横向扩展与无状态存储——这是资深实时后端区别于“能跑 demo”的关键。</div>
 </main>
 </div>
 <script>

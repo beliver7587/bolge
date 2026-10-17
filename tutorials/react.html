@@ -11,65 +11,247 @@
 <nav class="tside" id="tside">
   <div class="tbrand">React<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 三个核心概念</a>
-  <a href="#s3">3. 第一个例子</a>
-  <a href="#s4">4. Hooks 入门</a>
-  <a href="#s5">5. 常见坑</a>
-  <a href="#s6">6. 小结与上手</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 跑起第一个项目</a>
+  <a href="#s4">4. 核心概念</a>
+  <a href="#s5">5. 事件 / 列表 / 条件</a>
+  <a href="#s6">6. 副作用 useEffect</a>
+  <a href="#s7">7. 表单与受控组件</a>
+  <a href="#s8">8. 样式的 3 种写法</a>
+  <a href="#s9">9. 实战：Todo 清单</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 调试与生态</a>
+  <a href="#s12">12. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>React</h1>
-  <p class="tsub">用“组件”拼出界面的前端库 —— 简历工坊、网页游戏、Memora 前端都基于 React 生态。</p>
+  <p class="tsub">用“组件”拼出界面的前端库 —— 简历工坊、网页游戏、Memora 前端都基于 React 生态。学完本节，你能独立用 React 写一个带状态的小应用。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>React 是 Facebook 开源的<strong>前端 JavaScript 库</strong>，用来构建用户界面。它的核心思想是：把页面拆成一个个<strong>可复用的组件</strong>，每个组件管自己的一小块界面和状态，拼起来就是完整应用。</p>
-  <div class="box"><span class="bt">一句话：</span>React 像一个“乐高积木盒”，你用组件（积木）拼出整个网站，数据变了界面自动跟着变。</div>
-
-  <h2 id="s2">2. 三个核心概念</h2>
-  <h3>① 组件（Component）</h3>
-  <p>一个函数，返回一段界面（JSX）。比如一个“按钮”或“卡片”都可以是组件。</p>
-  <h3>② JSX</h3>
-  <p>把 HTML 写进 JS 里的语法糖，看起来像 HTML，其实是 JavaScript。浏览器不认识 JSX，需要 Vite/打包工具编译成 <code>React.createElement(...)</code>。</p>
-  <h3>③ Props 与 State</h3>
+  <p><strong>React</strong> 是 Facebook 开源的<strong>前端 JavaScript 库</strong>，用来构建用户界面。它的核心思想一句话总结：</p>
+  <div class="box"><span class="bt">一句话：</span>把页面拆成一个个<strong>可复用的组件</strong>，你只描述“界面长什么样”，数据变了 React 自动把界面更新成对的样子。你不用手动操作 DOM。</div>
+  <h3>为什么要用它？</h3>
   <ul>
-    <li><b>Props</b>：父组件传给子组件的数据，像函数的入参，<b>只读</b>。</li>
-    <li><b>State</b>：组件自己内部的数据，变了会触发界面重新渲染。</li>
+    <li><b>不用手抖 DOM</b>：传统写法是 <code>document.getElementById(...).innerHTML = ...</code>，状态一多就乱。React 让你写 <code>return &lt;h1&gt;{title}&lt;/h1&gt;</code>，数据 title 变了界面自动变。</li>
+    <li><b>组件复用</b>：一个 <code>&lt;Button/&gt;</code> 可以到处用，改一处全站生效。</li>
+    <li><b>生态最大</b>：路由、状态管理、UI 库（Ant Design）、服务端渲染（Next.js）一应俱全。</li>
+    <li><b>需求多</b>：招聘市场上 React 岗位最多，学会它能直接找前端工作。</li>
   </ul>
+  <div class="box ok"><span class="bt">适合：</span>中后台系统、数据看板、单页应用（SPA）、移动端（React Native）。<br><span class="box warn">不适合：</span>纯静态展示页（直接写 HTML 更简单）、超轻量小工具（引入 React 体积偏大）。</div>
 
-  <h2 id="s3">3. 第一个例子</h2>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>React 项目需要 Node.js 来跑开发服务器和打包。跟着下面 4 步走：</p>
+  <div class="step"><div class="n">1</div><div class="b"><h4>安装 Node.js（含 npm）</h4><p>去 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> 下载 <b>LTS</b> 版本（如 20.x），一路下一步安装。装完自带 <code>npm</code>（包管理器）。</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>验证安装</h4><p>打开终端（Win 用 PowerShell / Mac 用终端），输入：</p>
+  <pre><code>node -v      # 应输出 v20.x 之类
+npm -v       # 应输出 9.x / 10.x 之类</code></pre>
+  <p>能看到版本号就成功了。</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><h4>用 Vite 创建项目</h4><p>Vite 是现在最主流的构建工具（快）。在<strong>你想放项目的文件夹</strong>里执行：</p>
+  <pre><code>npm create vite@latest my-react-app -- --template react
+cd my-react-app
+npm install</code></pre>
+  <p>第一句会问你“Ok to proceed?”，回车即可；<code>--template react</code> 表示用 React 模板。第二、三句进入目录并安装依赖（首次会下载几十秒）。</p></div></div>
+  <div class="step"><div class="n">4</div><div class="b"><h4>认识目录</h4>
+  <pre><code>my-react-app/
+├─ index.html        # 页面入口，里面有个 &lt;div id="root"&gt;
+├─ package.json      # 项目信息 + 依赖列表
+├─ vite.config.js    # Vite 配置
+└─ src/
+   ├─ main.jsx       # 把 React 挂到 #root 上
+   ├─ App.jsx        # 最顶层组件（从这里开始写）
+   └─ index.css      # 全局样式</code></pre>
+  </div></div>
+
+  <h2 id="s3">3. 跑起第一个项目</h2>
+  <p>在 <code>my-react-app</code> 目录里执行：</p>
+  <pre><code>npm run dev</code></pre>
+  <p>终端会打印一个本地地址，通常是 <code>http://localhost:5173</code>。浏览器打开它，看到 Vite 的欢迎页就成功了。</p>
+  <div class="box ok"><span class="bt">试手：</span>打开 <code>src/App.jsx</code>，把里面的文字改一下，保存，浏览器<strong>会自动刷新</strong>——这就是“热更新”，开发体验拉满。</div>
+  <p>以后常用命令：</p>
+  <table>
+    <tr><th>命令</th><th>作用</th></tr>
+    <tr><td><code>npm run dev</code></td><td>本地开发（带热更新）</td></tr>
+    <tr><td><code>npm run build</code></td><td>打包到 <code>dist/</code>，用于上线部署</td></tr>
+    <tr><td><code>npm run preview</code></td><td>本地预览打包后的结果</td></tr>
+  </table>
+
+  <h2 id="s4">4. 核心概念</h2>
+  <h3>① 组件（Component）</h3>
+  <p>组件就是一个<strong>返回 JSX 的函数</strong>。文件名以大写开头（<code>App.jsx</code>、<code>Button.jsx</code>），这样 React 才知道它是组件而不是普通标签。</p>
+  <pre><code>// src/App.jsx
+function App() {
+  return &lt;h1&gt;你好，React&lt;/h1&gt;;
+}
+export default App;</code></pre>
+  <h3>② JSX</h3>
+  <p>把 HTML 写进 JS 的语法糖。注意：</p>
+  <ul>
+    <li>JSX 里写 JS 表达式要用 <code>{}</code> 包起来，比如 <code>&lt;p&gt;{1 + 1}&lt;/p&gt;</code> 显示 2。</li>
+    <li>class 要写成 <code>className</code>（因为 class 是 JS 关键字）。</li>
+    <li>标签必须闭合：<code>&lt;img /&gt;</code>、<code>&lt;br /&gt;</code>。</li>
+  </ul>
+  <h3>③ Props（父传子的数据）</h3>
+  <p>Props 像函数的入参，<strong>只读</strong>。父组件传，子组件收：</p>
+  <pre><code>function Welcome({ name }) {        // 解构 props
+  return &lt;h2&gt;你好，{name}&lt;/h2&gt;;
+}
+// 使用：&lt;Welcome name="小王" /&gt;</code></pre>
+  <h3>④ State（组件自己的数据）</h3>
+  <p>State 是可变的内部数据，变了会触发重渲染。用 <code>useState</code>：</p>
   <pre><code>import { useState } from 'react';
 
 function Counter() {
-  const [count, setCount] = useState(0);   // 声明一个状态 count
+  const [count, setCount] = useState(0);   // [值, 改值的函数]
   return (
     &lt;div&gt;
-      &lt;p&gt;你点了 {count} 次&lt;/p&gt;
+      &lt;p&gt;点击了 {count} 次&lt;/p&gt;
       &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+1&lt;/button&gt;
     &lt;/div&gt;
   );
-}
-export default Counter;</code></pre>
-  <div class="box ok"><span class="bt">逐行看：</span><code>useState(0)</code> 给组件一个初始为 0 的状态；点按钮调用 <code>setCount</code> 改值，React 自动重画 <code>{count}</code> 那一行。</div>
+}</code></pre>
+  <div class="box"><span class="bt">关键：</span>不能直接改 state（<code>count++</code> 无效），必须用 <code>setCount</code> 传“新值”，React 才会重画。</div>
 
-  <h2 id="s4">4. Hooks 入门</h2>
-  <p>Hook 是“钩子”，让你在函数组件里用上状态、副作用等能力，最常用的两个：</p>
+  <h2 id="s5">5. 事件 / 列表 / 条件</h2>
+  <h3>事件处理</h3>
+  <p>React 事件用驼峰：<code>onClick</code>、<code>onChange</code>、<code>onSubmit</code>，值是函数。</p>
+  <h3>列表渲染 + key</h3>
+  <p>用 <code>map</code> 把数组变成组件列表，<strong>每个子项必须带唯一 key</strong>（帮 React 识别增删）。</p>
+  <pre><code>const list = ['苹果', '香蕉', '橙子'];
+&lt;ul&gt;
+  {list.map((item, i) =&gt; &lt;li key={i}&gt;{item}&lt;/li&gt;)}
+&lt;/ul&gt;</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>用数组下标 <code>i</code> 当 key 只在“列表不增删”时安全；会增删排序时请用稳定 ID（如 <code>item.id</code>）。</div>
+  <h3>条件渲染</h3>
+  <pre><code>{isLogin ? &lt;UserPanel /&gt; : &lt;LoginForm /&gt;}
+{showTip &amp;&amp; &lt;p&gt;这是提示&lt;/p&gt;}</code></pre>
+
+  <h2 id="s6">6. 副作用 useEffect</h2>
+  <p>组件里“不是渲染”的事（请求接口、定时器、监听）叫<strong>副作用</strong>，放进 <code>useEffect</code>。</p>
+  <pre><code>import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  useEffect(() =&gt; {
+    // 组件挂载后执行一次：拉取数据
+    fetch('/api/users')
+      .then(r =&gt; r.json())
+      .then(setUsers);
+  }, []);   // 第二个参数 [] = 只在挂载时跑一次
+
+  return &lt;ul&gt;{users.map(u =&gt; &lt;li key={u.id}&gt;{u.name}&lt;/li&gt;)}&lt;/ul&gt;;
+}</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>依赖数组 <code>[]</code> 里要写全用到的外部变量，否则闭包拿到旧值。比如依赖 <code>userId</code> 就要写成 <code>[userId]</code>，它会随 userId 变化重新请求。</div>
+
+  <h2 id="s7">7. 表单与受控组件</h2>
+  <p>React 里输入框的值由 state 控制，叫“受控组件”：</p>
+  <pre><code>function NameForm() {
+  const [name, setName] = useState('');
+  return (
+    &lt;form onSubmit={(e) =&gt; { e.preventDefault(); alert('提交：' + name); }}&gt;
+      &lt;input value={name} onChange={(e) =&gt; setName(e.target.value)} /&gt;
+      &lt;button type="submit"&gt;提交&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+  <div class="box"><span class="bt">要点：</span><code>onChange</code> 把输入同步到 state；<code>e.preventDefault()</code> 阻止表单默认刷新页面。</div>
+
+  <h2 id="s8">8. 样式的 3 种写法</h2>
   <table>
-    <tr><th>Hook</th><th>作用</th><th>例子</th></tr>
-    <tr><td><code>useState</code></td><td>声明状态</td><td>表单输入、计数器</td></tr>
-    <tr><td><code>useEffect</code></td><td>处理副作用</td><td>请求接口、监听事件</td></tr>
+    <tr><th>方式</th><th>写法</th><th>适合</th></tr>
+    <tr><td>普通 CSS</td><td><code>import './App.css'</code> + className</td><td>传统、可控</td></tr>
+    <tr><td>内联 style</td><td><code style={{color:'red'}}</code></td><td>动态值（如进度条宽度）</td></tr>
+    <tr><td>CSS Modules</td><td><code>import s from './App.module.css'</code></td><td>避免类名冲突</td></tr>
   </table>
-  <pre><code>useEffect(() =&gt; {
-  fetch('/api/user').then(r =&gt; r.json()).then(setUser);
-}, []);   // 第二个参数 [] 表示“只在挂载时执行一次”</code></pre>
+  <div class="box ok"><span class="bt">新手建议：</span>先用普通 CSS 文件 + className，最直观。想提速可上 <a href="tailwind.html">Tailwind</a> 或 <a href="antd.html">Ant Design</a>。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>直接改 state 不生效：<code>count++</code> 不行，必须用 <code>setCount(count+1)</code>，React 靠“新引用”判断变化。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>忘记加 <code>key</code>：用 <code>map</code> 渲染列表时每个子项要带唯一 <code>key</code>，否则增删会错乱。</div>
-  <div class="box warn"><span class="bt">坑 3：</span><code>useEffect</code> 依赖没写全会拿到旧值；依赖数组要列出所有用到的外部变量。</div>
+  <h2 id="s9">9. 实战：Todo 清单（完整可运行）</h2>
+  <p>下面这个项目把上面所有知识点串起来：添加、删除、标记完成、统计。把 <code>src/App.jsx</code> 整个替换成下面的代码即可运行。</p>
+  <pre><code>import { useState } from 'react';
 
-  <h2 id="s6">6. 小结与上手</h2>
-  <p>React 本质是“组件 + 数据驱动界面”。下一步建议：用 <code>npm create vite@latest</code> 选 React 模板跑起来，照着改上面的 Counter 例子，再学状态管理 <a href="zustand.html">Zustand</a> 和路由。三个项目的源码里都有大量组件可参考。</p>
+function App() {
+  const [text, setText] = useState('');
+  const [todos, setTodos] = useState([]);
+
+  const add = () =&gt; {
+    const t = text.trim();
+    if (!t) return;                       // 空内容不添加
+    setTodos([...todos, { id: Date.now(), text: t, done: false }]);
+    setText('');                          // 清空输入框
+  };
+
+  const toggle = (id) =&gt;
+    setTodos(todos.map(t =&gt; t.id === id ? { ...t, done: !t.done } : t));
+
+  const remove = (id) =&gt; setTodos(todos.filter(t =&gt; t.id !== id));
+
+  const left = todos.filter(t =&gt; !t.done).length;
+
+  return (
+    &lt;div style={{ maxWidth: 420, margin: '40px auto', fontFamily: 'sans-serif' }}&gt;
+      &lt;h1&gt;📝 我的待办&lt;/h1&gt;
+      &lt;div&gt;
+        &lt;input
+          value={text}
+          placeholder="写点什么…"
+          onChange={(e) =&gt; setText(e.target.value)}
+          onKeyDown={(e) =&gt; e.key === 'Enter' &amp;&amp; add()}
+        /&gt;
+        &lt;button onClick={add}&gt;添加&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;ul&gt;
+        {todos.map(t =&gt; (
+          &lt;li key={t.id} style={{ margin: '8px 0' }}&gt;
+            &lt;span
+              onClick={() =&gt; toggle(t.id)}
+              style={{
+                cursor: 'pointer',
+                textDecoration: t.done ? 'line-through' : 'none',
+                color: t.done ? '#999' : '#000'
+              }}&gt;
+              {t.text}
+            &lt;/span&gt;
+            &lt;button onClick={() =&gt; remove(t.id)} style={{ marginLeft: 10 }}&gt;删除&lt;/button&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+
+      &lt;p&gt;还剩 {left} 项未完成，共 {todos.length} 项&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+export default App;</code></pre>
+  <div class="box ok"><span class="bt">运行：</span>保存后浏览器自动刷新，输入文字回车或点“添加”即可。<strong>你已经用 React 写了一个真实可用的小应用！</strong></div>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>直接改 state 不生效：<code>count++</code> 不行，必须 <code>setCount(count+1)</code>。改对象/数组也要“先拷贝再改”：<code>setUser({...user, age: 18})</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>列表忘了 <code>key</code>：用 <code>map</code> 渲染时每个子项要带唯一 <code>key</code>，否则增删错乱、控制台报警告。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>useState</code> 是“异步”的：连续 <code>setCount(count+1)</code> 两次并不会 +2，因为两次用的都是旧 count。正确做法用函数式更新：<code>setCount(c =&gt; c+1)</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span><code>useEffect</code> 死循环：依赖数组里放了每次渲染都变的对象/数组，导致反复执行。把依赖写成基本类型，或把函数用 <code>useCallback</code> 包起来。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>在 <code>useEffect</code> 里发请求没做清理，组件卸载后 setState 报错。加 return 清理函数或用“已取消”标记。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>忘记 <code>import</code>：用了 <code>useState</code> 却没 <code>import { useState } from 'react'</code>，会报“未定义”。</div>
+  <div class="box warn"><span class="bt">坑 7：</span><code>{}</code> 里不能直接写语句（如 <code>if</code>），只能写表达式。要用分支就用三元 <code>? :</code> 或 <code>&amp;&amp;</code>。</div>
+  <div class="box warn"><span class="bt">坑 8：</span>把 <code>onClick={handleClick()}</code> 写成调用（带括号），会“渲染时就执行一次”。应写 <code>onClick={handleClick}</code> 或 <code>onClick={() =&gt; handleClick()}</code>。</div>
+
+  <h2 id="s11">11. 调试与生态</h2>
+  <ul>
+    <li><b>React DevTools</b>：Chrome 装扩展，能看到组件树和每个组件的 state/props，调试神器。</li>
+    <li><b>报错看栈</b>：React 报错信息现在很友好，点链接能跳到出错组件。</li>
+    <li><b>路由</b>：多页面用 <code>react-router-dom</code>。</li>
+    <li><b>状态管理</b>：组件多了、跨页面共享数据用 <a href="zustand.html">Zustand</a>（轻量）或 Redux。</li>
+    <li><b>UI 库</b>：不想自己写样式就用 <a href="antd.html">Ant Design</a>。</li>
+  </ul>
+
+  <h2 id="s12">12. 下一步</h2>
+  <ol>
+    <li>把上面的 Todo 加个“编辑”功能练手。</li>
+    <li>学 <a href="vite.html">Vite</a> 的更多配置（代理、环境变量）。</li>
+    <li>学 <a href="typescript.html">TypeScript</a>，给组件加类型，减少 bug。</li>
+    <li>学 <a href="nextjs.html">Next.js</a>：自带路由 + 服务端渲染，更适合做完整网站。</li>
+    <li>看三个项目源码（简历工坊 / 网页游戏 / Memora），里面有大量真实组件可模仿。</li>
+  </ol>
+  <div class="box ok"><span class="bt">你已经毕业：</span>能搭环境、写组件、管状态、发请求、做表单、踩完常见坑——这就是一名 React 新手该有的能力。继续做 2~3 个小项目，就能上简历。</div>
 </main>
 </div>
 <script>

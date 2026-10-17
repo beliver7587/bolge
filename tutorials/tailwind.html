@@ -2,92 +2,123 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tailwind CSS · 小白通关教程</title>
+<title>Tailwind CSS · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Tailwind<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 装到项目里</a>
-  <a href="#s4">4. 第一个样式</a>
-  <a href="#s5">5. 常用类速查</a>
-  <a href="#s6">6. 响应式</a>
-  <a href="#s7">7. 暗色模式</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 下一步</a>
+  <div class="tbrand">Tailwind<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 核心概念</a>
+  <a href="#s4">4. 配置体系</a>
+  <a href="#s5">5. 响应式与变体</a>
+  <a href="#s6">6. 复用与组合</a>
+  <a href="#s7">7. 设计令牌整合</a>
+  <a href="#s8">8. 性能</a>
+  <a href="#s9">9. 架构边界</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 调试</a>
+  <a href="#s12">12. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Tailwind CSS</h1>
-  <p class="tsub">用“类名”直接写样式的工具库 —— 不用再写一堆 CSS 文件。学完你能几秒钟排出好看的界面。</p>
+  <h1>Tailwind CSS：从小白到资深前端</h1>
+  <p class="tsub">Tailwind 是<strong>原子化（utility-first）</strong>CSS 框架：你不直接写 CSS 规则，而是在 HTML 里用预定义的小类拼样式。本教程讲清它“为什么快、何时该用、配置与令牌怎么管、性能与架构边界在哪”——这是资深前端对 Tailwind 的取舍判断。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Tailwind</strong> 是“原子化 CSS”框架：它提供成千上万个小类名（如 <code>flex</code>、<code>p-4</code>、<code>text-red-500</code>），你把类名直接写到 HTML 上，样式就生效，<strong>不用自己写 CSS 规则</strong>。</p>
-  <div class="box"><span class="bt">对比：</span>传统写法要先写 <code>.card{...}</code> 再用 <code>class="card"</code>；Tailwind 直接 <code>class="rounded-lg p-4 bg-white shadow"</code>，所见即所得。</div>
-  <div class="box ok"><span class="bt">为什么火：</span>不用起名、不用来回切文件、复用度高、打包后体积小（只保留用到的类）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>传统语义化 CSS（BEM/Modules）要“起名 + 切文件 + 维护类名”，项目一大，样式文件膨胀、命名冲突、删样式怕误伤。Tailwind 反过来：<strong>样式即类名</strong>，不用起名、不用切文件，约束集中在配置里。</p>
+  <div class="box"><span class="bt">一句话：</span>Tailwind 用一套受约束的设计令牌（间距/颜色/字号）生成原子类，让你在标记里快速拼出一致、可控的 UI，且<strong>零运行时</strong>。</div>
+  <div class="box ok"><span class="bt">适合：</span>快速开发、需要视觉一致的中后台/产品 UI、设计系统落地。<br><span class="box warn">不适合：</span>追求极致可读/语义的展示页、已有成熟 CSS 体系的项目硬迁。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>已有 Vite / Next.js 项目即可。没项目先按 <a href="vite.html">Vite</a> 或 <a href="nextjs.html">Next.js</a> 建一个。</p>
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code">pnpm add -D tailwindcss @tailwindcss/postcss postcss autoprefixer
+# 初始化（Tailwind v4 用 @tailwindcss/postcss，配置更简）
+# 在 CSS 入口引入
+@import "tailwindcss";</code></pre>
+  <p>在 <a href="vite.html">Vite</a>/<a href="nextjs.html">Next.js</a> 里装好 PostCSS 插件即可，构建时扫描你的文件生成用到的类。</p>
 
-  <h2 id="s3">3. 装到项目里</h2>
-  <pre><code>npm install -D tailwindcss @tailwindcss/postcss postcss
-npx tailwindcss init -p        # 生成 tailwind.config.js + postcss.config.js</code></pre>
-  <p>在 <code>tailwind.config.js</code> 指定要扫描的文件：</p>
-  <pre><code>export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: { extend: {} },
-  plugins: []
-}</code></pre>
-  <p>在 CSS 入口（如 <code>src/index.css</code>）引入三个指令：</p>
-  <pre><code>@tailwind base;
-@tailwind components;
-@tailwind utilities;</code></pre>
-
-  <h2 id="s4">4. 第一个样式</h2>
-  <pre><code>&lt;button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"&gt;
-  点我
+  <h2 id="s3">3. 核心概念</h2>
+  <p>你写的不是“样式文件”，而是“类名组合”：</p>
+  <pre><code">&lt;button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"&gt;
+  保存
 &lt;/button&gt;</code></pre>
-  <p>含义：蓝色背景 / 白字 / 左右内边距 4 / 上下 2 / 圆角 / 悬停更深蓝。保存即生效，不用写一行 CSS！</p>
+  <ul>
+    <li><code>px-4</code> = <code>padding-left/right: 1rem</code>，间距取自配置里的刻度（4=1rem）。</li>
+    <li><code>bg-blue-600</code> 是调色板里的固定档位——<strong>不会冒出 #3a7bd5 这种随意色</strong>，视觉自然统一。</li>
+    <li>所有值都来自配置的设计令牌，强制一致性。</li>
+  </ul>
 
-  <h2 id="s5">5. 常用类速查</h2>
+  <h2 id="s4">4. 配置体系</h2>
+  <p>Tailwind v4 用 CSS 里的 <code>@theme</code> 定义令牌；v3 用 <code>tailwind.config.js</code> 的 <code>theme.extend</code>。</p>
+  <pre><code">// tailwind.config.js（v3 示例）
+export default {
+  content: ['./src/**/*.{ts,tsx}'],   // 扫描范围，决定哪些类被保留
+  theme: {
+    extend: {
+      colors: { brand: { 500: '#6366f1' } },
+      spacing: { '18': '4.5rem' },
+    },
+  },
+};</code></pre>
+  <div class="box warn"><span class="bt">坑：</span><code>content</code> 路径配错 → 你用的类没被扫描到 → 生产构建后样式“消失”。这是最高频事故。</div>
+
+  <h2 id="s5">5. 响应式与变体</h2>
+  <ul>
+    <li><b>断点变体</b>：<code>md:grid-cols-3</code> 表示“中屏及以上三列”，移动优先。</li>
+    <li><b>状态变体</b>：<code>hover:</code>、<code>focus:</code>、<code>active:</code>、<code>disabled:</code>。</li>
+    <li><b>暗色</b>：<code>dark:bg-slate-800</code> + 配置 <code>darkMode: 'class'</code>，切换根节点 class 即可换肤。</li>
+  </ul>
+
+  <h2 id="s6">6. 复用与组合</h2>
+  <ul>
+    <li><b>组件层</b>：在 React/Vue 里把一组类封成组件（<code>&lt;Button/&gt;</code>），类留在组件内，复用即复用。</li>
+    <li><code>@apply</code>：在 CSS 里把多个原子类合成一个语义类（<code>.btn { @apply px-4 py-2 rounded; }</code>），适合全局通用件。</li>
+    <li><b>变体管理</b>：用 <code>class-variance-authority (cva)</code> 按 props 生成不同变体（primary/ghost/size），比手写条件字符串稳。</li>
+  </ul>
+
+  <h2 id="s7">7. 设计令牌整合</h2>
+  <p>把公司设计令牌（品牌色、间距尺度）映射进 Tailwind 主题，前端直接用 <code>bg-brand-500</code>，改令牌全站生效。结合 <a href="css.html">CSS 变量</a> 还能做运行时主题：</p>
+  <pre><code">// 主题色走 CSS 变量，Tailwind 引用
+colors: { brand: 'rgb(var(--brand) / &lt;alpha-value&gt;)' }</code></pre>
+
+  <h2 id="s8">8. 性能</h2>
+  <ul>
+    <li><b>JIT 引擎</b>：只生成你<strong>实际用到</strong>的类，开发随手写、生产不膨胀。</li>
+    <li><b>零运行时</b>：产物是纯 CSS，没有 JS 开销（对比 CSS-in-JS）。</li>
+    <li>体积由“用到的类”决定，不靠整库引入——比 Bootstrap 这类全量框架小得多。</li>
+  </ul>
+
+  <h2 id="s9">9. 架构边界</h2>
+  <div class="box warn"><span class="bt">资深判断：</span>Tailwind 不是银弹。① 极复杂的动画/关键帧仍写原生 CSS 或 CSS Modules；② 超长类名可读性差是真问题，用组件封装解决；③ 别为了“少写 CSS”把一切塞进 class，业务逻辑与样式应分层。</div>
+  <p>常见组合：Tailwind 做 90% 布局/视觉，CSS Modules 或原生 CSS 做那 10% 复杂/全局样式（如第三方组件覆盖、keyframes）。</p>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span><code>content</code> 路径漏配，类被 purge 掉，线上样式丢失。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>动态拼接类名不被扫描（<code>class={`bg-${color}`}</code>）→ 该类没生成。要用完整字符串或 safelist。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>滥用 <code>@apply</code> 把 Tailwind 又写回“大 CSS 文件”，失去原子化优势。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>类名过长、表达式拼装，可维护性崩；用组件/cva 收口。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>随意自定义颜色绕过令牌，视觉再次失稳。</div>
+
+  <h2 id="s11">11. 调试</h2>
+  <ul>
+    <li>官方 VS Code 插件：自动补全 + 悬停预览颜色/值。</li>
+    <li>DevTools 看元素 class，对照生成的 CSS。</li>
+    <li>用 <code>safelist</code> 排查“动态类不生效”。</li>
+  </ul>
+
+  <h2 id="s12">12. 成长路线</h2>
   <table>
-    <tr><th>想要的效果</th><th>类名</th></tr>
-    <tr><td>弹性布局</td><td><code>flex</code> <code>items-center</code> <code>justify-between</code></td></tr>
-    <tr><td>间距</td><td><code>p-4</code>(内) <code>m-2</code>(外) <code>gap-3</code></td></tr>
-    <tr><td>文字</td><td><code>text-sm</code> <code>text-red-500</code> <code>font-bold</code></td></tr>
-    <tr><td>背景/边框</td><td><code>bg-white</code> <code>border</code> <code>rounded-xl</code></td></tr>
-    <tr><td>阴影</td><td><code>shadow</code> <code>shadow-lg</code></td></tr>
-    <tr><td>尺寸</td><td><code>w-full</code> <code>h-10</code> <code>max-w-md</code></td></tr>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会用基础类（p-/flex/bg）画页面</td></tr>
+    <tr><td>初级</td><td>会响应式、暗色、自定义配置</td></tr>
+    <tr><td>中级</td><td>用组件/cva 封装变体、整合设计令牌</td></tr>
+    <tr><td>资深</td><td>清楚 Tailwind 的边界、性能与架构取舍，与 CSS Modules 协同</td></tr>
   </table>
-
-  <h2 id="s6">6. 响应式</h2>
-  <p>前缀代表断点：<code>sm:</code> <code>md:</code> <code>lg:</code> <code>xl:</code>。</p>
-  <pre><code>&lt;div class="grid grid-cols-1 md:grid-cols-3 gap-4"&gt;
-  &lt;!-- 手机 1 列，≥768px 变 3 列 --&gt;
-&lt;/div&gt;</code></pre>
-
-  <h2 id="s7">7. 暗色模式</h2>
-  <p>在 config 开启 <code>darkMode: 'class'</code>，然后给根节点加 <code>class="dark"</code>：</p>
-  <pre><code>&lt;div class="bg-white dark:bg-gray-900 text-black dark:text-white"&gt;...</code></pre>
-
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>样式不生效：八成是 <code>content</code> 路径没包含你的文件，Tailwind 没扫描到。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>忘了引入 <code>@tailwind</code> 三条指令，页面完全没有样式。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>动态拼接类名（<code>class={"text-" + color}</code>）Tailwind 扫描不到，不会被打包。要用完整字符串或 <code>safelist</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>类名写太长影响可读性；复杂组件可抽成组件或用 <code>@apply</code> 在 CSS 里聚合。</div>
-
-  <h2 id="s9">9. 下一步</h2>
-  <ol>
-    <li>把现有项目的 CSS 慢慢换成 Tailwind 类名。</li>
-    <li>配合 <a href="react.html">React</a> 做组件。</li>
-    <li>需要现成组件用 <a href="antd.html">Ant Design</a>（后台）或 Tailwind UI 模板。</li>
-    <li>看简历工坊源码，里面大量使用 Tailwind。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能在 Vite/Next 里配置 Tailwind，用原子类快速排版、做响应式与暗色——前端界面效率直接翻倍。</div>
+  <div class="box ok"><span class="bt">练习：</span>① 用 Tailwind 搭一个后台卡片列表（含响应式）② 配置品牌色 + 暗色模式 ③ 用 cva 做一个多变体 Button ④ 用 @apply 抽一个全局 .btn。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>懂得用约束换一致与速度，也懂得何时收回 Tailwind 交给原生 CSS——这是资深前端对工具的判断力。</div>
 </main>
 </div>
 <script>

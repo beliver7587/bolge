@@ -2,79 +2,111 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JWT · 小白通关教程</title>
+<title>JWT · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">JWT<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
+  <div class="tbrand">JWT<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
   <a href="#s2">2. 令牌结构</a>
-  <a href="#s3">3. 签发令牌</a>
-  <a href="#s4">4. 校验令牌</a>
-  <a href="#s5">5. 前端携带</a>
-  <a href="#s6">6. 刷新令牌</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <a href="#s3">3. 签名算法</a>
+  <a href="#s4">4. 签发与校验</a>
+  <a href="#s5">5. 刷新令牌</a>
+  <a href="#s6">6. 攻击向量</a>
+  <a href="#s7">7. 存储与防护</a>
+  <a href="#s8">8. 与 OAuth2</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>JWT</h1>
-  <p class="tsub">JSON Web Token —— 无状态的登录凭证，前后端分离必备。学完你能实现“登录后带令牌访问受保护接口”。</p>
+  <h1>JWT：从小白到资深</h1>
+  <p class="tsub"><strong>JWT（JSON Web Token）</strong> 是无状态的登录凭证：登录成功后签发一个自包含令牌，客户端后续携带，服务端验签即知身份，无需查库存会话。本教程讲透<strong>令牌结构、签名算法与算法混淆攻击、签发校验、刷新令牌旋转、攻击向量、存储防护与 OAuth2 区别</strong>——前后端分离身份认证的底线。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>JWT</strong> 是一种令牌格式：服务端登录成功后签发一个字符串，客户端之后每次请求带上它，服务端验签即可知道“是谁、有没有权”，无需查库存会话。</p>
-  <div class="box"><span class="bt">对比：</span>传统 Session 把登录状态存服务端；JWT 把状态编码进令牌本身，服务端无状态、易横向扩展。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>传统 Session 把登录态存服务端（内存/Redis），横向扩展要共享存储。JWT 把状态<strong>编码进令牌本身</strong>，服务端无状态、易扩展。</p>
+  <div class="box"><span class="bt">代价：</span>令牌一旦签发无法主动吊销（除非维护黑名单或短过期），这是无状态的固有取舍。</div>
 
   <h2 id="s2">2. 令牌结构</h2>
-  <p>JWT 是 <code>header.payload.signature</code> 三段 base64：</p>
+  <p><code>header.payload.signature</code> 三段 base64url：</p>
   <ul>
-    <li><b>header</b>：算法（如 HS256）。</li>
-    <li><b>payload</b>：存放数据（userId、过期时间 exp 等），<strong>任何人可解码看到，别放密码</strong>。</li>
-    <li><b>signature</b>：用密钥对前两段签名，防篡改。</li>
+    <li><b>header</b>：<code>{alg, typ}</code>，声明算法。</li>
+    <li><b>payload</b>：业务数据（userId、exp 等）；<strong>任何人可 base64 解码看到，绝不能放密码</strong>。</li>
+    <li><b>signature</b>：对前两段的签名，防篡改（改 payload 验签即失败）。</li>
   </ul>
 
-  <h2 id="s3">3. 签发令牌</h2>
-  <p>Node 用 <code>jsonwebtoken</code>：</p>
+  <h2 id="s3">3. 签名算法</h2>
+  <table>
+    <tr><th>算法</th><th>特点</th><th>适用</th></tr>
+    <tr><td>HS256</td><td>对称，同一密钥签名/验证</td><td>单团队、密钥好保管</td></tr>
+    <tr><td>RS256/ES256</td><td>非对称，私钥签、公钥验</td><td>多服务/第三方验证、可公开公钥</td></tr>
+  </table>
+  <div class="box danger"><span class="bt">算法混淆攻击：</span>若服务端只配 HS256 却用公钥文件当 HMAC 密钥，攻击者可把 alg 改成 HS256 用公钥签名伪造令牌。对策：服务端<strong>固定并显式校验 alg</strong>，绝不“按令牌声明的算法验签”。另禁用 <code>alg:none</code>。</div>
+
+  <h2 id="s4">4. 签发与校验</h2>
   <pre><code>import jwt from 'jsonwebtoken';
 const token = jwt.sign(
   { userId: 1, name: '小王' },
-  process.env.JWT_SECRET,     // 服务端密钥，绝不外泄
-  { expiresIn: '2h' }
-);</code></pre>
+  process.env.JWT_SECRET,    // 服务端密钥，env 注入，足够随机
+  { expiresIn: '2h', issuer: 'my-app' }
+);
 
-  <h2 id="s4">4. 校验令牌</h2>
-  <pre><code>function auth(req, res, next) {
+function auth(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);   // 验签+过期
+    req.user = jwt.verify(token, process.env.JWT_SECRET, { issuer: 'my-app' });
     next();
   } catch { res.status(401).json({ msg: '未登录' }); }
 }</code></pre>
+  <div class="box ok"><span class="bt">资深：</span>verify 时校验 <code>exp</code>、<code>iss</code>、<code>aud</code>，并固定算法白名单。</div>
 
-  <h2 id="s5">5. 前端携带</h2>
-  <pre><code>fetch('/api/me', { headers: { Authorization: 'Bearer ' + token } });</code></pre>
+  <h2 id="s5">5. 刷新令牌</h2>
+  <ul>
+    <li><b>访问令牌</b>短命（如 15m~2h），被盗用窗口小。</li>
+    <li><b>刷新令牌</b>长效，存 HttpOnly Cookie，访问令牌过期时换发新令牌（<b>旋转</b>：每次用旧 refresh 换新的，并作废旧的，防重放）。</li>
+    <li><b>吊销</b>：refresh 可进库（用户登出/改密即作废），而 access token 靠短过期自然失效。</li>
+  </ul>
 
-  <h2 id="s6">6. 刷新令牌</h2>
-  <p>访问令牌短命（如 2h），另发一个长效 refresh token 存 HttpOnly Cookie；访问令牌过期时用 refresh 换新的，提升安全性。</p>
+  <h2 id="s6">6. 攻击向量</h2>
+  <ul>
+    <li><b>重放</b>：截获令牌在过期前重用；可加 <code>jti</code>+短期黑名单/nonce。</li>
+    <li><b>密钥泄露</b>：任何人可伪造；泄露即轮换并作废在飞令牌。</li>
+    <li><b>算法降级</b>：见 §3，固定 alg 可防。</li>
+    <li><b>弱密钥</b>：HS256 用弱口令 → 暴力破解；用长随机密钥。</li>
+  </ul>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>密钥写死在代码或泄露，任何人可伪造令牌；用环境变量且足够随机。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>payload 里放敏感信息（密码），base64 一解码就暴露。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>不设过期或过期太长，令牌被盗用风险高；短过期 + refresh。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>前端把 token 存 localStorage 易被 XSS 偷；敏感场景用 HttpOnly Cookie。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>JWT 无法主动吊销（除非维护黑名单）；重大风险时只能等过期或换密钥。</div>
+  <h2 id="s7">7. 存储与防护</h2>
+  <table>
+    <tr><th>位置</th><th>风险</th></tr>
+    <tr><td>localStorage</td><td>易被 XSS 窃取 → 用 CSP 收紧、尽量不用</td></tr>
+    <tr><td>HttpOnly Cookie</td><td>防 XSS 读，但要防 CSRF（SameSite + 双重提交）</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">密码存储：</span>口令用 <code>bcrypt/argon2</code> 加盐哈希，永远不存明文、不进 JWT。</div>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>给后端加一个登录签发 + 中间件校验。</li>
-    <li>配合 <a href="express.html">Express</a> 写受保护接口。</li>
-    <li>学 <a href="nginx.html">Nginx</a> 部署与 <a href="https.html">HTTPS</a> 加密。</li>
-    <li>看简历工坊，鉴权实现。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能签发/校验 JWT、做登录鉴权与刷新——前后端分离的身份认证你已掌握。</div>
+  <h2 id="s8">8. 与 OAuth2 / OIDC</h2>
+  <p>JWT 是令牌格式；OAuth2 是授权框架（常用 JWT 作 access token），OIDC 在其上做身份认证。自研登录用 JWT 即可；接入第三方登录（微信/Google）走 OIDC。</p>
+
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>密钥写死/泄露 → 伪造令牌；env 注入且足够随机。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>payload 放密码 → base64 一解码就暴露。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>过期太长 → 短过期 + refresh。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>token 存 localStorage 被 XSS 偷 → 敏感用 HttpOnly Cookie。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>不固定 alg → 算法混淆伪造。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>JWT 无法主动吊销 → 关键场景用黑名单或短过期 + 版本号。</div>
+
+  <h2 id="s10">10. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会签发/校验 JWT 做登录</td></tr>
+    <tr><td>初级</td><td>refresh 令牌、HttpOnly Cookie</td></tr>
+    <tr><td>中级</td><td>算法混淆防护、攻击面分析</td></tr>
+    <tr><td>资深</td><td>吊销体系、OIDC 集成、密码哈希治理</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 签发含 exp/iss 的 JWT ② 中间件校验并固定 alg ③ 实现 refresh 旋转 ④ 用 HttpOnly Cookie 存 refresh ⑤ 用 bcrypt 存密码 ⑥ 排查算法混淆漏洞。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 JWT 无状态的本质取舍与攻击面，能安全地签发、校验、刷新与存储令牌——这是资深后端做身份认证的安全底线。</div>
 </main>
 </div>
 <script>

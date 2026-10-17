@@ -11,53 +11,99 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Express<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 第一个 API</a>
-  <a href="#s3">3. 中间件</a>
-  <a href="#s4">4. 与前端联调</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个服务</a>
+  <a href="#s4">4. 路由</a>
+  <a href="#s5">5. 中间件</a>
+  <a href="#s6">6. 解析请求体</a>
+  <a href="#s7">7. 实战：待办 API</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Express</h1>
-  <p class="tsub">最经典的 Node.js Web 框架 —— Memora 用 Express 写 REST 接口与 SSE 流式。</p>
+  <p class="tsub">Node.js 最经典的 Web 框架 —— 极简、灵活，几行代码写一个 REST API。Memora 后端就用它。学完你能独立写后端接口。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>Express 是 Node 上最流行的<strong>轻量 Web 框架</strong>，帮你处理路由（URL→处理函数）、请求解析、中间件。它极简、自由，几乎所有 Node 后端课都从它讲起。</p>
+  <p><strong>Express</strong> 是 Node.js 的 Web 框架，在原生 <code>http</code> 之上封装了简洁的路由、中间件机制。</p>
+  <div class="box"><span class="bt">一句话：</span>原生 http 写接口很啰嗦；Express 让你 <code>app.get('/x', ...)</code> 一句话搞定路由。</div>
+  <div class="box ok"><span class="bt">适合：</span>REST API、BFF、中小型后端。轻量、自由；需要更多功能自己加中间件。</div>
 
-  <h2 id="s2">2. 第一个 API</h2>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>已装 <a href="nodejs.html">Node.js</a>。建项目：</p>
+  <pre><code>mkdir my-api &amp;&amp; cd my-api
+npm init -y
+npm install express</code></pre>
+
+  <h2 id="s3">3. 第一个服务</h2>
   <pre><code>import express from 'express';
 const app = express();
-app.use(express.json());              // 解析 JSON 请求体
+app.get('/', (req, res) =&gt; res.send('你好 Express'));
+app.listen(3000, () =&gt; console.log('http://localhost:3000'));</code></pre>
+  <p>保存为 <code>server.js</code>，<code>node server.js</code> 后访问即可。</p>
 
-app.get('/api/hi', (req, res) =&gt; {
-  res.json({ msg: '你好' });          // 返回 JSON
-});
-app.post('/api/echo', (req, res) =&gt; {
-  res.json({ youSent: req.body });    // 收前端发来的数据
-});
+  <h2 id="s4">4. 路由</h2>
+  <pre><code>app.get('/users', (req, res) =&gt; res.json([{id:1, name:'小王'}]));
+app.get('/users/:id', (req, res) =&gt; res.json({ id: req.params.id }));
+app.post('/users', (req, res) =&gt; res.status(201).json(req.body));
+app.put('/users/:id', ...);
+app.delete('/users/:id', ...);</code></pre>
 
-app.listen(3010, () =&gt; console.log('listening'));
-</code></pre>
-
-  <h2 id="s3">3. 中间件</h2>
-  <p>中间件是“请求到达路由前/后的一段处理逻辑”，像流水线：</p>
-  <pre><code>app.use((req, res, next) =&gt; {          // 每个请求都先过这里
-  console.log(req.method, req.url);
-  next();                              // 放行给下一个
+  <h2 id="s5">5. 中间件</h2>
+  <p>中间件是“请求到达路由前/后执行的函数”，用来做日志、鉴权、错误处理。</p>
+  <pre><code>app.use((req, res, next) =&gt; {
+  console.log(req.method, req.url);   // 日志
+  next();                            // 放行到下一个
 });</code></pre>
-  <div class="box ok"><span class="bt">常用中间件：</span><code>cors</code>（跨域）、<code>express.json()</code>（解析体）、<code>morgan</code>（日志）。鉴权也可用中间件统一拦截。</div>
 
-  <h2 id="s4">4. 与前端联调</h2>
-  <p>前端跑在 5173、后端在 3010，不同端口算“跨域”，要么前端配代理、要么后端加 <code>cors</code>。上线后由 <a href="nginx.html">Nginx</a> 把两者统一到同一域名。</p>
+  <h2 id="s6">6. 解析请求体</h2>
+  <pre><code>app.use(express.json());        // 解析 JSON 请求体
+app.post('/users', (req, res) =&gt; {
+  const { name } = req.body;   // 直接用
+  res.json({ ok: true, name });
+});</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>忘记 <code>express.json()</code>，<code>req.body</code> 是 undefined。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>异步错误没捕获会直接让进程崩——用 <code>try/catch</code> 或全局错误处理中间件。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>路径参数 <code>/user/:id</code> 与静态文件冲突，注意顺序。</div>
-  <div class="box"><span class="bt">进阶：</span>流式输出用 <a href="sse.html">SSE</a>，鉴权用 <a href="jwt.html">JWT</a>。</div>
+  <h2 id="s7">7. 实战：待办 API</h2>
+  <pre><code>let todos = [];
+app.get('/todos', (req, res) =&gt; res.json(todos));
+app.post('/todos', (req, res) =&gt; {
+  const t = { id: Date.now(), text: req.body.text, done: false };
+  todos.push(t);
+  res.status(201).json(t);
+});
+app.delete('/todos/:id', (req, res) =&gt; {
+  todos = todos.filter(t =&gt; t.id != req.params.id);
+  res.json({ ok: true });
+});</code></pre>
+  <div class="box ok"><span class="bt">练手：</span>用 Postman 或前端 <a href="react.html">React</a> 调这些接口，就是一个最小后端。</div>
+
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>忘了 <code>express.json()</code>，<code>req.body</code> 是 undefined。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>中间件顺序错：<code>next()</code> 没调用导致请求挂起；路由要在中间件之后注册（或放在合适顺序）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>用了 ES Module（<code>"type":"module"</code>）却 <code>const express = require('express')</code>，混用报错；统一用 <code>import</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>跨域（前端 3000 调后端 4000）被浏览器拦截；加 <code>cors</code> 中间件 <code>npm i cors</code>。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>没处理异常，出错返回 500 且进程可能崩；用错误中间件 <code>app.use((err,req,res,next)=&gt;...)</code>。</div>
+
+  <h2 id="s9">9. 下一步</h2>
+  <ol>
+    <li>把待办 API 接到真实数据库（<a href="bettersqlite.html">SQLite</a> / <a href="mysql.html">MySQL</a>）。</li>
+    <li>加 <a href="jwt.html">JWT</a> 登录鉴权。</li>
+    <li>用 <a href="pm2.html">PM2</a> 守护 + <a href="nginx.html">Nginx</a> 反代。</li>
+    <li>看 Memora 源码，Express 实战范例。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 Express、写路由、用中间件、解析请求体、做 CRUD API——Node 后端接口你已能写。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

@@ -11,45 +11,90 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Node.js<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 事件循环</a>
-  <a href="#s3">3. 第一个服务</a>
-  <a href="#s4">4. npm 包管理</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个脚本</a>
+  <a href="#s4">4. 模块与 npm</a>
+  <a href="#s5">5. 读写文件</a>
+  <a href="#s6">6. 起一个 HTTP 服务</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Node.js</h1>
-  <p class="tsub">让 JavaScript 跑在服务端的运行时 —— Memora 与游戏中转服务都基于它。</p>
+  <p class="tsub">让 JavaScript 跑在服务器上的运行时 —— 前后端统一语言，Memora、网页游戏后端都基于 Node。学完你能写服务端程序。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>浏览器之外，JS 需要运行环境。Node.js 用 Chrome 的 V8 引擎把 JS 带到服务器端，让你用同一门语言写前端和后端。它还内置了文件、网络等系统能力，是 <a href="express.html">Express</a>、<a href="pm2.html">PM2</a> 等工具的地基。</p>
+  <p><strong>Node.js</strong> 是把 Chrome 的 V8 引擎拿出来，让 JavaScript 脱离浏览器在服务器端运行的环境。它<strong>不是框架</strong>，是“运行时”。</p>
+  <div class="box"><span class="bt">一句话：</span>以前 JS 只在浏览器跑；有了 Node，JS 能写服务器、命令行工具、桌面应用。</div>
+  <div class="box ok"><span class="bt">特点：</span>事件驱动、非阻塞 I/O，擅长高并发 I/O（接口、网关、实时服务）。</div>
 
-  <h2 id="s2">2. 事件循环</h2>
-  <p>Node 是<strong>单线程 + 异步非阻塞</strong>：一个线程处理大量并发请求，遇到 I/O（读文件、查库）不干等，先去处理别的，完了再回调。这让它特别适合“很多连接、但每次不重”的场景（如聊天、API）。</p>
-  <div class="box"><span class="bt">记忆：</span>CPU 密集型（如大规模计算）不是 Node 强项，那种用多进程/其他语言。</div>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>到 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> 装 LTS，验证：</p>
+  <pre><code>node -v
+npm -v        # Node 自带包管理器</code></pre>
 
-  <h2 id="s3">3. 第一个服务</h2>
-  <pre><code>// server.js
-const http = require('http');
-const srv = http.createServer((req, res) =&gt; {
-  res.end('Hello from Node!');
+  <h2 id="s3">3. 第一个脚本</h2>
+  <p>新建 <code>hello.js</code>：</p>
+  <pre><code>console.log('你好，Node');</code></pre>
+  <p>运行：<code>node hello.js</code>。就这么简单。</p>
+
+  <h2 id="s4">4. 模块与 npm</h2>
+  <p>ESM（推荐，Node 现代写法）：</p>
+  <pre><code>// math.js
+export function add(a, b) { return a + b; }
+// main.js
+import { add } from './math.js';
+console.log(add(1, 2));</code></pre>
+  <p>CommonJS（老，仍大量存在）：</p>
+  <pre><code>// math.js
+module.exports = { add: (a,b)=>a+b };
+// main.js
+const { add } = require('./math.js');</code></pre>
+  <p>npm 装包：<code>npm install lodash</code>，然后 <code>import _ from 'lodash'</code>。</p>
+
+  <h2 id="s5">5. 读写文件</h2>
+  <pre><code>import { readFile, writeFile } from 'node:fs/promises';
+const txt = await readFile('a.txt', 'utf8');
+await writeFile('b.txt', txt + '!');</code></pre>
+  <div class="box ok"><span class="bt">提示：</span>Node 顶层 <code>await</code> 需在 ESM（<code>"type":"module"</code>）下可用。</div>
+
+  <h2 id="s6">6. 起一个 HTTP 服务</h2>
+  <pre><code>import http from 'node:http';
+const server = http.createServer((req, res) =&gt; {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ msg: 'hello' }));
 });
-srv.listen(3010, () =&gt; console.log('跑在 3010'));</code></pre>
-  <pre><code>node server.js   # 终端运行，访问 http://localhost:3010</code></pre>
+server.listen(3000, () =&gt; console.log('http://localhost:3000'));</code></pre>
+  <div class="box"><span class="bt">更爽：</span>实际开发用 <a href="express.html">Express</a> 框架，路由写法更简洁。</div>
 
-  <h2 id="s4">4. npm 包管理</h2>
-  <p><code>npm</code> 是 Node 的包管理器（装第三方库、管依赖）：</p>
-  <pre><code>npm init -y        # 生成 package.json
-npm install express # 装依赖，写进 package.json
-npm run start      # 运行 scripts 里定义的命令</code></pre>
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>混用 ESM 和 CJS：文件是 <code>.js</code> 但没设 <code>"type":"module"</code>，用 <code>import</code> 会报错，改用 <code>require</code> 或把文件改 <code>.mjs</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>回调地狱（老代码）；新代码用 <code>async/await</code> + Promise。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>同步阻塞 API（如 <code>readFileSync</code>）在高并发接口里拖慢整体，尽量用异步。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忘记 <code>res.end()</code>，请求一直挂起。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>全局安装包后命令行找不到，检查 npm 全局路径是否在 PATH。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>回调地狱——用 <code>async/await</code> 替代层层回调。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>版本兼容性：某些原生模块（如 isolated-vm）在 Node 22 编译失败，要锁 <b>Node 20</b>（Memora 真实踩坑）。</div>
-  <div class="box warn"><span class="bt">坑 3：</span><code>require</code> 与 <code>import</code> 混用（CommonJS vs ESM）会报错，项目里保持一致。</div>
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>用 Node 写一个命令行小工具。</li>
+    <li>学 <a href="express.html">Express</a> 写 REST API。</li>
+    <li>学 <a href="typescript.html">TypeScript</a> 给 Node 加类型。</li>
+    <li>学 <a href="pm2.html">PM2</a> 守护进程。</li>
+    <li>看 Memora 后端，纯 Node + Express。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 Node、写脚本、用模块、读写文件、起 HTTP 服务——服务端 JS 你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

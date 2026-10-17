@@ -2,59 +2,98 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bun + Elysia · 小白通关教程</title>
+<title>Bun · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Bun + Elysia<small>小白通关教程</small></div>
+  <div class="tbrand">Bun<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么比 Node 快</a>
-  <a href="#s3">3. 第一个服务</a>
-  <a href="#s4">4. Elysia 框架</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 跑脚本/装包</a>
+  <a href="#s4">4. 内置 API</a>
+  <a href="#s5">5. 起 HTTP 服务</a>
+  <a href="#s6">6. 与 Node 差异</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Bun + Elysia</h1>
-  <p class="tsub">更快的 JS 运行时 + 轻量后端框架 —— 网页游戏前端用它构建、后端也用它跑。</p>
+  <h1>Bun</h1>
+  <p class="tsub">一体化的 JavaScript 运行时 + 工具链 —— 比 Node 更快，自带包管理器、测试、打包。学完你能用更现代的“全家桶”跑 JS 项目。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Bun</strong> 是近年兴起的 JavaScript 运行时，定位是 Node 的“更快替代”：启动快、内置打包/测试、兼容 npm 生态。<strong>Elysia</strong> 是构建在 Bun 之上的极简、高性能后端框架，API 风格类似 Express 但类型更优雅。</p>
+  <p><strong>Bun</strong> 是新一代 JS 运行时（用 Zig 写，内嵌 JS 引擎），目标是一站式替代 Node + npm + 若干工具：</p>
+  <ul>
+    <li>运行时：直接跑 JS/TS，无需先编译 TS。</li>
+    <li>包管理器：<code>bun install</code> 比 <code>npm install</code> 快很多。</li>
+    <li>内置：HTTP 服务、测试 <code>bun test</code>、打包 <code>bun build</code>、脚本运行。</li>
+  </ul>
+  <div class="box"><span class="bt">一句话：</span>Node 能做的 Bun 都能做，且更省心更快；但不是 100% 兼容所有 Node API。</div>
 
-  <h2 id="s2">2. 为什么比 Node 快</h2>
-  <table>
-    <tr><th>维度</th><th>Bun</th><th>Node</th></tr>
-    <tr><td>底层引擎</td><td>JavaScriptCore（Safari 同款）</td><td>V8（Chrome 同款）</td></tr>
-    <tr><td>启动</td><td>极快</td><td>较快</td></tr>
-    <tr><td>内置能力</td><td>打包/测试/运行一体</td><td>需额外工具</td></tr>
-  </table>
+  <h2 id="s2">2. 环境准备</h2>
+  <pre><code># macOS / Linux
+curl -fsSL https://bun.sh/install | bash
+# Windows 用 npm：npm install -g bun
+bun -v</code></pre>
 
-  <h2 id="s3">3. 第一个服务</h2>
-  <pre><code>// 直接用 Bun 跑，不用装框架
-Bun.serve({
+  <h2 id="s3">3. 跑脚本/装包</h2>
+  <pre><code>bun run server.ts        # 直接跑 TS，无需 tsc
+bun install              # 装依赖，秒级
+bun add express          # 加依赖</code></pre>
+
+  <h2 id="s4">4. 内置 API</h2>
+  <pre><code>const txt = await Bun.file('a.txt').text();   // 读文件
+await Bun.write('b.txt', txt);                // 写文件
+console.log(Bun.env.API_KEY);                 // 读环境变量</code></pre>
+
+  <h2 id="s5">5. 起 HTTP 服务</h2>
+  <pre><code>Bun.serve({
   port: 3000,
   fetch(req) {
-    return new Response("Hello from Bun!");
+    return new Response(JSON.stringify({ msg: 'hi from Bun' }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-});</code></pre>
+});
+console.log('http://localhost:3000');</code></pre>
 
-  <h2 id="s4">4. Elysia 框架</h2>
-  <pre><code>import { Elysia } from 'elysia';
-new Elysia()
-  .get('/hello', () =&gt; ({ msg: '你好' }))
-  .listen(3000);</code></pre>
-  <div class="box ok"><span class="bt">亮点：</span>Elysia 的路由返回值自动序列化成 JSON，且类型推导强，写 API 很省心。</div>
+  <h2 id="s6">6. 与 Node 差异</h2>
+  <table>
+    <tr><th>能力</th><th>Node</th><th>Bun</th></tr>
+    <tr><td>跑 TS</td><td>需 tsc/ts-node</td><td>原生支持</td></tr>
+    <tr><td>装包</td><td>npm</td><td>bun install（快）</td></tr>
+    <tr><td>测试</td><td>jest/vitest</td><td>内置 bun test</td></tr>
+    <tr><td>HTTP</td><td>需框架</td><td>内置 Bun.serve</td></tr>
+  </table>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>个别 Node 原生模块（如 isolated-vm）在 Bun 下不兼容——必要时混用 Node（网页游戏项目就是 Bun + Node 务实并存）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>生产用 Bun 跑长驻服务，先确认稳定性；不确定就用 Node。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>Windows 上 Bun 仍在完善，建议 Linux/macOS 开发。</div>
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>某些 Node 专属原生模块/老库不兼容，跑起来报找不到功能；先用 Bun 试，不行回退 Node。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>Windows 上用 npm 全局装 bun 有时 PATH 没生效，重开终端或手动加。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>环境变量读取用 <code>Bun.env</code> 而非 <code>process.env</code>（两者都可用，但习惯统一）。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>部署到服务器要注意运行时是 Bun，CI/启动命令用 <code>bun run</code> 而非 <code>node</code>。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>把一个 Express 项目改用 <code>bun install</code> + <code>bun run</code>。</li>
+    <li>用 <code>bun test</code> 写几个测试。</li>
+    <li>学 <a href="nodejs.html">Node.js</a> 打基础。</li>
+    <li>配合 <a href="pm2.html">PM2</a> 守护（或 Bun 自带 --watch）。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 Bun、跑 TS、装包、起 HTTP 服务——现代 JS 工具链你已尝鲜。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

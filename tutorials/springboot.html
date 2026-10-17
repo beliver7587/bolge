@@ -11,52 +11,112 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Spring Boot<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么用它</a>
-  <a href="#s3">3. 第一个接口</a>
-  <a href="#s4">4. 分层结构</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 创建项目</a>
+  <a href="#s4">4. 目录结构</a>
+  <a href="#s5">5. 第一个接口</a>
+  <a href="#s6">6. 分层架构</a>
+  <a href="#s7">7. 连数据库</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Spring Boot</h1>
-  <p class="tsub">Java 后端一站式框架 —— 简历工坊后端用它搭 REST 服务。</p>
+  <p class="tsub">Java 世界最主流的后端框架 —— 开箱即用、内嵌 Tomcat，几分钟搭一个生产级 API 服务。简历工坊后端就是它。学完你能独立写 Java 后端。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>Spring Boot 是基于 Spring 的<strong>Java 后端框架</strong>，核心口号是“约定优于配置”：你不用写一堆 XML 和繁琐配置，它帮你把常用组件（Web、数据库、安全）自动装配好，几行代码就能起一个可运行的后端服务。</p>
+  <p><strong>Spring Boot</strong> 是 Spring 家族的“快速启动器”，帮你省掉大量 XML 配置。核心价值：</p>
+  <ul>
+    <li><b>内嵌服务器</b>：自带 Tomcat，<code>java -jar</code> 直接跑，不用单独装 Web 容器。</li>
+    <li><b>自动配置</b>：引入依赖就自动配好常用组件。</li>
+    <li><b>起步依赖</b>：<code>spring-boot-starter-web</code> 一键拿全套 Web 能力。</li>
+  </ul>
+  <div class="box"><span class="bt">一句话：</span>写最少的配置，最快拥有一个能跑的后端服务。</div>
 
-  <h2 id="s2">2. 为什么用它</h2>
-  <table>
-    <tr><th>能力</th><th>说明</th></tr>
-    <tr><td>内嵌服务器</td><td>自带 Tomcat，<code>java -jar</code> 直接跑，不用另装</td></tr>
-    <tr><td>自动配置</td><td>引入依赖即自动装配，极大减少样板</td></tr>
-    <tr><td>生态完整</td><td>安全、数据库、缓存、消息全家桶</td></tr>
-  </table>
+  <h2 id="s2">2. 环境准备</h2>
+  <div class="step"><div class="n">1</div><div class="b"><h4>装 JDK 17+</h4><p>到 <a href="https://adoptium.net" target="_blank" rel="noopener">Adoptium</a> 下载 Temurin 17 LTS，安装并配置 <code>JAVA_HOME</code>。</p><pre><code>java -version   # 应显示 17 或 21</code></pre></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>装构建工具</h4><p>用 <strong>Maven</strong>（最普遍）或 Gradle。装 Maven 后：</p><pre><code>mvn -v</code></pre></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><h4>装 IDE</h4><p>推荐 IntelliJ IDEA（社区版免费）。</p></div></div>
 
-  <h2 id="s3">3. 第一个接口</h2>
-  <pre><code>@RestController
-@RequestMapping("/api/user")
-public class UserController {
-  @GetMapping("/{id}")                  // GET /api/user/1
-  public String get(@PathVariable Long id){
-    return "用户" + id;
-  }
+  <h2 id="s3">3. 创建项目</h2>
+  <p>最方便：打开 <a href="https://start.spring.io" target="_blank" rel="noopener">start.spring.io</a>，选：
+  <ul>
+    <li>Project: Maven，Language: Java，Spring Boot: 3.x</li>
+    <li>Dependencies: <code>Spring Web</code>、<code>Spring Data JPA</code>、<code>MySQL Driver</code>（按需）</li>
+  </ul>
+  点 Generate 下载 zip，解压后用 IDEA 打开。</p>
+
+  <h2 id="s4">4. 目录结构</h2>
+  <pre><code>src/main/java/com/example/demo/
+├─ DemoApplication.java     # 启动类（有 main 方法）
+├─ controller/              # 接收 HTTP 请求
+├─ service/                 # 业务逻辑
+└─ repository/              # 数据库访问
+src/main/resources/
+├─ application.yml          # 配置文件（端口、数据库等）
+└─ application.properties</code></pre>
+
+  <h2 id="s5">5. 第一个接口</h2>
+  <pre><code>// DemoApplication.java 同级建一个 HelloController.java
+@RestController
+public class HelloController {
+    @GetMapping("/hello")
+    public String hello() {
+        return "你好，Spring Boot!";
+    }
 }</code></pre>
-  <div class="box ok"><span class="bt">注解是关键：</span><code>@RestController</code> 声明这是个接口类；<code>@GetMapping</code> 把方法映射到某个 URL；Spring 自动把返回值转成 JSON。</div>
+  <p>运行 <code>DemoApplication</code> 的 main 方法，浏览器访问 <code>http://localhost:8080/hello</code> 即可看到返回。</p>
 
-  <h2 id="s4">4. 分层结构</h2>
-  <div class="diagram">Controller（接收请求）
-   → Service（业务逻辑）
-   → Mapper / Repository（操作数据库，见 MyBatis-Plus）
-   → Entity（数据模型）</div>
+  <h2 id="s6">6. 分层架构</h2>
+  <p>标准三层：Controller（接请求）→ Service（业务）→ Repository（数据）。示例：</p>
+  <pre><code>@RestController
+@RequestMapping("/users")
+public class UserController {
+    @Autowired private UserService service;
+    @GetMapping("/{id}") public User get(@PathVariable Long id) { return service.findById(id); }
+}</code></pre>
+  <div class="box ok"><span class="bt">好处：</span>职责清晰、易测试、易维护。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>端口冲突：默认 8080，被占就在 <code>application.yml</code> 改 <code>server.port</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>依赖版本不匹配（JDK 与 Spring Boot 版本要对应），IDE 报一堆错。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>跨域：前端不同源访问接口要加 <code>@CrossOrigin</code> 或全局 CORS 配置。</div>
-  <div class="box"><span class="bt">搭配：</span>数据库访问看 <a href="mybatisplus.html">MyBatis-Plus</a>，部署看 <a href="systemd.html">systemd</a> / <a href="nginx.html">Nginx</a>。</div>
+  <h2 id="s7">7. 连数据库</h2>
+  <p>在 <code>application.yml</code> 配置（详见 <a href="mysql.html">MySQL</a>）：</p>
+  <pre><code>spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/demo?useSSL=false&amp;serverTimezone=UTC
+    username: root
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update</code></pre>
+  <p>配合 <a href="mybatisplus.html">MyBatis-Plus</a> 或 JPA 即可操作数据。</p>
+
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>端口被占用：默认 8080，改 <code>server.port: 9090</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>JDK 版本不匹配 Spring Boot 3 要求 Java 17+，用 Java 8 会启动失败。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>依赖没下载完就跑，报 ClassNotFound；执行 <code>mvn clean install</code> 拉全依赖。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>@RestController 与 @Controller 混淆：前者返回 JSON/字符串，后者返回页面视图。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>循环依赖：Spring Boot 2.6+ 默认禁止，重构拆分服务。</div>
+
+  <h2 id="s9">9. 下一步</h2>
+  <ol>
+    <li>写几个 CRUD 接口练手。</li>
+    <li>学 <a href="mybatisplus.html">MyBatis-Plus</a> 操作数据库。</li>
+    <li>学 <a href="redis.html">Redis</a> 做缓存。</li>
+    <li>学 <a href="nginx.html">Nginx</a> + <a href="pm2.html">PM2</a>/systemd 部署 jar 包。</li>
+    <li>看简历工坊后端源码。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能建 Spring Boot 项目、写接口、分层、连数据库——Java 后端开发你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

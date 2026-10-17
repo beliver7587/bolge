@@ -11,54 +11,100 @@
 <nav class="tside" id="tside">
   <div class="tbrand">MyBatis-Plus<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么用它</a>
-  <a href="#s3">3. 定义实体与 Mapper</a>
-  <a href="#s4">4. 常用 CRUD</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 三步上手</a>
+  <a href="#s4">4. 增删改查</a>
+  <a href="#s5">5. 分页</a>
+  <a href="#s6">6. 条件构造器</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>MyBatis-Plus</h1>
-  <p class="tsub">MyBatis 的增强工具 —— 简历工坊数据层用它，单表 CRUD 几乎零 SQL。</p>
+  <p class="tsub">MyBatis 的增强工具 —— 不写 SQL 也能做 CRUD，单表操作效率翻倍。学完你能极简地操作数据库。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>MyBatis</strong> 是 Java 里把 SQL 和代码解耦的持久层框架；<strong>MyBatis-Plus（MP）</strong> 在它之上加了“通用 CRUD”——你不用为每张表写增删改查的 SQL，MP 自动生成。对单表操作，开发效率极高。</p>
+  <p><strong>MyBatis-Plus（MP）</strong> 在 MyBatis 之上加了“开箱即用的通用 Mapper/Service”，单表 CRUD 不用写 XML、不用写 SQL。</p>
+  <div class="box"><span class="bt">一句话：</span>MyBatis 要手写 SQL；MP 帮你把“增删改查”默认实现好，复杂 SQL 你再写。</div>
+  <div class="box ok"><span class="bt">适合：</span>国内 Java 后端主流，尤其管理后台表单多、单表操作多的场景。</div>
 
-  <h2 id="s2">2. 为什么用它</h2>
-  <div class="box"><span class="bt">对比：</span>原生 JDBC 要手写大量样板；MP 只要实体类 + 一个接口，<code>selectById</code>、<code>insert</code>、<code>update</code> 全白送，复杂查询再手写 SQL。</div>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>在 <a href="springboot.html">Spring Boot</a> 项目里引入：</p>
+  <pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+  &lt;artifactId&gt;mybatis-plus-spring-boot3-starter&lt;/artifactId&gt;
+  &lt;version&gt;3.5.7&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;!-- 同时要有 MySQL 驱动，见 MySQL 教程 --&gt;</code></pre>
 
-  <h2 id="s3">3. 定义实体与 Mapper</h2>
-  <pre><code>@TableName("resume")
-public class Resume {
-  @TableId(type = IdType.AUTO)
-  private Long id;
-  private String title;
-  private Long userId;
-  // getter / setter 省略
+  <h2 id="s3">3. 三步上手</h2>
+  <div class="step"><div class="n">1</div><div class="b"><h4>实体类（对应表）</h4><pre><code>@TableName("user")
+public class User {
+  @TableId(type = IdType.AUTO) private Long id;
+  private String name;
+  private Integer age;
+  // getter/setter 省略
+}</code></pre></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>Mapper 接口</h4><pre><code>public interface UserMapper extends BaseMapper&lt;User&gt; {
+  // 不用写任何方法，CRUD 全在 BaseMapper 里
+}</code></pre></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><h4>启动类加扫描</h4><pre><code>@MapperScan("com.example.demo.mapper")
+@SpringBootApplication
+public class DemoApplication { ... }</code></pre></div></div>
+
+  <h2 id="s4">4. 增删改查</h2>
+  <pre><code>@Autowired UserMapper userMapper;
+
+userMapper.insert(user);                 // 增
+userMapper.selectById(1L);               // 查
+userMapper.updateById(user);             // 改
+userMapper.deleteById(1L);               // 删
+userMapper.selectList(null);             // 查全部</code></pre>
+
+  <h2 id="s5">5. 分页</h2>
+  <p>先注册分页插件，再调用：</p>
+  <pre><code>@Bean public MybatisPlusInterceptor mpInterceptor() {
+  MybatisPlusInterceptor i = new MybatisPlusInterceptor();
+  i.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+  return i;
 }
+// 使用
+Page&lt;User&gt; page = userMapper.selectPage(new Page&lt;&gt;(1, 10), null);
+page.getRecords();   // 本页数据
+page.getTotal();     // 总条数</code></pre>
 
-public interface ResumeMapper extends BaseMapper&lt;Resume&gt; {
-  // 什么都不用写，已继承 select/insert/update/delete
-}</code></pre>
+  <h2 id="s6">6. 条件构造器</h2>
+  <pre><code>QueryWrapper&lt;User&gt; w = new QueryWrapper&lt;&gt;();
+w.gt("age", 18).like("name", "王").orderByDesc("id");
+userMapper.selectList(w);</code></pre>
 
-  <h2 id="s4">4. 常用 CRUD</h2>
-  <pre><code>// 注入 mapper 后直接使用
-Resume r = mapper.selectById(1L);          // 按主键查
-mapper.insert(r);                           // 插
-mapper.updateById(r);                        // 改
-mapper.deleteById(1L);                       // 删
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>忘了 <code>@MapperScan</code>，启动报找不到 Mapper Bean。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>字段名和数据库列名不一致导致 null，用 <code>@TableField("col_name")</code> 映射。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>主键自增没标 <code>@TableId(type=IdType.AUTO)</code>，插入报错。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>分页没加插件，<code>selectPage</code> 返回全部不分页。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>MP 版本与 Spring Boot 3 不匹配，用 <code>mybatis-plus-spring-boot3-starter</code>。</div>
 
-// 条件构造器（不用写 SQL）
-mapper.selectList(new QueryWrapper&lt;Resume&gt;()
-  .eq("user_id", 10).like("title", "前端"));</code></pre>
-
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>实体类名/字段名和表对不上要用 <code>@TableName</code> / <code>@TableField</code> 显式指定。</div>
-  <div class="box warn"><span class="bt">坑 2：</span><code>QueryWrapper</code> 拼条件易 SQL 注入风险——用 <code>.eq()</code> 等安全方法而非 <code>last("...")</code> 拼字符串。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>逻辑删除、乐观锁等要加注解才生效，别以为默认开启。</div>
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>用 MP 写一个用户管理 CRUD 接口。</li>
+    <li>配合 <a href="springboot.html">Spring Boot</a> 分层架构。</li>
+    <li>学 <a href="mysql.html">MySQL</a> 设计表结构。</li>
+    <li>看简历工坊后端，MP 大量用于数据访问。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能配置 MP、用 Mapper 做 CRUD、分页、写条件查询——Java 持久层你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

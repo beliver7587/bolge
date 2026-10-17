@@ -1,75 +1,129 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SSE · 小白通关教程</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
+<title>SSE · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">SSE<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 服务端</a>
-  <a href="#s3">3. 浏览器端</a>
-  <a href="#s4">4. 与 WebSocket</a>
-  <a href="#s5">5. 实战：打字机</a>
-  <a href="#s6">6. 常见坑</a>
-  <a href="#s7">7. 下一步</a>
+  <div class="tbrand">SSE<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 协议格式</a>
+  <a href="#s3">3. 服务端</a>
+  <a href="#s4">4. 客户端</a>
+  <a href="#s5">5. 对比 WebSocket</a>
+  <a href="#s6">6. 流式 LLM</a>
+  <a href="#s7">7. 部署要点</a>
+  <a href="#s8">8. 鉴权</a>
+  <a href="#s9">9. 健壮与背压</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 调试</a>
+  <a href="#s12">12. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>SSE</h1>
-  <p class="tsub">服务端推送事件（Server-Sent Events）—— 服务端能一条条把数据推给浏览器，用来做“打字机式”的 AI 回复、实时进度条。Memora 用它流式输出。学完你能做流式界面。</p>
+  <h1>SSE：从小白到资深</h1>
+  <p class="tsub"><strong>SSE（Server-Sent Events）</strong> 是基于 HTTP 的<strong>单向流式</strong>推送：浏览器开一条长连接，服务端随时推文本片段，断线浏览器自动重连。它是大模型“打字机式”输出、实时进度条的首选（Memora 即用此流式回答）。本教程讲透<strong>协议格式、服务端 flush 与心跳、客户端自动重连、流式 LLM、Nginx 部署、鉴权与健壮</strong>。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>SSE</strong> 是基于 HTTP 的单向（服务端→客户端）流式推送：浏览器建一条长连接，服务端随时推文本片段，自动重连。</p>
-  <div class="box"><span class="bt">对比：</span><a href="websocket.html">WebSocket</a> 双向全双工；SSE 只下不上、走普通 HTTP，更易与现有 Web 框架/反代兼容。</div>
-  <div class="box ok"><span class="bt">典型用途：</span>大模型逐字输出、日志流、行情推送。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>传统请求“一来一回”；SSE 让服务端能<strong>持续、逐片</strong>地把数据推给浏览器——适合“结果逐步产生”的场景（LLM 逐 token、日志流、行情）。</p>
+  <div class="box"><span class="bt">对比：</span><a href="websocket.html">WebSocket</a> 双向全双工，适合游戏/实时交互；SSE 只下不上、走普通 HTTP，与 Web 框架/反代天然兼容、自动重连。轮询则又慢又浪费。</div>
 
-  <h2 id="s2">2. 服务端</h2>
-  <p>用 <a href="express.html">Express</a>：</p>
+  <h2 id="s2">2. 协议格式</h2>
+  <p>每条事件是一组以 <code>\n\n</code>（空行）结尾的字段行：</p>
+  <pre><code>data: 第1片\n
+data: 第2行也属同一事件\n
+event: progress\n
+id: 42\n
+retry: 3000\n
+\n
+: 这是注释（心跳），以冒号开头</code></pre>
+  <ul>
+    <li><code>data:</code> 多行会自动拼接成一个事件；<code>event:</code> 指定事件名（默认 message）。</li>
+    <li><code>id:</code> 用于断线后续传（Last-Event-ID）；<code>retry:</code> 指定重连间隔。</li>
+    <li><b>必须以空行 <code>\n\n</code> 结束</b>，否则浏览器不触发。</li>
+  </ul>
+
+  <h2 id="s3">3. 服务端</h2>
   <pre><code>app.get('/stream', (req, res) =&gt; {
-  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive'
+  });
   let i = 0;
-  const timer = setInterval(() =&gt; {
-    res.write(`data: 第${i++}条\n\n`);   // 每条以 \n\n 结尾
-    if (i &gt; 5) { clearInterval(timer); res.end(); }
+  const t = setInterval(() =&gt; {
+    res.write(`data: 第${i++}条\n\n`);     // 每个事件独立、以空行结尾
+    if (i &gt; 5) { clearInterval(t); res.end(); }
   }, 1000);
+  // 心跳：定时发注释行，防止代理因空闲断开
+  const hb = setInterval(() =&gt; res.write(': ping\n\n'), 15000);
+  req.on('close', () =&gt; { clearInterval(t); clearInterval(hb); });  // 断开务必清理
 });</code></pre>
 
-  <h2 id="s3">3. 浏览器端</h2>
+  <h2 id="s4">4. 客户端</h2>
   <pre><code>const es = new EventSource('/stream');
-es.onmessage = (e) =&gt; console.log('收到：', e.data);
-es.onerror = () =&gt; { es.close(); };</code></pre>
+es.onmessage = (e) =&gt; render(e.data);                 // 默认 message 事件
+es.addEventListener('progress', (e) =&gt; updateBar(e.data));  // 命名事件
+es.onerror = () =&gt; { /* 浏览器会自动重连，无需手动 */ };</code></pre>
+  <ul>
+    <li>断线后浏览器<strong>自动重连</strong>，并带上 <code>Last-Event-ID</code> 头；服务端可据此续传。</li>
+    <li>用完 <code>es.close()</code> 释放连接。</li>
+  </ul>
 
-  <h2 id="s4">4. 与 WebSocket</h2>
+  <h2 id="s5">5. 对比 WebSocket</h2>
   <table>
     <tr><th></th><th>SSE</th><th>WebSocket</th></tr>
     <tr><td>方向</td><td>服务端→客户端</td><td>双向</td></tr>
-    <tr><td>协议</td><td>HTTP（好兼容）</td><td>独立 ws 协议</td></tr>
+    <tr><td>协议</td><td>HTTP（好兼容）</td><td>独立 ws 握手</td></tr>
     <tr><td>重连</td><td>浏览器自动</td><td>自己写</td></tr>
-    <tr><td>适合</td><td>流式输出</td><td>实时交互/游戏</td></tr>
+    <tr><td>适合</td><td>流式输出/推送</td><td>实时交互/游戏</td></tr>
   </table>
 
-  <h2 id="s5">5. 实战：打字机</h2>
-  <p>大模型返回按 token 切片，服务端用 SSE 逐片 <code>data:</code> 推送，前端把 <code>e.data</code> 累加到页面，就是聊天机器人“逐字出现”的效果。</p>
+  <h2 id="s6">6. 流式 LLM</h2>
+  <p>把模型按 token 的增量片段，逐片 <code>data:</code> 推出；前端把 <code>e.data</code> 累加即“逐字出现”的打字机效果（见 <a href="agent.html">Agent</a> 步骤也可如此流式展示）。</p>
+  <div class="box ok"><span class="bt">资深：</span>每条 SSE 片只含“增量 token”，而非全量；前端负责拼接。注意编码与换行转义。</div>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>每条消息必须以空行 <code>\n\n</code> 结束，否则浏览器不触发 onmessage。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>经 <a href="nginx.html">Nginx</a> 反代时缓冲会延迟推送；设 <code>proxy_buffering off</code>。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>连接数限制：浏览器对同域 EventSource 并发有限；注意及时 <code>close()</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>需要带鉴权时，EventSource 不能直接设自定义 Header；用 cookie 或 URL 参数。</div>
+  <h2 id="s7">7. 部署要点</h2>
+  <ul>
+    <li><b>Nginx</b>：默认会缓冲响应导致“攒一批才推”，必须 <code>proxy_buffering off;</code> 并设 <code>proxy_read_timeout</code> 足够长（Memora 的 Nginx 已配好）。</li>
+    <li>若开 gzip，确认不缓冲流式；或对该路由关闭压缩。</li>
+  </ul>
 
-  <h2 id="s7">7. 下一步</h2>
-  <ol>
-    <li>用 SSE 做一个“逐字输出”的小 demo。</li>
-    <li>对比 <a href="websocket.html">WebSocket</a> 双向场景。</li>
-    <li>学 <a href="llm.html">LLM</a> 的流式接口。</li>
-    <li>看 Memora，SSE 流式回答实现。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能用 SSE 从服务端流式推数据到前端——实时/打字机界面你已掌握。</div>
+  <h2 id="s8">8. 鉴权</h2>
+  <div class="box warn"><span class="bt">EventSource 不能自定义 Header：</span>无法用 <code>Authorization: Bearer</code>。改用：① 同源 cookie（推荐，天然带）；② URL 查询参数带 token（注意日志泄露）；③ 先拿一次性 ticket 再连。</div>
+
+  <h2 id="s9">9. 健壮与背压</h2>
+  <ul>
+    <li><b>心跳</b>：定时发注释行 <code>: ping\n\n</code>，防代理/网关因空闲断开长连接。</li>
+    <li><b>清理</b>：监听 <code>req.on('close')</code> 清掉 timer/流，避免泄漏。</li>
+    <li><b>背压</b>：高频写入时关注 <code>res.write</code> 返回 false（缓冲区满），必要时暂停生产。</li>
+  </ul>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>事件没以 <code>\n\n</code> 结尾 → 浏览器不触发 onmessage。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>Nginx 缓冲 → 推送延迟；设 <code>proxy_buffering off</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>断线没清理 timer/流 → 内存泄漏。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>想用自定义 Header 鉴权 → EventSource 不支持，改用 cookie/参数。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>代理空闲超时断流 → 加心跳、调长超时。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>浏览器同域 EventSource 并发有限 → 及时 close。</div>
+
+  <h2 id="s11">11. 调试</h2>
+  <pre><code>curl -N http://localhost:3010/stream     # -N 禁用缓冲，直接看逐片输出</code></pre>
+
+  <h2 id="s12">12. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能写 SSE 服务端 + EventSource 客户端</td></tr>
+    <tr><td>初级</td><td>会命名事件、流式 LLM、清理连接</td></tr>
+    <tr><td>中级</td><td>心跳、Nginx 部署、鉴权方案</td></tr>
+    <tr><td>资深</td><td>背压、断线续传、生产可靠性</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 写 SSE 逐片推送 ② 接 LLM 流式接口做打字机 ③ Nginx 配 <code>proxy_buffering off</code> 验证 ④ 用 cookie 鉴权 ⑤ 加心跳防断 ⑥ 模拟断线看自动重连与 Last-Event-ID 续传。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 SSE 协议与部署陷阱，能做出稳定流式输出——这是资深 AI 后端做实时体验的标配能力。</div>
 </main>
 </div>
 <script>

@@ -2,76 +2,106 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Git · 小白通关教程</title>
+<title>Git · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Git<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个仓库</a>
-  <a href="#s4">4. 提交与查看</a>
-  <a href="#s5">5. 分支</a>
-  <a href="#s6">6. 远程协作</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">Git<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 数据模型</a>
+  <a href="#s3">3. 三区与基础</a>
+  <a href="#s4">4. 分支模型</a>
+  <a href="#s5">5. 远程协作</a>
+  <a href="#s6">6. 历史改写</a>
+  <a href="#s7">7. 暂存/标签/hooks</a>
+  <a href="#s8">8. 工作流</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Git</h1>
-  <p class="tsub">代码版本控制系统 —— 记录每次改动、随时回退、多人协作不打架。程序员必备。学完你能独自管理版本并与他人协作。</p>
+  <h1>Git：从小白到资深</h1>
+  <p class="tsub"><strong>Git</strong> 是分布式版本控制系统——记录每次改动快照、随时回退、多人并行协作。本教程讲透<strong>数据模型（快照/三区）、分支与 rebase、远程协作、历史改写安全边界、工作流与 hooks</strong>——程序员与 AI 协作都绕不开的基石。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Git</strong> 给项目建一个“时光机”：每次提交（commit）存下完整快照，可随时回到任意版本。配合 <a href="https://github.com" target="_blank">GitHub</a> 还能多人协作、备份到云端。</p>
-  <div class="box"><span class="bt">对比：</span>网盘/U盘只存最新版；Git 存全部历史，且能并行开发（分支）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>网盘只存最新版、改错难回退、多人改同一文件必冲突。Git 存全部历史，支持并行分支与可控合并，是“代码时光机 + 协作总线”。</p>
+  <div class="box"><span class="bt">分布式：</span>每人本地有完整仓库，离线可提交；远端（GitHub）只是其中一个副本，便于备份与协作。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>装 Git（Windows 装 Git for Windows；Mac <code>brew install git</code>；Linux <code>apt install git</code>）。配置身份：</p>
+  <h2 id="s2">2. 数据模型</h2>
+  <ul>
+    <li><b>快照而非差异</b>：每次 commit 记录项目完整状态（未变文件只存指向上版的指针）。</li>
+    <li><b>对象</b>：blob（文件内容）、tree（目录）、commit（指向 tree + 父提交 + 信息）、tag。</li>
+    <li><b>HEAD</b>：指向当前所在分支的最新提交。</li>
+  </ul>
+
+  <h2 id="s3">3. 三区与基础</h2>
+  <div class="diagram">工作区(你编辑) → git add → 暂存区(index) → git commit → 版本库</div>
   <pre><code>git config --global user.name "你的名字"
-git config --global user.email "you@example.com"</code></pre>
+git config --global user.email "you@example.com"
+git init
+git add -A                # 或精准 add 指定文件
+git commit -m "feat: 新增登录接口"   # 用 Conventional Commits 规范</code></pre>
+  <div class="box ok"><span class="bt">提交信息：</span><code>&lt;type&gt;: &lt;简述&gt;</code>（feat/fix/style/refactor/perf/docs/chore），正文写清“改了什么、为什么、如何验证”。一次提交只做一件事，便于回档。</div>
 
-  <h2 id="s3">3. 第一个仓库</h2>
-  <pre><code>cd my-project
-git init                 # 初始化仓库
-echo "# 我的项目" &gt; README.md
-git add README.md
-git commit -m "首次提交"</code></pre>
+  <h2 id="s4">4. 分支模型</h2>
+  <pre><code>git branch feature && git switch feature     # 建并切
+git merge feature                            # 合并回主线（产生合并提交）
+git rebase main                              # 把当前分支挪到 main 顶端（线性历史）</code></pre>
+  <ul>
+    <li><b>merge</b>：保留分叉历史，安全但图复杂。</li>
+    <li><b>rebase</b>：历史线性整洁，但改写了提交（勿对公共分支 rebase）。</li>
+    <li><b>冲突</b>：两边改同处需手动解决，再 <code>add</code>+<code>commit</code>。</li>
+  </ul>
 
-  <h2 id="s4">4. 提交与查看</h2>
-  <pre><code>git status               # 看哪些文件改了
-git add -A               # 暂存全部改动
-git commit -m "改了首页"
-git log --oneline        # 看历史</code></pre>
-
-  <h2 id="s5">5. 分支</h2>
-  <pre><code>git branch feature       # 建分支
-git checkout feature     # 切过去
-# 改完合并回主分支
-git checkout main &amp;&amp; git merge feature</code></pre>
-  <div class="box ok"><span class="bt">要点：</span>分支让你并行试错，不污染主线；开发完再合并。</div>
-
-  <h2 id="s6">6. 远程协作</h2>
+  <h2 id="s5">5. 远程协作</h2>
   <pre><code>git remote add origin https://github.com/你/仓库.git
-git push -u origin main     # 推到 GitHub
-git pull                    # 拉取他人改动</code></pre>
+git push -u origin main      # -u 绑上游，之后 git push/pull 即可
+git fetch                    # 取远端但不合并
+git pull                     # fetch + merge（或 rebase）</code></pre>
+  <div class="box warn"><span class="bt">推送被拒：</span>远端有别人新提交 → 先 <code>pull</code>（建议 <code>pull --rebase</code>）再推。</div>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>提交前没 <code>git add</code>，改动没进版本；先 add 再 commit。</div>
-  <div class="box warn"><span class="bt">坑 2：</span><code>git push</code> 被拒（远程有别人提交）；先 <code>git pull</code> 再推。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>把密钥/.env 提交进仓库泄露；用 <code>.gitignore</code> 排除。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>强推 <code>git push --force</code> 覆盖他人历史；非必要时禁用。</div>
+  <h2 id="s6">6. 历史改写（安全边界）</h2>
+  <ul>
+    <li><code>git reset --soft/--mixed/--hard</code>：回退提交（hard 会丢工作区改动，慎用）。</li>
+    <li><code>git revert &lt;commit&gt;</code>：生成“反向提交”撤销，**不改历史**，生产首选。</li>
+    <li><code>git checkout &lt;commit&gt; -- 路径</code>：只回档某文件到某版本。</li>
+    <li><b>红线</b>：已推送到远端的公共历史，禁止 <code>push --force</code> 覆盖；除非用户明确要求且确认影响。</li>
+  </ul>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>把自己的项目用 Git 管起来并推到 GitHub。</li>
-    <li>学 <a href="docker.html">Docker</a> 打包环境。</li>
-    <li>了解 <code>.gitignore</code>、rebase、stash。</li>
-    <li>看本博客仓库，就是 Git 管理的范例。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能 init/commit/分支/推远程——版本管理与协作你已入门。</div>
+  <h2 id="s7">7. 暂存/标签/hooks</h2>
+  <ul>
+    <li><code>git stash</code>：临时收起未完成改动去处理别的事，<code>stash pop</code> 恢复。</li>
+    <li><code>git tag v1.0</code>：里程碑标记；部署上线可打 <code>deploy-20260911</code> 之类 tag 作回档锚点。</li>
+    <li><b>hooks</b>：<code>.git/hooks/pre-commit</code> 等可在提交前跑 lint/测试，CI 的前置防线。</li>
+  </ul>
+
+  <h2 id="s8">8. 工作流</h2>
+  <ul>
+    <li><b>GitHub Flow</b>：main 常可部署，开 feature 分支 PR 合并，简单。</li>
+    <li><b>Git Flow</b>：dev/release/hotfix 多分支，适合有版本发布节奏。</li>
+    <li><b>Trunk-based</b>：短命分支、频繁合主干，配 CI/CD，现代主流。</li>
+  </ul>
+
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>没 <code>git add</code> 就 commit，改动没进版本。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>把密钥/.env 提交进仓库泄露 → <code>.gitignore</code> 排除，泄露即轮换。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>强推覆盖他人历史 → 非必要禁用。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>对公共分支 rebase 导致他人历史错乱。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>大文件进仓库导致克隆膨胀 → 用 Git LFS 或忽略。</div>
+
+  <h2 id="s10">10. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会 init/add/commit/推远程</td></tr>
+    <tr><td>初级</td><td>分支、merge/rebase、解决冲突</td></tr>
+    <tr><td>中级</td><td>stash/tag/hooks、工作流选型</td></tr>
+    <tr><td>资深</td><td>revert 安全回滚、CI 集成、仓库治理</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 Conventional Commits 提交 ② 开分支开发再 rebase 合回 ③ 解决一次冲突 ④ 用 revert 撤销某提交 ⑤ 打 deploy tag ⑥ 写 pre-commit 跑 lint。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 Git 的快照模型与分支哲学，能安全协作、可控回滚、用工作流与 hooks 提升团队质量——这是资深后端工程素养的底座。</div>
 </main>
 </div>
 <script>

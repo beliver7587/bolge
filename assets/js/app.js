@@ -7,8 +7,7 @@
   /* ---------- 视图切换 ---------- */
   var views = {
     home: document.getElementById('view-home'),
-    frame: document.getElementById('view-frame'),
-    tutorials: document.getElementById('view-tutorials')
+    frame: document.getElementById('view-frame')
   };
   var navItems = Array.prototype.slice.call(document.querySelectorAll('.nav-item'));
   var frame = document.getElementById('contentFrame');
@@ -28,11 +27,11 @@
     });
   }
 
-  function loadFrame(src, crumb) {
+  function loadFrame(src, crumb, navTab) {
     frame.src = src;
     frameCrumb.textContent = crumb || '文档';
     frameOpen.href = src;
-    setActiveNav('project');
+    setActiveNav(navTab || '');
     showView('frame');
   }
 
@@ -42,10 +41,7 @@
     e.preventDefault();
     var tab = t.getAttribute('data-tab');
     if (tab === 'project') {
-      loadFrame(t.getAttribute('data-src'), t.textContent.trim());
-    } else if (tab === 'tutorials') {
-      setActiveNav('tutorials');
-      showView('tutorials');
+      loadFrame(t.getAttribute('data-src'), t.textContent.trim(), 'project');
     } else {
       setActiveNav('home');
       showView('home');
@@ -54,15 +50,15 @@
   });
 
   document.getElementById('backBtn').addEventListener('click', function () {
-    setActiveNav('tutorials');
-    showView('tutorials');
+    setActiveNav('home');
+    showView('home');
   });
 
   /* ---------- 移动端菜单 ---------- */
   var burger = document.getElementById('navBurger');
   var nav = document.getElementById('nav');
   var scrim = document.getElementById('scrim');
-  function closeMobileNav() { nav.classList.remove('open'); scrim.classList.remove('show'); if (navDropdownWrap) navDropdownWrap.classList.remove('open'); }
+  function closeMobileNav() { nav.classList.remove('open'); scrim.classList.remove('show'); }
   burger.addEventListener('click', function () {
     var open = nav.classList.toggle('open');
     scrim.classList.toggle('show', open);
@@ -181,7 +177,7 @@
         '<h3>' + t.title + '</h3>' +
         '<p>' + t.summary + '</p>' +
         '<div class="tut-tags">' + (t.tags || []).map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>';
-      card.addEventListener('click', function () { loadFrame(t.file, t.title); });
+      card.addEventListener('click', function () { loadFrame(t.file, t.title, ''); });
       grid.appendChild(card);
     });
     hubCount.textContent = '共 ' + list.length + ' 篇技术教程' + (q ? '（已筛选 “' + q + '”）' : '');
@@ -193,35 +189,4 @@
   // 首页标签云（取前 14 个技术名）
   heroTags.innerHTML = TUT.slice(0, 14).map(function (t) { return '<span>' + t.title + '</span>'; }).join('');
 
-  /* ---------- 顶部技术教程下拉菜单 ---------- */
-  var navDropdownWrap = document.getElementById('navDropdownWrap');
-  var navDropdown = document.getElementById('navDropdown');
-  function renderNavDropdown() {
-    var groups = {};
-    TUT.forEach(function (t) { (groups[t.category] = groups[t.category] || []).push(t); });
-    var order = ['前端','后端','实时通信','数据库','AI','运维','安全','游戏'];
-    var html = '<div class="dd-all"><a href="#" data-tab="tutorials">查看全部教程（含搜索/筛选）</a></div>';
-    order.forEach(function (cat) {
-      var items = groups[cat]; if (!items) return;
-      html += '<div class="dd-group"><h4>' + cat + '</h4>' +
-        items.map(function (t) { return '<a href="#" data-src="' + t.file + '" data-crumb="' + t.title + '">' + t.title + '</a>'; }).join('') +
-        '</div>';
-    });
-    navDropdown.innerHTML = html;
-  }
-  renderNavDropdown();
-
-  navDropdownWrap.querySelector('.nav-dropdown-toggle').addEventListener('click', function (e) {
-    e.preventDefault();
-    navDropdownWrap.classList.toggle('open');
-  });
-  navDropdown.addEventListener('click', function (e) {
-    var a = e.target.closest('a[data-src]');
-    if (!a) return;
-    e.preventDefault();
-    loadFrame(a.getAttribute('data-src'), a.getAttribute('data-crumb'));
-    setActiveNav('');
-    navDropdownWrap.classList.remove('open');
-    closeMobileNav();
-  });
 })();

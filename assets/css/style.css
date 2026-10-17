@@ -106,10 +106,10 @@ main{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding
 #contentFrame{width:100%; height:calc(100vh - var(--topbar-h) - 70px); border:none; border-radius:14px;
   background:var(--bg2); border:1px solid var(--line)}
 
-/* ===== 教程 Hub ===== */
-.view-tutorials{padding-top:34px}
-.hub-head h2{font-size:30px; margin:0 0 8px}
-.hub-head>p{color:var(--muted); margin:0 0 22px; font-size:15px}
+/* ===== 主页技术教程区 ===== */
+.tech-section{padding:34px 30px 40px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); margin-top:40px; scroll-margin-top:80px}
+.tech-section h2{font-size:30px; margin:0 0 8px}
+.tech-section>p{color:var(--muted); margin:0 0 22px; font-size:15px}
 .hub-tools{display:flex; flex-direction:column; gap:16px; margin-bottom:8px}
 .search-box{position:relative; max-width:560px}
 .search-ico{position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:15px; opacity:.7}
@@ -160,46 +160,7 @@ main{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding
   .hero-actions .btn{flex:1; padding:13px 18px}
 }
 
-/* ===== 顶部“技术教程”下拉菜单 ===== */
-.nav-dropdown{position:relative}
-.nav-dropdown-toggle{display:flex; align-items:center; gap:6px; background:transparent; border:none; font:inherit; cursor:pointer}
-.nav-dropdown-toggle .caret{font-size:10px; opacity:.7; transition:.2s}
-.nav-dropdown.open .nav-dropdown-toggle .caret{transform:rotate(180deg)}
-.nav-dropdown-menu{
-  position:absolute; top:calc(100% + 8px); right:0; z-index:60;
-  min-width:680px; max-width:90vw; max-height:74vh; overflow-y:auto;
-  background:var(--panel); border:1px solid var(--line2); border-radius:14px;
-  box-shadow:var(--shadow); padding:16px;
-  display:none; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px
-}
-.nav-dropdown.open .nav-dropdown-menu,
-.nav-dropdown:hover .nav-dropdown-menu{display:grid}
-.nav-dropdown-menu .dd-all{
-  grid-column:1 / -1; padding:10px 12px; margin-bottom:4px; border-radius:10px;
-  background:linear-gradient(120deg,rgba(91,140,255,.12),rgba(124,92,255,.12));
-  border:1px solid var(--line2); text-align:center; font-weight:700
-}
-.nav-dropdown-menu .dd-all a{color:var(--text)}
-.nav-dropdown-menu .dd-group h4{
-  margin:0 0 8px; padding:0 8px; font-size:12px; color:var(--cyan);
-  letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid var(--line); padding-bottom:6px
-}
-.nav-dropdown-menu .dd-group a{
-  display:block; padding:6px 9px; border-radius:8px; font-size:13px; color:#b7c5db;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis
-}
-.nav-dropdown-menu .dd-group a:hover{background:var(--panel2); color:#fff}
-
+/* ===== 响应式：技术教程区 ===== */
 @media (max-width:860px){
-  .nav-dropdown{width:100%}
-  .nav-dropdown-menu{
-    position:static; display:none; min-width:auto; max-width:none; max-height:55vh;
-    box-shadow:none; border:none; border-radius:0; padding:8px 0 8px 12px;
-    grid-template-columns:1fr; gap:8px; background:transparent
-  }
-  .nav-dropdown.open .nav-dropdown-menu{display:grid}
-  .nav-dropdown:hover .nav-dropdown-menu{display:none}
-  .nav-dropdown-menu .dd-all{grid-column:auto; text-align:left; background:transparent; border:none; padding:10px 14px}
-  .nav-dropdown-menu .dd-group h4{margin-top:8px}
-  .nav-dropdown-menu .dd-group a{padding:8px 14px; font-size:14px}
+  .tech-section{padding:22px 18px 28px}
 }

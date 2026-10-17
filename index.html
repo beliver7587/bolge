@@ -24,10 +24,6 @@
     <a href="#" class="nav-item" data-tab="project" data-src="projects/resume.html">简历工坊</a>
     <a href="#" class="nav-item" data-tab="project" data-src="projects/game.html">网页游戏</a>
     <a href="#" class="nav-item" data-tab="project" data-src="projects/memora.html">Memora</a>
-    <div class="nav-dropdown" id="navDropdownWrap">
-      <button class="nav-item nav-dropdown-toggle">技术教程 <span class="caret">▾</span></button>
-      <div class="nav-dropdown-menu" id="navDropdown"></div>
-    </div>
   </nav>
 </header>
 
@@ -43,7 +39,7 @@
       <h1 class="hero-title">王越的<span class="grad">技术作品集</span></h1>
       <p class="hero-desc">这里收录了我亲手落地的前端、后端、游戏与 AI 项目，<br/>并为每一项用到的技术写了<strong>面向小白的通关教程</strong>——照着做你也能上手开发。</p>
       <div class="hero-actions">
-        <button class="btn btn-primary" data-tab="tutorials">浏览技术教程</button>
+        <a href="#techSection" class="btn btn-primary">浏览技术教程</a>
         <button class="btn btn-ghost" data-tab="project" data-src="projects/resume.html">查看作品项目</button>
       </div>
       <div class="hero-tags" id="heroTags"></div>
@@ -68,12 +64,21 @@
         <p>有记忆、能办事的 AI 客服 Agent：混合检索 RAG、四层记忆、工具调用、SSE 流式、安全护栏。</p>
         <div class="card-tags"><span>Node.js</span><span>RAG</span><span>Agent</span><span>Express</span><span>n8n</span></div>
       </a>
-      <a class="card card-accent" href="#" data-tab="tutorials">
-        <div class="card-emoji">📚</div>
-        <h3>技术教程库</h3>
-        <p>把三个项目里出现过的 40+ 项技术，逐一写成「是什么 → 怎么装 → 第一个例子 → 常见坑」的小白通关文。</p>
-        <div class="card-tags"><span>前端</span><span>后端</span><span>数据库</span><span>AI</span><span>运维</span><span>游戏</span></div>
-      </a>
+    </div>
+
+    <div class="tech-section" id="techSection">
+      <h2>技术教程库</h2>
+      <p>从三个项目里提炼出的 40 项技术，点击任意卡片开始学习。支持关键词搜索与分类筛选。</p>
+      <div class="hub-tools">
+        <div class="search-box">
+          <span class="search-ico">🔍</span>
+          <input id="searchInput" type="search" placeholder="搜索技术名 / 关键词，如 React、RAG、Nginx…" autocomplete="off" />
+        </div>
+        <div class="filters" id="filters"></div>
+      </div>
+      <div class="hub-count" id="hubCount"></div>
+      <div class="hub-grid" id="hubGrid"></div>
+      <div class="hub-empty" id="hubEmpty" hidden>没有匹配的技术，换个关键词试试 🤔</div>
     </div>
 
     <div class="about">
@@ -90,24 +95,6 @@
       <a class="frame-open" id="frameOpen" href="#" target="_blank" rel="noopener">↗ 新窗口打开</a>
     </div>
     <iframe id="contentFrame" title="内容" loading="lazy"></iframe>
-  </section>
-
-  <!-- ============ 技术教程 Hub ============ -->
-  <section class="view view-tutorials" id="view-tutorials">
-    <div class="hub-head">
-      <h2>技术教程库</h2>
-      <p>从三个项目里提炼出的全部技术，点击任意卡片开始学习。支持关键词搜索与分类筛选。</p>
-      <div class="hub-tools">
-        <div class="search-box">
-          <span class="search-ico">🔍</span>
-          <input id="searchInput" type="search" placeholder="搜索技术名 / 关键词，如 React、RAG、Nginx…" autocomplete="off" />
-        </div>
-        <div class="filters" id="filters"></div>
-      </div>
-      <div class="hub-count" id="hubCount"></div>
-    </div>
-    <div class="hub-grid" id="hubGrid"></div>
-    <div class="hub-empty" id="hubEmpty" hidden>没有匹配的技术，换个关键词试试 🤔</div>
   </section>
 
 </main>

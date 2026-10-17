@@ -9,9 +9,8 @@
   - `projects/resume.html` —— 简历工坊（前端 Next.js/React，后端 Spring Boot）
   - `projects/game.html` —— 网页游戏平台（TypeScript/React/PixiJS/WebSocket）
   - `projects/memora.html` —— Memora AI 客服（Node/Express/RAG/Agent）
-- **技术教程库**：`tutorials/` 下 40 篇面向小白的通关教程（是什么 → 怎么装 → 第一个例子 → 常见坑），支持**关键词搜索**与**分类筛选**（前端 / 后端 / 实时通信 / 数据库 / AI / 运维 / 安全 / 游戏）。
-  - 顶部导航的「技术教程」是下拉菜单，每项技术都可一键直达；「查看全部教程」进入带搜索/筛选的 Hub 页面。
-  - 清单由 `tutorials/manifest.js` 驱动，主页下拉与 Hub 自动渲染。
+- **技术教程库**：`tutorials/` 下 40 篇面向小白的通关教程（是什么 → 怎么装 → 第一个例子 → 常见坑），直接在首页展示，支持**关键词搜索**与**分类筛选**（前端 / 后端 / 实时通信 / 数据库 / AI / 运维 / 安全 / 游戏）。
+  - 清单由 `tutorials/manifest.js` 驱动，主页搜索/筛选/卡片网格自动渲染。
 
 ## 目录结构
 

@@ -2,69 +2,102 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AABB 碰撞 · 小白通关教程</title>
+<title>AABB 碰撞 · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">AABB 碰撞<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 核心公式</a>
-  <a href="#s3">3. 代码实现</a>
-  <a href="#s4">4. 实战：矩形碰矩形</a>
-  <a href="#s5">5. 进阶：扫掠</a>
-  <a href="#s6">6. 常见坑</a>
-  <a href="#s7">7. 下一步</a>
+  <div class="tbrand">AABB 碰撞<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 数学本质</a>
+  <a href="#s3">3. 实现与层级</a>
+  <a href="#s4">4. 连续碰撞</a>
+  <a href="#s5">5. 空间加速</a>
+  <a href="#s6">6. 旋转物体</a>
+  <a href="#s7">7. 性能与调试</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>AABB 碰撞检测</h1>
-  <p class="tsub">轴对齐包围盒 —— 用两个矩形是否重叠来判断“撞没撞上”，是 2D 游戏最基础的碰撞算法。网页游戏平台用它做命中判定。学完你能实现游戏碰撞。</p>
+  <h1>AABB 碰撞检测：从小白到资深</h1>
+  <p class="tsub"><strong>AABB（Axis-Aligned Bounding Box）</strong> 用两个不旋转的矩形是否重叠判断“撞没撞上”，是 2D 游戏最基础的命中判定。本教程讲透<strong>重叠的数学充要条件、包围盒层级、连续碰撞（隧穿）、空间加速（broad-phase）、旋转物体处理与性能调试</strong>——游戏手感与性能的底层。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>AABB（Axis-Aligned Bounding Box）</strong> 是把物体用“不旋转的矩形”包起来，只要判断两组矩形在 X、Y 轴是否都重叠，就知道是否相撞。</p>
-  <div class="box"><span class="bt">一句话：</span>不管你画的是小人还是飞船，先套个正矩形框，框框碰了就当撞了。</div>
-  <div class="box ok"><span class="bt">优点：</span>O(1)、极快、实现简单；缺点：不能处理旋转/斜的物体（可用 OBB 或多边形分解）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>判定“两个物体是否相交”是物理/战斗/拾取的核心。AABB 把任意形状先用正矩形包起来，只判矩形重叠，O(1)、极快、易实现。</p>
+  <div class="box"><span class="bt">取舍：</span>优点快、简单；缺点不能精确处理旋转/斜物体，且包围盒比原物体大（有“误判”边距）。精细场景配合 OBB/SAT 或多边形分解。</div>
 
-  <h2 id="s2">2. 核心公式</h2>
-  <div class="diagram">两矩形 A、B（用 x,y 左上角 + w,h 表示）相撞 ⇔
-  A.x &lt; B.x + B.w  AND  A.x + A.w &gt; B.x
+  <h2 id="s2">2. 数学本质</h2>
+  <p>两矩形（用左上角 x,y + 宽高 w,h 表示）相撞 ⇔ 在 X、Y 轴<strong>都重叠</strong>：</p>
+  <div class="diagram">A.x &lt; B.x+B.w  AND  A.x+A.w &gt; B.x
   AND
-  A.y &lt; B.y + B.h  AND  A.y + A.h &gt; B.y
-四个条件同时成立才重叠</div>
+  A.y &lt; B.y+B.h  AND  A.y+A.h &gt; B.y
+  四个条件同时成立才重叠（分离轴思想：任一轴不重叠即未撞）</div>
+  <div class="box ok"><span class="bt">分离轴定理雏形：</span>只要找到一个轴（这里 X 或 Y）上两盒不重叠，就必然不相交——这是一切碰撞检测的核心思想。</div>
 
-  <h2 id="s3">3. 代码实现</h2>
+  <h2 id="s3">3. 实现与层级</h2>
   <pre><code>function aabb(a, b) {
   return a.x &lt; b.x + b.w &amp;&amp;
          a.x + a.w &gt; b.x &amp;&amp;
          a.y &lt; b.y + b.h &amp;&amp;
          a.y + a.h &gt; b.y;
-}</code></pre>
+}
+const player = { x:50, y:50, w:30, h:30 };
+const enemy  = { x:70, y:60, w:30, h:30 };
+if (aabb(player, enemy)) console.log('撞上了');</code></pre>
+  <ul>
+    <li><b>坐标系统一</b>：明确用左上角还是中心+半宽，全工程一致。</li>
+    <li><b>层级包围盒</b>：先用大盒做粗筛，命中再细分（宽相位→窄相位）。</li>
+  </ul>
 
-  <h2 id="s4">4. 实战：矩形碰矩形</h2>
-  <pre><code>const player = { x: 50, y: 50, w: 30, h: 30 };
-const enemy  = { x: 70, y: 60, w: 30, h: 30 };
-if (aabb(player, enemy)) console.log('撞上了！');</code></pre>
+  <h2 id="s4">4. 连续碰撞（防隧穿）</h2>
+  <p>高速物体一帧可能“穿过”薄墙（步长 > 墙厚），叫<strong>隧穿</strong>。对策：</p>
+  <ul>
+    <li><b>扫掠 AABB（sweep）</b>：算位移线段与障碍最近相交时刻 t∈[0,1]，先做连续检测。</li>
+    <li><b>多子步</b>：把一帧切成 N 小步分别检测。</li>
+    <li><b>胶囊/射线</b>：运动物体用射线/扫掠体而非静态盒。</li>
+  </ul>
 
-  <h2 id="s5">5. 进阶：扫掠检测</h2>
-  <p>物体很快时，一帧可能“穿过”对方（隧穿）。用扫掠 AABB 检测一段位移内是否相交，避免高速穿透漏判。</p>
+  <h2 id="s5">5. 空间加速（broad-phase）</h2>
+  <p>N 个物体两两检测是 O(n²)，物体多必卡。用<strong>宽相位</strong>快速排除明显不相交的对：</p>
+  <ul>
+    <li><b>均匀网格</b>：把场景切成格子，只查相邻格。</li>
+    <li><b>四叉树/BVH</b>：空间划分，规模更大时更优。</li>
+    <li>典型管线：broad-phase（粗筛候选对）→ narrow-phase（AABB/SAT 精确判定）。</li>
+  </ul>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>坐标用中心点还是左上角要统一；混用导致判定偏移。本文用左上角。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>高速物体穿越（隧穿）；用扫掠或多子步检测。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>物体旋转后 AABB 变大且不准；旋转物体用 OBB 或多边形碰撞。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>大量物体两两检测 O(n²) 卡顿；用空间划分（网格/四叉树）或 <a href="edgeauthority.html">端侧权威</a> 简化。</div>
+  <h2 id="s6">6. 旋转物体</h2>
+  <p>AABB 对旋转物体会用更大的外接盒，误差大。方案：</p>
+  <ul>
+    <li><b>OBB（有向包围盒）</b>+ <strong>SAT 分离轴定理</strong>：对任意凸多边形取各边法线作轴，投影均重叠才相交。</li>
+    <li>或把旋转物体转回轴对齐在局部坐标判定。</li>
+  </ul>
 
-  <h2 id="s7">7. 下一步</h2>
-  <ol>
-    <li>用 AABB 给小游戏加“吃金币”判定。</li>
-    <li>学 <a href="pixijs.html">PixiJS</a> / <a href="canvas2d.html">Canvas</a> 画物体。</li>
-    <li>学 <a href="edgeauthority.html">端侧权威运算</a> 处理联机判定。</li>
-    <li>看网页游戏平台，碰撞实现。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能实现 AABB 碰撞检测与高速穿透处理——2D 游戏命中判定你已掌握。</div>
+  <h2 id="s7">7. 性能与调试</h2>
+  <ul>
+    <li><b>对象池</b>：碰撞体复用，减少 GC 抖动。</li>
+    <li><b>休眠</b>：静止物体标记为 asleep，不参与检测直到被唤醒。</li>
+    <li><b>可视化</b>：调试期画包围盒轮廓，直观看误判/穿透。</li>
+  </ul>
+
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>坐标系混用（中心 vs 左上角）导致判定偏移。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>高速物体隧穿 → 扫掠/子步。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>旋转物体用 AABB 既大又不准 → OBB/SAT。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>大量物体 O(n²) 卡顿 → 空间划分/宽相位。</div>
+
+  <h2 id="s9">9. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会实现 AABB 矩形碰撞</td></tr>
+    <tr><td>初级</td><td>扫掠防隧穿、包围盒层级</td></tr>
+    <tr><td>中级</td><td>网格/四叉树宽相位、OBB/SAT</td></tr>
+    <tr><td>资深</td><td>完整碰撞管线、性能调优</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 实现 AABB 并统一坐标系 ② 加扫掠检测修高速穿透 ③ 用网格做宽相位 ④ OBB+SAT 判旋转物体 ⑤ 画包围盒调试 ⑥ 接 <a href="edgeauthority.html">端侧权威</a> 做联机判定。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解碰撞检测从“两框重叠”到“宽相位+连续检测+旋转处理”的工程化，能写出又快又准的命中判定——这是资深游戏后端/客户端的基础能力。</div>
 </main>
 </div>
 <script>

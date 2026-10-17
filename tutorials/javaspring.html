@@ -2,76 +2,126 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Java Spring · 小白通关教程</title>
+<title>Java Spring · 从小白到资深后端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Java Spring<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个接口</a>
-  <a href="#s4">4. IoC / DI</a>
-  <a href="#s5">5. 分层架构</a>
-  <a href="#s6">6. 与数据库</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">Java Spring<small>从小白到资深后端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. IoC 容器</a>
+  <a href="#s4">4. 依赖注入</a>
+  <a href="#s5">5. AOP 切面</a>
+  <a href="#s6">6. 声明式事务</a>
+  <a href="#s7">7. Spring MVC</a>
+  <a href="#s8">8. 生态全景</a>
+  <a href="#s9">9. 与 Boot 分工</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 调试</a>
+  <a href="#s12">12. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Java Spring</h1>
-  <p class="tsub">Java 企业级框架家族 —— 用 IoC/DI 解耦、注解驱动开发，含 Spring Boot 一键启动。学完你能用 Java 写后端服务。</p>
+  <h1>Java Spring：从小白到资深后端</h1>
+  <p class="tsub"><strong>Spring</strong> 是 Java 企业级开发的基石框架，核心是 IoC 容器与 AOP，衍生出 MVC、Data、Security、Cloud 等全家桶。<a href="springboot.html">Spring Boot</a> 是它的“一键启动器”。本教程讲透<strong>容器本质、DI、AOP 代理、声明式事务、MVC 请求流程与生态分工</strong>——这是资深 Java 工程师的内功。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Spring</strong> 是 Java 生态最主流的后端框架，核心思想 <strong>IoC（控制反转）</strong> 与 <strong>DI（依赖注入）</strong>：对象的创建和依赖由容器管理，你只管写业务逻辑。<strong>Spring Boot</strong> 在其上做“自动配置”，让你几乎零 XML 就能跑起来（详见 <a href="springboot.html">Spring Boot</a>）。</p>
-  <div class="box"><span class="bt">一句话：</span>Spring 负责“搭好一切”，你只填业务；Spring Boot 让你“开箱即跑”。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>早期 JavaEE/EJB 配置繁琐、侵入性强。Spring 用<strong>轻量容器 + 非侵入</strong> 解决：对象创建与依赖交给容器（IoC），横切逻辑（事务、日志、鉴权）用切面剥离（AOP），业务代码保持纯净。</p>
+  <div class="box"><span class="bt">一句话：</span>Spring 提供“对象如何被创建/组装/增强”的基础设施，让你专注业务；Spring Boot 在此之上做自动配置让你开箱即跑。</div>
+  <div class="box ok"><span class="bt">适合：</span>一切 Java 后端；尤其需要长期演进、强类型、大团队协作的企业系统。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>装 JDK 17+ 与 Maven/Gradle。最简方式：用 <a href="https://start.spring.io" target="_blank">start.spring.io</a> 在线生成项目骨架，或用 IDE（IntelliJ IDEA）新建 Spring Boot 项目。</p>
-  <pre><code># 用 Spring Boot CLI 也可
-brew install springboot</code></pre>
+  <h2 id="s2">2. 工程化起步</h2>
+  <ul>
+    <li>JDK 17+（Spring 6/Boot 3 要求），Maven 或 Gradle。</li>
+    <li>用 <a href="https://start.spring.io" target="_blank" rel="noopener">start.spring.io</a> 勾选依赖生成骨架；<a href="springboot.html">Spring Boot</a> 章节讲启动细节。</li>
+    <li>标准包结构：<code>controller / service / repository / config / dto</code>。</li>
+  </ul>
 
-  <h2 id="s3">3. 第一个接口</h2>
-  <pre><code>@RestController
-public class HelloController {
-  @GetMapping("/hello")
-  public String hello() { return "Hello Spring"; }
+  <h2 id="s3">3. IoC 容器</h2>
+  <p><code>ApplicationContext</code> 是容器，管理 Bean 的注册、实例化、装配与生命周期。</p>
+  <pre><code>@Configuration
+public class AppConfig {
+  @Bean
+  public UserService userService() { return new UserService(); }  // 手动声明 Bean
 }</code></pre>
-  <p>启动后访问 <code>http://localhost:8080/hello</code> 即返回文字。</p>
+  <ul>
+    <li><b>作用域</b>：<code>singleton</code>（默认，全局一个）、<code>prototype</code>（每次取新实例）、<code>request/session</code>（Web 作用域）。</li>
+    <li><b>生命周期</b>：实例化 → 属性填充 → <code>@PostConstruct</code> → 就绪 → <code>@PreDestroy</code>。</li>
+    <li><b>扫描</b>：<code>@ComponentScan</code> 自动发现 <code>@Component/@Service/@Controller</code>。</li>
+  </ul>
 
-  <h2 id="s4">4. IoC / DI</h2>
+  <h2 id="s4">4. 依赖注入</h2>
   <pre><code>@Service
-public class UserService { public String name() { return "小王"; } }
-
-@RestController
-public class C {
-  @Autowired private UserService svc;   // 容器自动注入
-  @GetMapping("/who") public String who() { return svc.name(); }
+public class OrderService {
+  private final PaymentClient pay;          // 构造注入（推荐，不可变、易测）
+  public OrderService(PaymentClient pay) { this.pay = pay; }
 }</code></pre>
-  <div class="box ok"><span class="bt">要点：</span><code>@Component/@Service/@Controller</code> 交给容器管理，<code>@Autowired</code> 注入依赖，解耦且易测试。</div>
+  <ul>
+    <li><b>构造注入 &gt; 字段注入</b>：字段 <code>@Autowired</code> 难测试、隐藏依赖、循环依赖更难查。</li>
+    <li><b>条件化装配</b> <code>@ConditionalOn...</code>：Spring Boot 自动配置靠它按 classpath 决定装不装 Bean。</li>
+  </ul>
 
-  <h2 id="s5">5. 分层架构</h2>
-  <p>经典三层：<code>Controller</code>（接收请求）→ <code>Service</code>（业务逻辑）→ <code>Repository/DAO</code>（数据）。配合 <a href="mybatisplus.html">MyBatis-Plus</a> 操作数据库。</p>
+  <h2 id="s5">5. AOP 切面</h2>
+  <p>AOP 把“横切关注点”（日志、事务、鉴权、监控）从业务里抽出来，用代理在方法前后织入。</p>
+  <pre><code>@Aspect
+@Component
+public class LogAspect {
+  @Around("execution(* com.demo.service..*(..))")
+  public Object log(ProceedingJoinPoint p) throws Throwable {
+    long t = System.nanoTime();
+    try { return p.proceed(); }
+    finally { System.out.println(p.getSignature() + " 耗时 " + (System.nanoTime()-t)); }
+  }
+}</code></pre>
+  <ul>
+    <li><b>代理机制</b>：有接口用 JDK 动态代理，否则 CGLIB 子类代理——这决定了 <code>@Transactional</code> 等注解只能拦截“外部调用”（见第 6 节）。</li>
+    <li>切面顺序用 <code>@Order</code> 控制。</li>
+  </ul>
 
-  <h2 id="s6">6. 与数据库</h2>
-  <p>在 <code>application.properties</code> 配数据源，用 <code>Spring Data JPA</code> 或 MyBatis-Plus 写 CRUD，无需手写大量样板。</p>
+  <h2 id="s6">6. 声明式事务</h2>
+  <p><code>@Transactional</code> 本质是 AOP：方法开始前开事务、正常提交、异常回滚。</p>
+  <div class="box warn"><span class="bt">失效根因：</span>① 自调用（同类方法互调绕过代理）② 非 public ③ 异常被 catch 吞掉 ④ 数据库引擎不支持（如 MyISAM）。要生效须“经代理的外部调用”。</div>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>循环依赖（A 注入 B、B 注入 A）；用构造器注入或拆分层解决。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>包扫描不到 Bean（类不在启动类同包或子包）；注意 <code>@SpringBootApplication</code> 位置。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>端口被占用启动失败；改 <code>server.port</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>JDK 版本与 Spring Boot 不匹配；Boot 3 需 JDK 17+。</div>
+  <h2 id="s7">7. Spring MVC</h2>
+  <p>请求流程：<code>DispatcherServlet</code> → <code>HandlerMapping</code> 找控制器 → <code>HandlerAdapter</code> 执行 → 返回 <code>ModelAndView</code>/JSON，经 <code>ViewResolver</code>/消息转换器输出。注解 <code>@RequestMapping/@GetMapping/@RequestBody/@Valid</code> 驱动。</p>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>写一个带 Service 的 REST 接口。</li>
-    <li>学 <a href="springboot.html">Spring Boot</a> 自动配置。</li>
-    <li>学 <a href="mybatisplus.html">MyBatis-Plus</a> 接数据库。</li>
-    <li>看简历工坊，Spring Boot 实战。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能搭 Spring 项目、写接口、理解 IoC/DI 与分层——Java 后端你已入门。</div>
+  <h2 id="s8">8. 生态全景</h2>
+  <ul>
+    <li><b>Spring Data</b>：统一 Repository 抽象（JPA/MongoDB/Redis）。</li>
+    <li><b>Spring Security</b>：认证授权（详见 <a href="springboot.html">Spring Boot</a> 安全节）。</li>
+    <li><b>Spring Cloud</b>：微服务套件（注册中心、网关、熔断、配置中心）。</li>
+    <li><b>Spring Batch</b>：批处理；<b>Spring AMQP/Kafka</b>：消息。</li>
+  </ul>
+
+  <h2 id="s9">9. 与 Boot 分工</h2>
+  <div class="box ok"><span class="bt">分工：</span>Spring = 内核（容器/AOP/事务/MVC）；Spring Boot = 在此之上的“自动配置 + 起步依赖 + 内嵌服务器”，让你零配置启动。学 Boot 前先懂 Spring 内核，排错才知根因。</div>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>循环依赖（A↔B）；构造注入下直接启动失败，逼你拆边界。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>包扫描路径不对 → Bean 未注册 NoSuchBeanDefinition。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>@Transactional 自调用失效 → 拆 Bean 或走代理。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>singleton 里注入 prototype 但每次都是同一个 → 用 <code>ObjectProvider</code> 或 lookup。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>上下文过大（扫太多包）拖慢启动；按模块切分。</div>
+
+  <h2 id="s11">11. 调试</h2>
+  <ul>
+    <li>IDEA 断点；<code>--debug</code> 看自动配置报告；<code>/actuator/beans</code> 看容器 Bean。</li>
+    <li>用 Arthas 在线诊断 Bean/代理/方法耗时。</li>
+  </ul>
+
+  <h2 id="s12">12. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能写 Bean、接口、分层</td></tr>
+    <tr><td>初级</td><td>懂 DI、MVC 流程</td></tr>
+    <tr><td>中级</td><td>懂 AOP、事务边界、容器原理</td></tr>
+    <tr><td>资深</td><td>设计模块边界、排代理/事务疑难、用 Cloud 做微服务</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 手写 @Bean 配置并对比 @ComponentScan ② 写一个 @Aspect 统计 Service 耗时 ③ 故意自调用触发 @Transactional 失效并修复 ④ 读自动配置报告理解条件装配。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 Spring 内核（容器/AOP/事务）与 Boot 的分工，能设计清晰边界、排代理与事务疑难——这是资深 Java 工程师的硬功夫。</div>
 </main>
 </div>
 <script>

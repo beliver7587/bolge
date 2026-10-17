@@ -2,88 +2,147 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Node.js · 小白通关教程</title>
+<title>Node.js · 从小白到资深后端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Node.js<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个脚本</a>
-  <a href="#s4">4. 模块与 npm</a>
-  <a href="#s5">5. 读写文件</a>
-  <a href="#s6">6. 起一个 HTTP 服务</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">Node.js<small>从小白到资深后端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 事件循环原理</a>
+  <a href="#s4">4. 模块系统</a>
+  <a href="#s5">5. 文件与流</a>
+  <a href="#s6">6. HTTP 服务</a>
+  <a href="#s7">7. 进程与性能</a>
+  <a href="#s8">8. 健壮性与优雅关闭</a>
+  <a href="#s9">9. 安全</a>
+  <a href="#s10">10. 测试</a>
+  <a href="#s11">11. 与 Bun/Deno</a>
+  <a href="#s12">12. 常见坑</a>
+  <a href="#s13">13. 调试</a>
+  <a href="#s14">14. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Node.js</h1>
-  <p class="tsub">让 JavaScript 跑在服务器上的运行时 —— 前后端统一语言，Memora、网页游戏后端都基于 Node。学完你能写服务端程序。</p>
+  <h1>Node.js：从小白到资深后端</h1>
+  <p class="tsub">Node.js 是把 Chrome V8 引擎搬到服务器端的<strong>JavaScript 运行时</strong>。它<strong>不是框架</strong>，而是“让 JS 跑在服务端”的基础——事件驱动、非阻塞 I/O，天然适合高并发接口、网关与实时服务。本教程讲透<strong>事件循环、单线程模型、流与背压、多进程、健壮性与安全</strong>。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Node.js</strong> 是把 Chrome 的 V8 引擎拿出来，让 JavaScript 脱离浏览器在服务器端运行的环境。它<strong>不是框架</strong>，是“运行时”。</p>
-  <div class="box"><span class="bt">一句话：</span>以前 JS 只在浏览器跑；有了 Node，JS 能写服务器、命令行工具、桌面应用。</div>
-  <div class="box ok"><span class="bt">特点：</span>事件驱动、非阻塞 I/O，擅长高并发 I/O（接口、网关、实时服务）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>传统服务端（如 <a href="springboot.html">Java</a> 线程池）每个连接占一个线程，高并发下线程上下文切换开销大。Node 用<strong>单线程 + 事件循环 + 非阻塞 I/O</strong>：一个线程就能扛大量并发连接，特别适合 I/O 密集型（接口转发、文件/网络读写、实时推送）。</p>
+  <div class="box"><span class="bt">一句话：</span>Node 让你用 JS 写服务端，并以“少量线程处理海量并发连接”的模型，在高 I/O 场景高效又省内存。</div>
+  <div class="box ok"><span class="bt">适合：</span>API 网关、BFF、实时服务、CLI、前端构建工具。<br><span class="box warn">不适合：</span>CPU 密集型（如大量同步计算会阻塞事件循环）——这种用 Worker 或换语言。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>到 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> 装 LTS，验证：</p>
-  <pre><code>node -v
-npm -v        # Node 自带包管理器</code></pre>
+  <h2 id="s2">2. 工程化起步</h2>
+  <ul>
+    <li>装 LTS（推荐 20/22）：用 <code>nvm</code> 或 <code>n</code> 管理多版本。</li>
+    <li>包管理：<code>npm</code> 自带；<code>pnpm</code> 省磁盘、严格依赖；<code>yarn</code> 经典。</li>
+    <li><code>package.json</code>：<code>"type":"module"</code> 开启 ESM（现代写法）。</li>
+  </ul>
+  <pre><code>node -v &amp;&amp; npm -v
+npm init -y &amp;&amp; npm pkg set type=module</code></pre>
 
-  <h2 id="s3">3. 第一个脚本</h2>
-  <p>新建 <code>hello.js</code>：</p>
-  <pre><code>console.log('你好，Node');</code></pre>
-  <p>运行：<code>node hello.js</code>。就这么简单。</p>
+  <h2 id="s3">3. 事件循环原理</h2>
+  <p>这是 Node 的心脏。核心要点：</p>
+  <ul>
+    <li><b>单线程执行 JS</b>：你的代码在同一个线程跑，所以<strong>别写长时间同步计算</strong>会卡住所有人。</li>
+    <li><b>事件循环阶段</b>：timers → pending → poll（I/O 回调）→ check（setImmediate）→ close。每轮处理一批回调。</li>
+    <li><b>微任务优先</b>：<code>Promise.then</code>/<code>process.nextTick</code> 在阶段切换间清空，先于宏任务（<code>setTimeout</code>）。</li>
+    <li><b>非阻塞 I/O</b>：网络/文件请求交给 libuv 线程池，完成后回调入队，主线程继续跑别的——所以“单线程”并不等于“不能并发”。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑底：</span>在请求处理函数里跑重计算（如大循环、同步压缩），会阻塞事件循环，整台服务器的其他请求都变慢。CPU 活交给 Worker 或拆批。</div>
 
-  <h2 id="s4">4. 模块与 npm</h2>
-  <p>ESM（推荐，Node 现代写法）：</p>
-  <pre><code>// math.js
-export function add(a, b) { return a + b; }
-// main.js
-import { add } from './math.js';
-console.log(add(1, 2));</code></pre>
-  <p>CommonJS（老，仍大量存在）：</p>
-  <pre><code>// math.js
-module.exports = { add: (a,b)=>a+b };
-// main.js
-const { add } = require('./math.js');</code></pre>
-  <p>npm 装包：<code>npm install lodash</code>，然后 <code>import _ from 'lodash'</code>。</p>
+  <h2 id="s4">4. 模块系统</h2>
+  <ul>
+    <li><b>ESM</b>（<code>import/export</code>，推荐）：静态、可被 tree-shaking。</li>
+    <li><b>CommonJS</b>（<code>require/module.exports</code>）：老生态仍多。</li>
+    <li><b>互操作</b>：ESM 里 <code>import</code> CJS 通常可行；CJS 里 <code>require</code> ESM 不行（ESM 是异步的）——这就是“双包危机”的痛点。</li>
+    <li>内置模块用 <code>node:</code> 前缀（<code>node:fs</code>）更清晰、避免歧义。</li>
+  </ul>
 
-  <h2 id="s5">5. 读写文件</h2>
-  <pre><code>import { readFile, writeFile } from 'node:fs/promises';
-const txt = await readFile('a.txt', 'utf8');
-await writeFile('b.txt', txt + '!');</code></pre>
-  <div class="box ok"><span class="bt">提示：</span>Node 顶层 <code>await</code> 需在 ESM（<code>"type":"module"</code>）下可用。</div>
+  <h2 id="s5">5. 文件与流</h2>
+  <pre><code>import { createReadStream, createWriteStream } from 'node:fs';
+// 流：边读边写，内存恒定，处理大文件/代理转发必备
+createReadStream('big.iso').pipe(createWriteStream('out.iso'));</code></pre>
+  <ul>
+    <li><b>Stream</b>：大文件别 <code>readFile</code> 全读进内存，用流分块；<strong>背压（backpressure）</strong> 自动让快的写端等慢的读端，防内存爆。</li>
+    <li>小文件用 <code>node:fs/promises</code> 的异步 API 即可。</li>
+  </ul>
 
-  <h2 id="s6">6. 起一个 HTTP 服务</h2>
+  <h2 id="s6">6. HTTP 服务</h2>
   <pre><code>import http from 'node:http';
 const server = http.createServer((req, res) =&gt; {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ msg: 'hello' }));
 });
-server.listen(3000, () =&gt; console.log('http://localhost:3000'));</code></pre>
-  <div class="box"><span class="bt">更爽：</span>实际开发用 <a href="express.html">Express</a> 框架，路由写法更简洁。</div>
+server.listen(3000);</code></pre>
+  <p>原生 <code>http</code> 偏底层；实际用 <a href="express.html">Express</a>/Fastify 等框架，提供路由与中间件模型（洋葱圈：请求依次穿过中间件，响应再反向穿过）。</p>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>混用 ESM 和 CJS：文件是 <code>.js</code> 但没设 <code>"type":"module"</code>，用 <code>import</code> 会报错，改用 <code>require</code> 或把文件改 <code>.mjs</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>回调地狱（老代码）；新代码用 <code>async/await</code> + Promise。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>同步阻塞 API（如 <code>readFileSync</code>）在高并发接口里拖慢整体，尽量用异步。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>忘记 <code>res.end()</code>，请求一直挂起。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>全局安装包后命令行找不到，检查 npm 全局路径是否在 PATH。</div>
+  <h2 id="s7">7. 进程与性能</h2>
+  <ul>
+    <li><b>cluster</b>：Node 单进程只用一核，用 <code>cluster</code> 或 <code>PM2</code> 起多个进程（每核一个）吃满多核。</li>
+    <li><b>worker_threads</b>：同进程内多线程，做 CPU 密集任务（如加密、压缩）而不阻塞事件循环。</li>
+    <li><b>内存</b>：默认单进程约 2GB 上限，大对象/泄漏会 OOM；用 <code>--max-old-space-size</code> 调。</li>
+  </ul>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>用 Node 写一个命令行小工具。</li>
-    <li>学 <a href="express.html">Express</a> 写 REST API。</li>
-    <li>学 <a href="typescript.html">TypeScript</a> 给 Node 加类型。</li>
-    <li>学 <a href="pm2.html">PM2</a> 守护进程。</li>
-    <li>看 Memora 后端，纯 Node + Express。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能装 Node、写脚本、用模块、读写文件、起 HTTP 服务——服务端 JS 你已入门。</div>
+  <h2 id="s8">8. 健壮性与优雅关闭</h2>
+  <pre><code>process.on('unhandledRejection', (e) =&gt; { console.error(e); /* 别静默 */ });
+process.on('SIGTERM', () =&gt; {
+  server.close(() =&gt; process.exit(0));   // 先停收新请求，再退出
+});</code></pre>
+  <ul>
+    <li>漏掉 <code>unhandledRejection</code> 监听，未捕获 Promise 错误可能导致进程不稳定。</li>
+    <li><b>优雅关闭</b>：收到 SIGTERM（如 <a href="docker.html">K8s</a> 滚动发布）要停收新流量、跑完在途请求再退出，别直接杀。</li>
+  </ul>
+
+  <h2 id="s9">9. 安全</h2>
+  <ul>
+    <li><b>依赖供应链</b>：<code>npm audit</code> 查漏洞；锁文件（package-lock）固定版本；用 SCA 工具。</li>
+    <li><b>原型污染</b>：别把用户输入直接 <code>merge</code> 进对象（<code>__proto__</code> 攻击）；用安全深拷贝。</li>
+    <li>密钥走环境变量 / 配置中心，绝不进仓库。</li>
+  </ul>
+
+  <h2 id="s10">10. 测试</h2>
+  <ul>
+    <li>单元/集成用 <code>vitest</code> 或 <code>jest</code>；HTTP 层用 <code>supertest</code> 测接口。</li>
+    <li>CI 跑 lint + test + audit 作为质量门。</li>
+  </ul>
+
+  <h2 id="s11">11. 与 Bun/Deno</h2>
+  <table>
+    <tr><th></th><th>Node.js</th><th><a href="bun.html">Bun</a></th><th>Deno</th></tr>
+    <tr><td>定位</td><td>生态最成熟</td><td>更快、内置工具链</td><td>安全默认、TS 原生</td></tr>
+    <tr><td>现状</td><td>事实标准</td><td>崛起中</td><td>小众</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">选型：</span>求稳、要生态 → Node；求极致启动/运行速度、现代工具链 → Bun（兼容大多数 npm 包）。</div>
+
+  <h2 id="s12">12. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>ESM/CJS 混用报错 → 统一项目模块系统，CJS 里别 require ESM。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>事件循环被重计算阻塞 → 拆批或用 Worker。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>大文件用 <code>readFileSync</code> 占爆内存 → 改流。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忘记 <code>res.end()</code> → 请求挂起超时。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>unhandledRejection 未监听 → 隐性崩溃。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>依赖漏洞不过审 → 定期 audit 与升级。</div>
+
+  <h2 id="s13">13. 调试</h2>
+  <ul>
+    <li><code>node --inspect</code> 接 Chrome DevTools 断点调试。</li>
+    <li><code>clinic.js</code> 做性能剖析（定位事件循环延迟、CPU 热点）。</li>
+    <li>结构化日志（pino）配合日志平台。</li>
+  </ul>
+
+  <h2 id="s14">14. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能写脚本、起 HTTP 服务</td></tr>
+    <tr><td>初级</td><td>会用框架、模块系统、异步</td></tr>
+    <tr><td>中级</td><td>懂事件循环、流、cluster、健壮处理</td></tr>
+    <tr><td>资深</td><td>性能调优、安全供应链、架构与排障</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用流复制一个大文件并观察内存恒定 ② 写一个阻塞事件循环的“坏接口”并用 clinic 定位 ③ 用 cluster 起 4 进程 ④ 实现 SIGTERM 优雅关闭 ⑤ 跑 npm audit 修一个漏洞。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解单线程事件循环的本质与边界，能用流/集群/Worker 做出高并发且健壮的服务——这是资深 Node 后端的分水岭。</div>
 </main>
 </div>
 <script>

@@ -2,110 +2,141 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TypeScript · 小白通关教程</title>
+<title>TypeScript · 从小白到资深类型工程师</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">TypeScript<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个 TS 文件</a>
-  <a href="#s4">4. 基础类型</a>
-  <a href="#s5">5. 接口与类型</a>
-  <a href="#s6">6. 泛型入门</a>
-  <a href="#s7">7. 在 React 里用</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 下一步</a>
+  <div class="tbrand">TypeScript<small>从小白到资深类型工程师</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 类型基础</a>
+  <a href="#s4">4. 接口与类型别名</a>
+  <a href="#s5">5. 函数与泛型</a>
+  <a href="#s6">6. 高级类型</a>
+  <a href="#s7">7. 类与 OOP</a>
+  <a href="#s8">8. 严格模式心智</a>
+  <a href="#s9">9. 声明文件</a>
+  <a href="#s10">10. 与 React 结合</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试与工具</a>
+  <a href="#s13">13. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>TypeScript</h1>
-  <p class="tsub">给 JavaScript 加上“类型”的超级加强版 —— 写代码时就能发现错误，不 Runtime 才崩。学完你能用 TS 写更稳的前端/后端。</p>
+  <h1>TypeScript：从小白到资深类型工程师</h1>
+  <p class="tsub">TypeScript 是 JavaScript 的<strong>超集</strong>，给它加上静态类型。它不改变运行，只在编译期帮你挡掉一类“本来要等上线才爆”的 bug。本教程从“会写类型”讲到“用类型建模业务、设计可演进的 API”。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>TypeScript（TS）</strong> 是微软出的语言，本质是“带了类型的 JavaScript”。浏览器不认识 TS，需要先<strong>编译</strong>成 JS 才能跑。</p>
-  <div class="box"><span class="bt">一句话：</span>JS 是“写完跑起来才知道错没错了”；TS 是“写的时候编辑器就提醒你类型不对”。</div>
-  <div class="box ok"><span class="bt">为什么学：</span>大项目、团队开发几乎都用 TS；React / Next.js / Node 后端都推荐 TS；能大幅减少低级 bug。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>JS 是动态类型：<code>user.name</code> 在运行时才发现 <code>user</code> 是 undefined。项目越大，这种“拼写错/结构变/传错参”的事故越多，IDE 也给不了靠谱提示。</p>
+  <div class="box"><span class="bt">一句话：</span>TS 用<strong>类型即文档、类型即测试</strong>，把大量错误在写代码时就拦下，并让重构有安全感。</div>
+  <div class="box warn"><span class="bt">误区：</span>TS 类型在编译后<strong>会被擦除</strong>，运行时没有类型保护。想运行时校验（API 入参），要配合 <a href="https://zod.dev" target="_blank" rel="noopener">zod</a> 这类 schema 库。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <div class="step"><div class="n">1</div><div class="b"><h4>装 Node.js</h4><p>见 <a href="react.html">React 教程</a> 的环境准备。</p></div></div>
-  <div class="step"><div class="n">2</div><div class="b"><h4>全局安装 TS 编译器</h4><pre><code>npm install -g typescript
-tsc -v        # 看到版本号即成功</code></pre></div></div>
-
-  <h2 id="s3">3. 第一个 TS 文件</h2>
-  <p>新建 <code>hello.ts</code>：</p>
-  <pre><code>function greet(name: string): string {
-  return '你好，' + name;
-}
-console.log(greet('小王'));</code></pre>
-  <p>注意 <code>: string</code> 就是“类型标注”。编译并运行：</p>
-  <pre><code>tsc hello.ts      # 生成 hello.js
-node hello.js     # 输出：你好，小王</code></pre>
-  <div class="box warn"><span class="bt">试试：</span>把 <code>greet(123)</code> 传个数字，保存后 <code>tsc</code> 会<strong>直接报错</strong>——“Argument of type 'number' is not assignable to 'string'”。这就是 TS 的价值。</div>
-
-  <h2 id="s4">4. 基础类型</h2>
-  <pre><code>let age: number = 18;
-let name: string = '小王';
-let isOk: boolean = true;
-let list: number[] = [1, 2, 3];      // 数字数组
-let tuple: [string, number] = ['a', 1]; // 元组
-let anything: any = 123;             // 任意类型（尽量少用）
-let u: undefined = undefined;
-let n: null = null;</code></pre>
-  <div class="box"><span class="bt">提示：</span>多数情况不用手写类型，TS 会“类型推断”，比如 <code>let x = 1</code> 自动知道 x 是 number。</div>
-
-  <h2 id="s5">5. 接口与类型</h2>
-  <p><code>interface</code> 用来描述“一个对象长什么样”，最常见：
-
-  <pre><code>interface User {
-  id: number;
-  name: string;
-  email?: string;        // ? 表示可选
-}
-
-function printUser(u: User) {
-  console.log(u.id, u.name);
-}
-printUser({ id: 1, name: '小红' });   // OK，email 可选</code></pre>
-  <div class="box ok"><span class="bt">好处：</span>函数参数有没有传错字段、少传了必填项，编辑器立刻标红。</div>
-
-  <h2 id="s6">6. 泛型入门</h2>
-  <p>泛型 = “类型当参数”，写可复用的通用函数/容器：</p>
-  <pre><code>function first&lt;T&gt;(arr: T[]): T | undefined {
-  return arr[0];
-}
-first&lt;number&gt;([1, 2, 3]);   // 返回 number
-first&lt;string&gt;(['a', 'b']);  // 返回 string</code></pre>
-  <div class="box"><span class="bt">在 React 里：</span><code>useState&lt;number&gt;(0)</code> 就是泛型，告诉 state 是 number 类型。</div>
-
-  <h2 id="s7">7. 在 React 里用</h2>
-  <pre><code>interface Props {
-  title: string;
-  count?: number;
-}
-function Card({ title, count = 0 }: Props) {
-  return &lt;div&gt;&lt;h3&gt;{title}&lt;/h3&gt;&lt;p&gt;{count}&lt;/p&gt;&lt;/div&gt;;
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code">pnpm add -D typescript
+npx tsc --init          # 生成 tsconfig.json</code></pre>
+  <p>关键配置（<code>tsconfig.json</code>）：</p>
+  <pre><code">{
+  "compilerOptions": {
+    "strict": true,            // 一次开齐所有严格选项，资深项目必开
+    "noUncheckedIndexedAccess": true,  // 访问 arr[i] 得到 T | undefined
+    "target": "ES2022",
+    "moduleResolution": "bundler"
+  }
 }</code></pre>
-  <p>给组件 props 加类型后，用 <code>&lt;Card /&gt;</code> 时漏传必填 <code>title</code> 会报错，安全感拉满。</p>
+  <div class="box ok"><span class="bt">集成：</span><a href="vite.html">Vite</a>/<a href="nextjs.html">Next.js</a> 原生支持 TS，<code>.ts/.tsx</code> 直接写，无需额外配置；类型检查用 <code>tsc --noEmit</code> 接进 CI。</div>
 
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>TS 只在“编译期”检查，<code>any</code> 会跳过检查。滥用 <code>any</code> 等于白用 TS。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>装了 TS 却没配置 <code>tsconfig.json</code>，编辑器不报错。新项目用 <code>tsc --init</code> 生成配置（Vite/Next 已自带）。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>“类型断言” <code>obj as Type</code> 是强行告诉 TS“我比你知道”，用错会埋雷，谨慎用。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>第三方库没类型时，需装 <code>@types/xxx</code> 或写 <code>declare module</code> 声明，否则报找不到模块。</div>
-  <div class="box warn"><span class="bt">坑 5：</span><code>null</code> 和 <code>undefined</code> 默认不能赋给其它类型（strict 模式）；用 <code>string | null</code> 或可选 <code>?:</code>。</div>
+  <h2 id="s3">3. 类型基础</h2>
+  <pre><code">let age: number = 18;
+const name: string = '小王';
+const tags: string[] = ['a', 'b'];
+const pair: [number, string] = [1, 'x'];   // 元组
+let status: 'on' | 'off' = 'on';           // 字面量联合</code></pre>
+  <div class="box ok"><span class="bt">新手：</span>多用 <code>const</code> + 字面量类型，少用 <code>any</code>。<code>any</code> 会“关掉”该处类型检查，是技术债。</div>
 
-  <h2 id="s9">9. 下一步</h2>
-  <ol>
-    <li>把现有 JS 文件改成 <code>.ts</code>，体验类型检查。</li>
-    <li>在 <a href="react.html">React</a> 项目里给组件加 <code>interface Props</code>。</li>
-    <li>用 <a href="nextjs.html">Next.js</a> 的 TS 模板起一个新项目。</li>
-    <li>学 <a href="nodejs.html">Node.js</a> 后端，用 TS 写 API。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能给变量/函数/接口加类型、读懂泛型、在 React 里用 TS——你已经跨过“稳代码”的门槛。</div>
+  <h2 id="s4">4. 接口与类型别名</h2>
+  <pre><code">interface User { id: number; name: string; email?: string }  // ? 可选
+type ID = number | string;                                   // 别名可联合
+type Point = { x: number; y: number };</code></pre>
+  <div class="box"><span class="bt">interface vs type：</span>interface 可被继承/声明合并（适合描述“对象形状/对外 API”）；type 能做联合/交叉/条件类型（适合组合）。团队约定统一即可，差别不大。</div>
+
+  <h2 id="s5">5. 函数与泛型</h2>
+  <pre><code">function first&lt;T&gt;(arr: T[]): T | undefined { return arr[0]; }
+first([1, 2, 3]);           // T 推断为 number
+first(['a']);               // T 推断为 string
+
+// 约束：T 必须有 length
+function logLen&lt;T extends { length: number }&gt;(x: T) { console.log(x.length); }</code></pre>
+  <div class="box ok"><span class="bt">泛型本质：</span>“类型层面的函数”，让代码对类型参数化而不丢失信息。库作者（如 React/Vue）几乎离不开它。</div>
+
+  <h2 id="s6">6. 高级类型</h2>
+  <ul>
+    <li><b>联合 / 交叉</b>：<code>A | B</code>（或）、<code>A &amp; B</code>（且）。</li>
+    <li><b>类型守卫</b>：<code>typeof</code>/<code>in</code>/自定义 <code>is</code> 收窄联合类型。</li>
+    <li><b>工具类型</b>：<code>Partial&lt;T&gt;</code>（全可选）、<code>Pick&lt;T,K&gt;</code>、<code>Omit&lt;T,K&gt;</code>、<code>Record&lt;K,V&gt;</code>、<code>Readonly&lt;T&gt;</code>。</li>
+    <li><b>映射类型</b>：<code>type Nullable&lt;T&gt; = { [K in keyof T]: T[K] | null }</code>。</li>
+  </ul>
+  <pre><code">type User = { id: number; name: string; role: 'admin' | 'user' };
+type PublicUser = Omit&lt;User, 'role'&gt;;           // 去掉敏感字段
+type PatchUser = Partial&lt;User&gt;;                   // 更新时全可选</code></pre>
+  <div class="box warn"><span class="bt">别走火入魔：</span>“类型体操”很爽，但过度复杂的类型别人看不懂、编译也慢。类型服务于业务可读性，不是炫技。</div>
+
+  <h2 id="s7">7. 类与 OOP</h2>
+  <pre><code">class Service {
+  private token: string;          // 私有，外部不可访问
+  constructor(token: string) { this.token = token; }
+  public call() { /* ... */ }
+}
+abstract class Animal { abstract speak(): void; }  // 抽象类</code></pre>
+  <div class="box ok"><span class="bt">取舍：</span>前端生态偏函数式；类适合“有状态、要封装行为”的对象（如 SDK 客户端）。接口优先于具体类，便于替换实现。</div>
+
+  <h2 id="s8">8. 严格模式心智</h2>
+  <ul>
+    <li><code>strictNullChecks</code>：<code>null/undefined</code> 不能随便赋给非空类型——消灭“cannot read property of undefined”这一类头号运行时错误。</li>
+    <li><code>noImplicitAny</code>：隐式 any 报错，逼你明确类型。</li>
+    <li><b>非空断言 <code>!</code></b>：<code>el!.value</code> 告诉编译器“我保证非空”，但用错会运行时崩，慎用。</li>
+  </ul>
+
+  <h2 id="s9">9. 声明文件</h2>
+  <p>第三方没类型时，写 <code>*.d.ts</code> 声明模块；有社区类型就 <code>pnpm add -D @types/xxx</code>。还能做<strong>模块扩展</strong>（给已有库加字段），比改源码安全。</p>
+  <pre><code">declare module 'legacy-lib' { export function doThing(): void; }</code></pre>
+
+  <h2 id="s10">10. 与 React 结合</h2>
+  <pre><code">'use client';
+interface Props { title: string; onClose: () => void; items: string[] }
+function Modal({ title, onClose, items }: Props) {
+  return &lt;div&gt;&lt;h2&gt;{title}&lt;/h2&gt;...&lt;/div&gt;;
+}
+// 泛型组件
+function List&lt;T extends { id: number }&gt;({ data }: { data: T[] }) { /* ... */ }</code></pre>
+  <div class="box ok"><span class="bt">资深做法：</span>用类型给组件 props/状态建模，配合 zod 在边界（API）做运行校验，形成“内外双保险”。</div>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span><code>any</code> 瘟疫：一个 any 扩散，整条调用链失去检查。用 <code>unknown</code> + 类型守卫代替（<code>unknown</code> 强制你先收窄再使用）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>以为类型能保证运行时安全——其实运行时无类型，外部输入必须 zod 校验。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>过度 <code>enum</code>：TS enum 会生成运行时对象、.tree-shaking 差，且反向映射易误导；倾向用 <code>const</code> 对象 + <code>as const</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>类型与实现对不上（手改了接口忘了改实现）；用 <code>implements</code> 让编译器帮你对齐。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>循环类型依赖导致编译诡异；拆分共享类型到 <code>types/</code>。</div>
+
+  <h2 id="s12">12. 调试与工具</h2>
+  <ul>
+    <li><code>tsc --noEmit</code>：只检查不编译，CI 必跑。</li>
+    <li><code>ts-node</code> / <code>tsx</code>：直接跑 TS 脚本。</li>
+    <li>IDE 悬浮看推断类型、用 <code>// @ts-expect-error</code> 标记“故意的错误”。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会标基础类型、interface</td></tr>
+    <tr><td>初级</td><td>泛型、工具类型、与框架结合</td></tr>
+    <tr><td>中级</td><td>严格模式、声明文件、类型建模</td></tr>
+    <tr><td>资深</td><td>用类型设计 API、约束业务规则、类型体操有度</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 给一个 JS 项目全量加类型 ② 写泛型工具函数 ③ 用 zod 给 API 入参做运行校验 ④ 用 <code>Omit/Pick</code> 设计 DTO 分层（DB 实体 → API 返回 → 表单）。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>能把业务规则“写进类型”，让编译器替你把门——这是资深工程师用 TS 的方式。</div>
 </main>
 </div>
 <script>

@@ -2,87 +2,145 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vue 3 · 小白通关教程</title>
+<title>Vue 3 · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Vue 3<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个组件</a>
-  <a href="#s4">4. 响应式数据</a>
-  <a href="#s5">5. 事件与绑定</a>
-  <a href="#s6">6. 一个计数器</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">Vue 3<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 响应式原理</a>
+  <a href="#s4">4. 组合式 API</a>
+  <a href="#s5">5. 模板与编译优化</a>
+  <a href="#s6">6. 组件通信</a>
+  <a href="#s7">7. 状态管理 Pinia</a>
+  <a href="#s8">8. 路由</a>
+  <a href="#s9">9. 性能优化</a>
+  <a href="#s10">10. 与 React 对比</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试</a>
+  <a href="#s13">13. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Vue 3</h1>
-  <p class="tsub">渐进式前端框架 —— 用“数据驱动视图”，改数据页面自动变。国内项目、uni-app 都用它。学完你能写可交互的 Vue 页面。</p>
+  <h1>Vue 3：从小白到资深前端</h1>
+  <p class="tsub">Vue 是渐进式前端框架，国内项目占比极高。本教程不止教模板语法，而是讲透它的<strong>响应式系统（Proxy 实现）、组合式 API 心智、编译期优化</strong>，并和 <a href="react.html">React</a> 做选型对比，帮你成为能驾驭大型 Vue 工程的资深工程师。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Vue 3</strong> 是声明式框架：你描述“数据长什么样”，它负责把数据渲染成 DOM；数据一变，视图自动更新，不用手动操作 DOM。</p>
-  <div class="box"><span class="bt">对比：</span><a href="react.html">React</a> 用 JSX 写组件；Vue 用模板（HTML 风格）写，更贴近原生 HTML，上手更直观。</div>
-  <div class="box ok"><span class="bt">核心：</span>组合式 API（<code>ref</code>/<code>reactive</code>）+ 单文件组件（<code>.vue</code>）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>和 React 一样，Vue 也是声明式 UI 框架：你描述“状态→界面”，框架负责更新 DOM。差别在<strong>心智模型与写法</strong>。</p>
+  <div class="box"><span class="bt">一句话：</span>Vue 用<strong>模板 + 响应式数据</strong>，改动数据自动更新视图，且内置了路由、状态管理、构建（<a href="vite.html">Vite</a>）等全家桶，开箱即用程度高。</div>
+  <div class="box ok"><span class="bt">适合：</span>中后台、国内业务系统、需要快速上手的团队、跨端（<a href="uniapp.html">uni-app</a>）。<br><span class="box warn">不适合：</span>极致定制的设计系统（模板约束比 JSX 强）。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>用官方脚手架起项目（需装 <a href="nodejs.html">Node.js</a>）：</p>
-  <pre><code>npm create vue@latest my-app
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code">npm create vue@latest my-app      # 官方脚手架，选 TS/Router/Pinia
 cd my-app &amp;&amp; npm install &amp;&amp; npm run dev</code></pre>
-  <p>浏览器打开提示的 <code>http://localhost:5173</code> 即看到页面。</p>
+  <p>生成 <code>src/</code>：<code>main.ts</code>（创建 app）、<code>App.vue</code>（根组件）、<code>components/</code>。组件是 <code>.vue</code> 单文件组件（SFC），含 <code>&lt;template&gt;&lt;script&gt;&lt;style&gt;</code> 三部分。</p>
 
-  <h2 id="s3">3. 第一个组件</h2>
-  <pre><code>&lt;template&gt;
-  &lt;h1&gt;{{ msg }}&lt;/h1&gt;
-&lt;/template&gt;
-&lt;script setup&gt;
-const msg = '你好 Vue';
+  <h2 id="s3">3. 响应式原理</h2>
+  <p>这是 Vue 的心脏，资深必懂。</p>
+  <ul>
+    <li><b>Vue 2</b> 用 <code>Object.defineProperty</code> 劫持属性，但<strong>监听不到新增/删除属性与数组下标</strong>，要 <code>Vue.set</code> 补丁。</li>
+    <li><b>Vue 3</b> 改用 <code>Proxy</code>：对整个对象做代理，<strong>任意读写、增删、数组操作都能拦截</strong>，且懒代理（用到才代理深层）。</li>
+    <li><b>依赖收集 → 派发更新</b>：组件渲染时“读”了某个响应式属性，就建立“这个属性 → 这个组件的渲染 effect”的依赖；属性被“写”时，触发对应 effect 重新渲染。</li>
+  </ul>
+  <pre><code">import { reactive, effect } from 'vue';
+const state = reactive({ count: 0 });
+effect(() =&gt; console.log('count =', state.count)); // 读 → 收集依赖
+state.count++;                                    // 写 → 触发 effect</code></pre>
+  <div class="box warn"><span class="bt">坑底：</span>响应式靠“读时收集”。如果你把响应式对象的属性<strong>解构</strong>出来（<code>const { count } = state</code>），拿到的是普通值，<strong>失去响应性</strong>。要用 <code>toRefs</code> 或保持引用访问。</div>
+
+  <h2 id="s4">4. 组合式 API</h2>
+  <p>Vue 3 主推组合式 API（<code>&lt;script setup&gt;</code>），把“同一逻辑的响应式状态与函数”聚在一起，比选项式 API（data/methods 分散）更易复用与维护。</p>
+  <pre><code">&lt;script setup lang="ts"&gt;
+import { ref, computed, onMounted } from 'vue';
+const count = ref(0);                       // 基本类型用 ref，访问要 .value
+const double = computed(() =&gt; count.value * 2);
+function inc() { count.value++; }
+onMounted(() =&gt; console.log('挂载完成'));
 &lt;/script&gt;</code></pre>
+  <ul>
+    <li><code>ref</code>：包裹基本类型（模板里自动解包，不用 <code>.value</code>）；<code>reactive</code>：包裹对象。</li>
+    <li><code>computed</code>：派生状态，带缓存。<code>watch</code>/<code>watchEffect</code>：监听变化做副作用。</li>
+    <li><b>组合式函数（composable）</b>：把逻辑抽成 <code>useXxx()</code>，跨组件复用——等价于 React 的自定义 Hook。</li>
+  </ul>
 
-  <h2 id="s4">4. 响应式数据</h2>
-  <p>用 <code>ref</code> 让数据变“响应式”，改它页面自动刷新：</p>
-  <pre><code>&lt;script setup&gt;
-import { ref } from 'vue';
-const count = ref(0);
-function add() { count.value++; }   // 注意 ref 要用 .value
-&lt;/script&gt;</code></pre>
+  <h2 id="s5">5. 模板与编译优化</h2>
+  <ul>
+    <li>指令：<code>v-if/v-show</code>、<code>v-for</code>、<code>v-bind(:)</code>、<code>v-on(@)</code>、<code>v-model</code>（双向绑定）。</li>
+    <li><b>编译期优化</b>：Vue 3 编译器会把<strong>静态节点提升</strong>（不重复创建）、给动态节点打“补丁标记（patch flag）”，diff 时只比对动态部分——比 Vue 2 快很多。</li>
+    <li><code>v-model</code> 本质是 <code>:value + @input</code> 的语法糖，自定义组件可用 <code>modelValue</code>/<code>update:modelValue</code>。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑：</span><code>v-for</code> 必须带 <code>:key</code>（稳定 id），且 <code>v-if</code> 和 <code>v-for</code> 同元素时，<code>v-if</code> 优先级更高（Vue 3）——避免在同一节点混用。</div>
 
-  <h2 id="s5">5. 事件与绑定</h2>
-  <pre><code>&lt;template&gt;
-  &lt;p&gt;计数：{{ count }}&lt;/p&gt;
-  &lt;button @click="add"&gt;+1&lt;/button&gt;
-  &lt;input v-model="text" placeholder="输入"&gt;
-&lt;/template&gt;</code></pre>
-  <div class="box ok"><span class="bt">要点：</span><code>@click</code> 绑定事件，<code>v-model</code> 双向绑定表单，<code>v-for</code> 列表渲染，<code>v-if</code> 条件渲染。</div>
+  <h2 id="s6">6. 组件通信</h2>
+  <ul>
+    <li><b>父→子</b>：<code>props</code>（只读，子组件改要 emit 事件）。</li>
+    <li><b>子→父</b>：<code>defineEmits</code> 声明事件，<code>emit('update', val)</code>。</li>
+    <li><b>插槽</b>：<code>&lt;slot/&gt;</code> 默认插槽、具名 <code>&lt;slot name="header"&gt;</code>、作用域插槽（子传数据给插槽内容）。</li>
+    <li><b>跨层</b>：<code>provide/inject</code>（类似 React Context，但要小心重渲染范围）。</li>
+    <li><b>透传</b>：未被声明为 props 的属性会落进 <code>$attrs</code>，可 <code>inheritAttrs: false</code> 手动绑定到指定元素（如把 class 透传到根 input）。</li>
+  </ul>
 
-  <h2 id="s6">6. 一个计数器</h2>
-  <pre><code>&lt;template&gt;
-  &lt;button @click="add"&gt;点了 {{ count }} 次&lt;/button&gt;
-&lt;/template&gt;
-&lt;script setup&gt;
-import { ref } from 'vue';
-const count = ref(0);
-const add = () =&gt; count.value++;
-&lt;/script&gt;</code></pre>
+  <h2 id="s7">7. 状态管理 Pinia</h2>
+  <p>Vuex 的继任者，更简洁、TS 友好。</p>
+  <pre><code">// stores/counter.ts
+import { defineStore } from 'pinia';
+export const useCounter = defineStore('counter', () =&gt; {
+  const n = ref(0);
+  const double = computed(() =&gt; n.value * 2);
+  function inc() { n.value++; }
+  return { n, double, inc };
+});</code></pre>
+  <div class="box ok"><span class="bt">选型：</span>局部状态用 <code>ref/reactive</code>；跨组件共享用 Pinia；服务端数据别存 Pinia（用 TanStack Query 类方案，同 React 思路）。</div>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>ref 在 JS 里要 <code>.value</code>，模板里不用；混用导致读不到值。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>直接给 reactive 对象整体替换（<code>obj = {...}</code>）会丢失响应式；用 <code>Object.assign</code> 改属性。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>在 <code>setup</code> 外定义普通变量当状态，不会触发更新。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>v-for 没加 <code>:key</code>，列表重排错乱；用稳定唯一值作 key。</div>
+  <h2 id="s8">8. 路由</h2>
+  <p><code>vue-router</code>：<code>&lt;router-view/&gt;</code> 渲染匹配路由，<code>&lt;router-link&gt;</code> 跳转。支持嵌套路由、动态路由 <code>:id</code>、路由守卫（<code>beforeEach</code> 做鉴权）、路由懒加载（<code>() =&gt; import()</code>）。</p>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>用 Vue 做一个 Todolist（增删改）。</li>
-    <li>学 <a href="vite.html">Vite</a> 打包、状态管理（Pinia）。</li>
-    <li>学 <a href="uniapp.html">uni-app</a> 用 Vue 写跨端应用。</li>
-    <li>对比 <a href="react.html">React</a>。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能搭 Vue 项目、写组件、用 ref 做响应式交互——前端框架你已入门。</div>
+  <h2 id="s9">9. 性能优化</h2>
+  <ul>
+    <li><code>v-once</code>：一次性渲染静态内容，之后不更新。</li>
+    <li><code>shallowRef / shallowReactive</code>：只对顶层做响应式，处理大对象时显著省开销。</li>
+    <li>大列表用虚拟滚动（<code>vue-virtual-scroller</code>）。</li>
+    <li>路由级懒加载 + <a href="vite.html">Vite</a> 分包减小首屏。</li>
+  </ul>
+
+  <h2 id="s10">10. 与 React 对比</h2>
+  <table>
+    <tr><th></th><th>Vue 3</th><th>React</th></tr>
+    <tr><td>视图写法</td><td>模板（约束强、易上手）</td><td>JSX（灵活、门槛高）</td></tr>
+    <tr><td>响应式</td><td>内置 Proxy 自动追踪</td><td>手动 setState/调度</td></tr>
+    <tr><td>心智</td><td>框架帮你管更新</td><td>你描述 UI=fn(state)</td></tr>
+    <tr><td>全家桶</td><td>官方 Router/Pinia 统一</td><td>生态丰富但需自选</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">选型：</span>团队 Vue 背景、要快上手、中后台 → Vue；追求极致灵活/大型设计系统、React 生态（含 RN 跨端）→ React。两者资深能力高度互通。</div>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>解构 reactive 丢响应性——用 <code>toRefs</code> 或保留引用。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>.value</code>（在 <code>&lt;script&gt;</code> 里访问 ref 必须 <code>.value</code>，模板里不用）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>v-for</code> 没 key、或 key 用 index 导致状态错乱。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>异步改数据后立刻读 DOM，拿到旧值——用 <code>nextTick()</code> 等 DOM 更新完。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>在 <code>setup</code> 顶层写副作用没清理（定时器/监听），组件卸载后泄漏——在 <code>onUnmounted</code> 清理。</div>
+
+  <h2 id="s12">12. 调试</h2>
+  <ul>
+    <li><b>Vue DevTools</b>：看组件树、props/state、Vuex/Pinia 状态、时间线。</li>
+    <li><code>@vue/reactivity</code> 可单独调试响应式。</li>
+    <li>生产构建用 <code>vite build</code>，配 sourcemap 便于排查。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会写模板、用 ref 跑起来</td></tr>
+    <tr><td>初级</td><td>组件通信、composable 复用</td></tr>
+    <tr><td>中级</td><td>懂响应式原理、性能优化、Pinia</td></tr>
+    <tr><td>资深</td><td>能设计大型 Vue 工程、定制构建、定位响应式与渲染性能瓶颈</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 composable 抽一个“防抖搜索”逻辑 ② 用 Pinia 做跨页购物车 ③ 用路由守卫做鉴权 ④ 解释“为什么解构 reactive 会丢响应性”。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 Proxy 响应式与编译优化，能驾驭组合式 API 与大型工程——这是资深 Vue 工程师的分水岭。</div>
 </main>
 </div>
 <script>

@@ -2,105 +2,159 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vite · 小白通关教程</title>
+<title>Vite · 从小白到资深构建工程师</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Vite<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 创建项目</a>
-  <a href="#s4">4. 目录与脚本</a>
-  <a href="#s5">5. 配置入门</a>
-  <a href="#s6">6. 引入资源</a>
+  <div class="tbrand">Vite<small>从小白到资深构建</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 核心原理</a>
+  <a href="#s4">4. 配置详解</a>
+  <a href="#s5">5. 插件生态</a>
+  <a href="#s6">6. HMR 原理</a>
   <a href="#s7">7. 环境变量</a>
-  <a href="#s8">8. 打包部署</a>
-  <a href="#s9">9. 常见坑</a>
-  <a href="#s10">10. 下一步</a>
+  <a href="#s8">8. 代码分割与优化</a>
+  <a href="#s9">9. 与框架集成</a>
+  <a href="#s10">10. 部署</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试与剖析</a>
+  <a href="#s13">13. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Vite</h1>
-  <p class="tsub">当下最主流的前端构建工具 / 开发服务器 —— 启动秒开、热更新飞快。React、Vue 官方都推荐用它。学完你能自己从零搭一个现代前端工程。</p>
+  <h1>Vite：从小白到资深构建工程师</h1>
+  <p class="tsub">Vite 是当下主流的前端构建工具与开发服务器。它让“冷启动”从几十秒降到毫秒级。本教程带你从“会用 dev/build”走到“懂 ESM 预构建、HMR、产物优化，能为大型项目定制构建链路”。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Vite</strong>（法语“快”）是前端构建工具，干两件事：</p>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>老一代打包器（Webpack）启动时要先把<strong>整个应用</strong>打包成 bundle 再起服务——项目越大越慢，改一行也要等。开发体验与“项目规模”成反比。</p>
+  <div class="box"><span class="bt">一句话：</span>Vite 在<strong>开发期</strong>利用浏览器原生 ESM，按需编译、秒级启动；在<strong>生产期</strong>用 Rollup 做优化打包。开发快、上线也快。</div>
+  <div class="box ok"><span class="bt">为什么快：</span>① 开发时不打包，浏览器用原生 <code>import</code> 拉模块，Vite 只编译“被请求到的文件”；② 依赖（node_modules）用 <code>esbuild</code> 预构建成 ES 模块并缓存；③ 生产用 Rust 写的 <code>esbuild</code>/<code>Rollup</code> 做极致压缩。</div>
+
+  <h2 id="s2">2. 工程化起步</h2>
+  <div class="step"><div class="n">1</div><div class="b"><h4>创建项目</h4>
+  <pre><code">pnpm create vite@latest app --template react-ts
+cd app &amp;&amp; pnpm i &amp;&amp; pnpm dev</code></pre>
+  <p>模板含 <code>react</code>/<code>vue</code>/<code>vanilla</code> 等，也可空模板自建。</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>关键文件</h4>
+  <pre><code">vite.config.ts   # 构建配置
+index.html       # 入口（Vite 以 HTML 为入口，而非 JS）
+tsconfig.json
+package.json     # scripts: dev / build / preview</code></pre>
+  <p>注意：Vite 的入口是 <code>index.html</code>，它用 <code>&lt;script type="module" src="/src/main.ts"&gt;</code> 拉入口模块。</p></div></div>
+
+  <h2 id="s3">3. 核心原理</h2>
   <ul>
-    <li><b>开发服务器</b>：启动极快，改代码毫秒级热更新（比老牌 Webpack 快很多）。</li>
-    <li><b>打包器</b>：<code>npm run build</code> 把代码压缩、合并成浏览器能跑的静态文件。</li>
+    <li><b>原生 ESM 开发服务器</b>：浏览器直接请求 <code>/src/main.ts</code>，Vite 实时把 TS/JSX 编译成浏览器能跑的 JS 返回，不生成中间 bundle。</li>
+    <li><b>依赖预构建（Pre-bundling）</b>：node_modules 里的 CJS/ESM 混包、海量小文件，Vite 用 <code>esbuild</code> 一次性转成精简 ESM 并强缓存（<code>node_modules/.vite</code>）。避免浏览器发成百上千个请求。</li>
+    <li><b>生产构建</b>：用 Rollup 做 tree-shaking、代码分割、压缩，产出可上线的静态文件。</li>
   </ul>
-  <div class="box"><span class="bt">一句话：</span>Vite 让你不用懂打包原理，也能拥有“现代前端工程”的开发体验。它不绑死框架，React / Vue / 原生都能用。</div>
+  <div class="box warn"><span class="bt">资深视角：</span>开发快≠生产随便。生产构建的优化（分包、target、压缩）决定了真实用户的首屏。两者用的是不同引擎，不能只看 dev 体验。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <div class="step"><div class="n">1</div><div class="b"><h4>装 Node.js（≥18）</h4><p>见 <a href="react.html">React 教程</a>。</p></div></div>
-  <div class="step"><div class="n">2</div><div class="b"><h4>验证</h4><pre><code>node -v &amp;&amp; npm -v</code></pre></div></div>
-
-  <h2 id="s3">3. 创建项目</h2>
-  <pre><code>npm create vite@latest my-app -- --template react
-cd my-app
-npm install
-npm run dev</code></pre>
-  <p>可选模板：<code>react</code> / <code>vue</code> / <code>vanilla</code>（纯 JS）/ <code>react-ts</code> 等。打开终端给的 <code>localhost</code> 地址即可。</p>
-
-  <h2 id="s4">4. 目录与脚本</h2>
-  <pre><code>my-app/
-├─ index.html        # 入口（Vite 从这儿开始）
-├─ vite.config.js    # Vite 配置
-├─ package.json
-└─ src/
-   ├─ main.jsx       # JS 入口
-   ├─ App.jsx
-   └─ assets/        # 图片等
-package.json 脚本：
-  "dev":   "vite"            # 开发
-  "build": "vite build"      # 打包
-  "preview":"vite preview"   # 预览打包结果</code></pre>
-
-  <h2 id="s5">5. 配置入门</h2>
-  <p><code>vite.config.js</code> 里常改两项：</p>
-  <pre><code>import { defineConfig } from 'vite';
+  <h2 id="s4">4. 配置详解</h2>
+  <pre><code">import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 3000, open: true },   // 改端口 + 自动开浏览器
-  build: { outDir: 'dist' }             // 打包输出目录
+  resolve: { alias: { '@': path.resolve(__dirname, 'src') } }, // 路径别名
+  server: {
+    port: 5173,
+    proxy: { '/api': 'http://localhost:3000' },  // 开发跨域代理
+  },
+  build: {
+    target: 'es2020',
+    outDir: 'dist',
+    sourcemap: false,
+  },
 });</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>代理解决开发期“前端 5173 调后端 3000”的跨域；别名 <code>@</code> 让深目录引用变干净。</div>
 
-  <h2 id="s6">6. 引入资源</h2>
-  <pre><code>import logo from './assets/logo.png';   // 直接 import 图片
-import './style.css';                   // 引入 CSS
-import data from './data.json';         // 引入 JSON</code></pre>
-  <div class="box ok"><span class="bt">爽点：</span>Vite 帮你处理路径、哈希文件名，不用手动配 loader。</div>
+  <h2 id="s5">5. 插件生态</h2>
+  <p>Vite 的插件接口兼容 Rollup 生态。常用：</p>
+  <ul>
+    <li><code>@vitejs/plugin-react</code> / <code>plugin-vue</code>：框架支持。</li>
+    <li><code>unplugin-auto-import</code>：自动导入 API，少写 import。</li>
+    <li><code>vite-plugin-pwa</code>：一键 PWA。</li>
+    <li><code>vite-plugin-svgr</code>：把 SVG 当组件导入。</li>
+  </ul>
+  <div class="box ok"><span class="bt">自定义插件：</span>插件是个带 <code>name</code> 和钩子（<code>transform</code>/<code>resolveId</code>/<code>load</code>）的对象，可在构建流水线任意点介入——这是资深做“私有组件库按需注入/规范检查”的利器。</div>
 
-  <h2 id="s7">7. 环境变量</h2>
-  <p>项目根目录建 <code>.env</code>：</p>
-  <pre><code>VITE_API_URL=https://api.example.com</code></pre>
-  <p>代码里读取：<code>import.meta.env.VITE_API_URL</code>。注意变量必须以 <code>VITE_</code> 开头才会暴露给前端。</p>
+  <h2 id="s6">6. HMR 原理</h2>
+  <p>热模块替换（HMR）：改一个文件，只替换那个模块，<strong>不刷新整页</strong>，状态保留。</p>
+  <ul>
+    <li>Vite 通过 WebSocket 通知浏览器“某模块变了”。</li>
+    <li>模块需自己实现 <code>import.meta.hot.accept</code> 处理更新；框架插件已内置（React Fast Refresh / Vue HMR）。</li>
+    <li><b>HMR 边界</b>：更新会向上找“能接受热更新的最近边界”，边界外仍可能整组件树重挂载。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑：</span>全局副作用（如注册全局事件、改 document）在 HMR 时可能重复执行，需用 <code>import.meta.hot.dispose</code> 清理。</div>
 
-  <h2 id="s8">8. 打包部署</h2>
-  <pre><code>npm run build      # 生成 dist/
-npm run preview    # 本地先看一眼</code></pre>
-  <p>把 <code>dist/</code> 整个上传到任意静态托管（GitHub Pages、Vercel、Nginx）即可上线。注意：<code>dist/index.html</code> 用了绝对路径 <code>/assets/...</code>，若部署在子目录需配 <code>base</code>。</p>
+  <h2 id="s7">7. 环境变量与模式</h2>
+  <pre><code">// .env.local
+VITE_API_URL=https://api.example.com
+// 代码里
+console.log(import.meta.env.VITE_API_URL);</code></pre>
+  <ul>
+    <li>只有 <code>VITE_</code> 前缀的变量才会进客户端包，其余仅服务端可见。</li>
+    <li><code>--mode staging</code> 加载 <code>.env.staging</code>，区分环境。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑：</span>把密钥写成 <code>VITE_SECRET</code> 会打进前端包，任何人都能看到。真密钥只在后端用。</div>
 
-  <h2 id="s9">9. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span><code>import</code> 图片路径写错或没加扩展名，报“Failed to resolve import”。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>部署后白屏：多半是 <code>base</code> 路径问题（子目录部署要设 <code>base: '/子目录/'</code>）。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>环境变量不生效：忘了加 <code>VITE_</code> 前缀，或写在 <code>.env.local</code> 但没重启 dev。</div>
-  <div class="box warn"><span class="bt">坑 4：</span><code>vite.config.js</code> 用了 <code>require</code>：配置文件是 ESM，用 <code>import</code> 而不是 <code>require</code>。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>端口被占用：改 <code>server.port</code> 或用 <code>--port 4000</code>。</div>
+  <h2 id="s8">8. 代码分割与优化</h2>
+  <pre><code">build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        vendor: ['react', 'react-dom'],   // 把稳定库拆独立 chunk，长缓存
+      },
+    },
+  },
+}</code></pre>
+  <ul>
+    <li><b>动态 <code>import()</code></b>：路由级自动分包，首屏不带全量代码。</li>
+    <li><b>manualChunks</b>：把不常变的第三方拆出来，利用浏览器长缓存。</li>
+    <li><b>target</b>：设低了兼容老浏览器但包变大；按用户群取舍。</li>
+  </ul>
 
-  <h2 id="s10">10. 下一步</h2>
-  <ol>
-    <li>用 Vite + React 搭个自己的小项目。</li>
-    <li>配 <a href="tailwind.html">Tailwind</a> 提速样式。</li>
-    <li>学 <a href="react.html">React</a> 或 Vue 框架本身。</li>
-    <li>学 <a href="nginx.html">Nginx</a> 把 <code>dist/</code> 部署到服务器。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能创建 Vite 项目、改配置、引入资源、用环境变量、打包部署——现代前端工程你已入门。</div>
+  <h2 id="s9">9. 与框架集成</h2>
+  <p><a href="react.html">React</a> 用 <code>@vitejs/plugin-react</code>（Fast Refresh），<a href="vue3.html">Vue</a> 用 <code>@vitejs/plugin-vue</code>。<a href="nextjs.html">Next.js</a> 内部也是基于类似思路（但它自带更重的约定）。</p>
+
+  <h2 id="s10">10. 部署</h2>
+  <pre><code">pnpm build      # 产出 dist/
+pnpm preview    # 本地预览产物</code></pre>
+  <ul>
+    <li>产物是纯静态文件，丢到 <a href="nginx.html">Nginx</a>/CDN/对象存储即可。</li>
+    <li><b>base 路径</b>：若部署在子路径（如 <code>/app/</code>），要设 <code>base: '/app/'</code>，否则资源 404。</li>
+  </ul>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>路径别名只在 Vite 配，TS 不认——要在 <code>tsconfig.json</code> 的 <code>paths</code> 同步配，否则 IDE/类型报错。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>开发用 proxy 解决跨域，但<strong>生产没有 proxy</strong>——上线要由 Nginx 或后端处理跨域/CORS。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>把密钥放 <code>VITE_</code> 前缀，泄露到前端。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>大依赖（如某个巨无霸库）没预构建/分包，首屏卡。检查并用 manualChunks 拆。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>部署子路径忘设 <code>base</code>，资源全 404。</div>
+
+  <h2 id="s12">12. 调试与剖析</h2>
+  <ul>
+    <li><code>vite build --debug</code> 看插件执行。</li>
+    <li><code>rollup-plugin-visualizer</code> 生成产物体积图，找“体积大户”。</li>
+    <li>慢启动先看是不是依赖预构建没命中缓存（清 <code>node_modules/.vite</code> 重试）。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会 create、dev、build</td></tr>
+    <tr><td>初级</td><td>会配 alias、proxy、env</td></tr>
+    <tr><td>中级</td><td>懂 HMR/预构建原理、会分包优化</td></tr>
+    <tr><td>资深</td><td>能写自定义插件、为大型项目定制构建链路、定位构建性能瓶颈</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 给项目配 alias + proxy ② 用 manualChunks 拆 vendor ③ 装 visualizer 找出最重依赖并优化 ④ 写一个自动注入版本号的 Vite 插件。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解“开发快”和“生产优”是两套引擎、懂得按需分包与跨域真相——这是资深前端构建能力的核心。</div>
 </main>
 </div>
 <script>

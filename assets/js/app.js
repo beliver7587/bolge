@@ -62,7 +62,7 @@
   var burger = document.getElementById('navBurger');
   var nav = document.getElementById('nav');
   var scrim = document.getElementById('scrim');
-  function closeMobileNav() { nav.classList.remove('open'); scrim.classList.remove('show'); }
+  function closeMobileNav() { nav.classList.remove('open'); scrim.classList.remove('show'); if (navDropdownWrap) navDropdownWrap.classList.remove('open'); }
   burger.addEventListener('click', function () {
     var open = nav.classList.toggle('open');
     scrim.classList.toggle('show', open);
@@ -192,4 +192,36 @@
 
   // 首页标签云（取前 14 个技术名）
   heroTags.innerHTML = TUT.slice(0, 14).map(function (t) { return '<span>' + t.title + '</span>'; }).join('');
+
+  /* ---------- 顶部技术教程下拉菜单 ---------- */
+  var navDropdownWrap = document.getElementById('navDropdownWrap');
+  var navDropdown = document.getElementById('navDropdown');
+  function renderNavDropdown() {
+    var groups = {};
+    TUT.forEach(function (t) { (groups[t.category] = groups[t.category] || []).push(t); });
+    var order = ['前端','后端','实时通信','数据库','AI','运维','安全','游戏'];
+    var html = '<div class="dd-all"><a href="#" data-tab="tutorials">查看全部教程（含搜索/筛选）</a></div>';
+    order.forEach(function (cat) {
+      var items = groups[cat]; if (!items) return;
+      html += '<div class="dd-group"><h4>' + cat + '</h4>' +
+        items.map(function (t) { return '<a href="#" data-src="' + t.file + '" data-crumb="' + t.title + '">' + t.title + '</a>'; }).join('') +
+        '</div>';
+    });
+    navDropdown.innerHTML = html;
+  }
+  renderNavDropdown();
+
+  navDropdownWrap.querySelector('.nav-dropdown-toggle').addEventListener('click', function (e) {
+    e.preventDefault();
+    navDropdownWrap.classList.toggle('open');
+  });
+  navDropdown.addEventListener('click', function (e) {
+    var a = e.target.closest('a[data-src]');
+    if (!a) return;
+    e.preventDefault();
+    loadFrame(a.getAttribute('data-src'), a.getAttribute('data-crumb'));
+    setActiveNav('');
+    navDropdownWrap.classList.remove('open');
+    closeMobileNav();
+  });
 })();

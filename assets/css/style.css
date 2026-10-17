@@ -159,3 +159,47 @@ main{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding
   .brand-name{font-size:15px}
   .hero-actions .btn{flex:1; padding:13px 18px}
 }
+
+/* ===== 顶部“技术教程”下拉菜单 ===== */
+.nav-dropdown{position:relative}
+.nav-dropdown-toggle{display:flex; align-items:center; gap:6px; background:transparent; border:none; font:inherit; cursor:pointer}
+.nav-dropdown-toggle .caret{font-size:10px; opacity:.7; transition:.2s}
+.nav-dropdown.open .nav-dropdown-toggle .caret{transform:rotate(180deg)}
+.nav-dropdown-menu{
+  position:absolute; top:calc(100% + 8px); right:0; z-index:60;
+  min-width:680px; max-width:90vw; max-height:74vh; overflow-y:auto;
+  background:var(--panel); border:1px solid var(--line2); border-radius:14px;
+  box-shadow:var(--shadow); padding:16px;
+  display:none; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px
+}
+.nav-dropdown.open .nav-dropdown-menu,
+.nav-dropdown:hover .nav-dropdown-menu{display:grid}
+.nav-dropdown-menu .dd-all{
+  grid-column:1 / -1; padding:10px 12px; margin-bottom:4px; border-radius:10px;
+  background:linear-gradient(120deg,rgba(91,140,255,.12),rgba(124,92,255,.12));
+  border:1px solid var(--line2); text-align:center; font-weight:700
+}
+.nav-dropdown-menu .dd-all a{color:var(--text)}
+.nav-dropdown-menu .dd-group h4{
+  margin:0 0 8px; padding:0 8px; font-size:12px; color:var(--cyan);
+  letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid var(--line); padding-bottom:6px
+}
+.nav-dropdown-menu .dd-group a{
+  display:block; padding:6px 9px; border-radius:8px; font-size:13px; color:#b7c5db;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis
+}
+.nav-dropdown-menu .dd-group a:hover{background:var(--panel2); color:#fff}
+
+@media (max-width:860px){
+  .nav-dropdown{width:100%}
+  .nav-dropdown-menu{
+    position:static; display:none; min-width:auto; max-width:none; max-height:55vh;
+    box-shadow:none; border:none; border-radius:0; padding:8px 0 8px 12px;
+    grid-template-columns:1fr; gap:8px; background:transparent
+  }
+  .nav-dropdown.open .nav-dropdown-menu{display:grid}
+  .nav-dropdown:hover .nav-dropdown-menu{display:none}
+  .nav-dropdown-menu .dd-all{grid-column:auto; text-align:left; background:transparent; border:none; padding:10px 14px}
+  .nav-dropdown-menu .dd-group h4{margin-top:8px}
+  .nav-dropdown-menu .dd-group a{padding:8px 14px; font-size:14px}
+}

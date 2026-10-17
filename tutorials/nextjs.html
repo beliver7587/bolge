@@ -11,63 +11,140 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Next.js<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么用它</a>
-  <a href="#s3">3. App Router 路由</a>
-  <a href="#s4">4. 服务端组件 vs 客户端组件</a>
-  <a href="#s5">5. 第一个页面</a>
-  <a href="#s6">6. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 创建项目</a>
+  <a href="#s4">4. 两种路由模式</a>
+  <a href="#s5">5. 页面与组件</a>
+  <a href="#s6">6. 数据获取</a>
+  <a href="#s7">7. API 路由</a>
+  <a href="#s8">8. 样式方案</a>
+  <a href="#s9">9. 部署上线</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Next.js</h1>
-  <p class="tsub">基于 React 的“全栈”框架 —— 简历工坊前端用它做服务端渲染与文件路由。</p>
+  <p class="tsub">基于 React 的“全家桶”框架 —— 自带路由、服务端渲染、API 接口，能直接做出可上线的完整网站。学完你能独立搭一个全栈站点。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>Next.js 是 Vercel 出品、构建在 React 之上的<strong>全栈框架</strong>。普通 React 只是“前端库”，而 Next.js 额外给了你：<b>文件路由</b>、<b>服务端渲染(SSR)</b>、<b>API 路由</b>（能写后端）、<b>打包优化</b>。一句话：React 负责“画”，Next.js 负责“怎么组织、怎么上线”。</p>
-
-  <h2 id="s2">2. 为什么用它</h2>
+  <p><strong>Next.js</strong> 是建立在 React 之上的框架。纯 React（Vite 那套）只是“前端库”，而 Next.js 给你补齐了做一个完整网站缺的东西：</p>
   <table>
-    <tr><th>能力</th><th>好处</th></tr>
-    <tr><td>SSR / SSG</td><td>页面先在服务器渲染好 HTML，首屏快、对 SEO 友好（简历被搜索引擎收录）</td></tr>
-    <tr><td>文件路由</td><td><code>app/about/page.tsx</code> 自动变成 <code>/about</code>，不用手写路由表</td></tr>
-    <tr><td>API 路由</td><td>在 <code>app/api/...</code> 写接口，前后端一个项目搞定</td></tr>
-    <tr><td>内置优化</td><td>图片、字体、代码分割开箱即用</td></tr>
+    <tr><th>你需要的</th><th>Next.js 提供</th></tr>
+    <tr><td>多页面 / 路由</td><td>基于文件的路由（建个文件就是个页面）</td></tr>
+    <tr><td>SEO / 首屏快</td><td>服务端渲染（SSR）、静态生成（SSG）</td></tr>
+    <tr><td>后端接口</td><td>API Routes（写个文件就是个接口）</td></tr>
+    <tr><td>图片优化 / 字体</td><td>内置 <code>&lt;Image&gt;</code> 等优化组件</td></tr>
   </table>
+  <div class="box"><span class="bt">一句话：</span>React 负责“画界面”，Next.js 负责“把界面组织成网站并跑在服务器上”。简历工坊前端就跑在 Next.js 上。</div>
 
-  <h2 id="s3">3. App Router 路由</h2>
-  <p>Next.js 14 推荐用 <code>app/</code> 目录组织页面，路径即路由：</p>
-  <pre><code>app/
-├── layout.tsx        # 所有页面的公共外壳（导航/页脚）
-├── page.tsx          # 对应网站根路径 /
-├── resume/
-│   └── page.tsx      # 对应 /resume
-└── api/
-    └── user/route.ts # 对应接口 /api/user</code></pre>
+  <h2 id="s2">2. 环境准备</h2>
+  <div class="step"><div class="n">1</div><div class="b"><h4>装 Node.js（≥18.18）</h4><p>到 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> 装 LTS。验证：</p><pre><code>node -v</code></pre></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>准备包管理器</h4><p>Next.js 官方推荐 <code>npm</code>，也可以用 <code>pnpm</code>/<code>yarn</code>。本文用 npm。</p></div></div>
 
-  <h2 id="s4">4. 服务端组件 vs 客户端组件</h2>
-  <div class="box"><span class="bt">关键：</span>默认组件是“服务端组件”，能直接读数据库、不发到浏览器；需要点击事件/状态时要加 <code>'use client'</code> 变成“客户端组件”。</div>
-  <pre><code>// 服务端组件：直接在服务器取数据
-export default async function Page() {
-  const data = await db.query('SELECT * FROM resume');
-  return &lt;List items={data} /&gt;;
+  <h2 id="s3">3. 创建项目</h2>
+  <pre><code>npx create-next-app@latest my-site --typescript --eslint --app
+cd my-site
+npm run dev</code></pre>
+  <p>参数说明：</p>
+  <ul>
+    <li><code>--typescript</code>：用 TS（推荐，少 bug）。</li>
+    <li><code>--app</code>：用新的 <strong>App Router</strong>（现在默认，下面重点讲）。</li>
+  </ul>
+  <p>打开 <code>http://localhost:3000</code>，看到 Next.js 欢迎页即成功。</p>
+  <pre><code>my-site/
+├─ app/
+│  ├─ page.tsx        # 首页 /
+│  ├─ layout.tsx      # 所有页面的公共外壳（导航/字体）
+│  └─ globals.css
+├─ public/            # 静态资源（图片等）
+└─ package.json</code></pre>
+
+  <h2 id="s4">4. 两种路由模式</h2>
+  <ul>
+    <li><b>App Router</b>（<code>app/</code> 目录，新）：每个 <code>page.tsx</code> 是一个路由，推荐。</li>
+    <li><b>Pages Router</b>（<code>pages/</code> 目录，旧）：<code>pages/about.tsx</code> = <code>/about</code>。</li>
+  </ul>
+  <div class="box ok"><span class="bt">新手：</span>直接用默认的 App Router，别纠结历史。</div>
+
+  <h2 id="s5">5. 页面与组件</h2>
+  <p>在 <code>app/</code> 下新建 <code>about/page.tsx</code> 就得到 <code>/about</code> 页面：</p>
+  <pre><code>// app/about/page.tsx
+export default function About() {
+  return &lt;h1&gt;关于我们&lt;/h1&gt;;
+}</code></pre>
+  <p>组件放在 <code>app/</code> 外或任意处，比如 <code>components/Button.tsx</code>，再 import 使用。注意：App Router 里组件默认是<strong>服务端组件</strong>（不能直接用 <code>useState</code> / 浏览器 API）；要写交互组件，顶部加 <code>'use client'</code>：</p>
+  <pre><code>'use client';
+import { useState } from 'react';
+export default function Like() {
+  const [n, setN] = useState(0);
+  return &lt;button onClick={() =&gt; setN(n + 1)}&gt;👍 {n}&lt;/button&gt;;
+}</code></pre>
+
+  <h2 id="s6">6. 数据获取</h2>
+  <h3>服务端组件直接取数（推荐，无需 useEffect）</h3>
+  <pre><code>// app/users/page.tsx  （服务端组件）
+async function getUsers() {
+  const res = await fetch('https://api.example.com/users');
+  return res.json();
 }
+export default async function Users() {
+  const users = await getUsers();     // 在服务端拿数据，首屏就有
+  return &lt;ul&gt;{users.map(u =&gt; &lt;li key={u.id}&gt;{u.name}&lt;/li&gt;)}&lt;/ul&gt;;
+}</code></pre>
+  <div class="box ok"><span class="bt">好处：</span>数据在服务端拿到，HTML 里已经包含内容，SEO 友好、首屏快，还不用写 <code>useEffect</code>。</div>
 
-// 客户端组件：有交互
-'use client';
-function Btn(){ const [n,setN]=useState(0); return &lt;button onClick={()=&gt;setN(n+1)}&gt;{n}&lt;/button&gt;; }</code></pre>
+  <h2 id="s7">7. API 路由</h2>
+  <p>在 <code>app/api/</code> 下建文件就是接口：</p>
+  <pre><code>// app/api/hello/route.ts
+export async function GET() {
+  return Response.json({ message: '你好 from API' });
+}</code></pre>
+  <p>访问 <code>/api/hello</code> 即可拿到 JSON。支持 <code>GET/POST/PUT/DELETE</code> 等导出函数。</p>
 
-  <h2 id="s5">5. 第一个页面</h2>
-  <pre><code>npm create next-app@latest my-site   # 选 TypeScript + App Router
-cd my-site &amp;&amp; npm run dev            # 打开 http://localhost:3000</code></pre>
-  <p>改 <code>app/page.tsx</code> 里的内容，刷新浏览器即可看到变化。</p>
+  <h2 id="s8">8. 样式方案</h2>
+  <ul>
+    <li><code>globals.css</code>：全局样式。</li>
+    <li>CSS Modules：<code>import s from './x.module.css'</code>。</li>
+    <li><a href="tailwind.html">Tailwind</a>：<code>npx create-next-app</code> 时可勾选，最受社区欢迎。</li>
+    <li><a href="antd.html">Ant Design</a>：企业后台首选。</li>
+  </ul>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>在“服务端组件”里用了 <code>onClick</code> 等浏览器事件会报错——记得加 <code>'use client'</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>环境变量：<code>NEXT_PUBLIC_</code> 前缀的才暴露给浏览器，其余只服务器可见。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>改了 <code>next.config</code> 要重启 dev 服务才生效。</div>
+  <h2 id="s9">9. 部署上线</h2>
+  <p>最简方案——<strong>Vercel</strong>（Next.js 官方平台，免费）：</p>
+  <div class="step"><div class="n">1</div><div class="b"><h4>打包</h4><pre><code>npm run build</code></pre></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>推到 GitHub</h4><p>把项目推到 GitHub 仓库。</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><h4>Vercel 导入仓库</h4><p>登录 <a href="https://vercel.com" target="_blank" rel="noopener">vercel.com</a> → New Project → 选仓库 → Deploy，几分钟得到域名。</p></div></div>
+  <div class="box"><span class="bt">也支持：</span>自托管可用 <code>npm start</code> 起 Node 服务，前面套 <a href="nginx.html">Nginx</a> 反代（见运维教程）。</div>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>在<strong>服务端组件</strong>里用了 <code>useState</code>/<code>onClick</code> 报“Event handlers cannot be passed”。解决：组件顶部加 <code>'use client'</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>直接 <code>import './x.css'</code> 全局 CSS 只能在 <code>app/</code> 入口引入；组件局部样式请用 <code>.module.css</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>API 路由返回要用 <code>Response.json(...)</code>（新版），不是旧的 <code>NextResponse</code>（也可用但非必须）。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>图片不用 <code>next/image</code> 也能跑，但会失去优化；用 <code>&lt;img&gt;</code> 会有 lint 警告（非错误）。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>环境变量：客户端要用的必须加前缀 <code>NEXT_PUBLIC_</code>，否则打包后拿不到。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>路由刷新 404（自托管）：需在服务器配置“所有路径 fallback 到 index.html”或按文档配 rewrites。</div>
+
+  <h2 id="s11">11. 下一步</h2>
+  <ol>
+    <li>用 Next.js 重写你的个人主页，体会 SSR 与 SEO。</li>
+    <li>学 <a href="react.html">React</a> 基础（必备前置）。</li>
+    <li>学 <a href="tailwind.html">Tailwind</a> 提速样式。</li>
+    <li>学 <a href="typescript.html">TypeScript</a> 加类型。</li>
+    <li>学 <a href="nginx.html">Nginx</a> + <a href="pm2.html">PM2</a> 自托管部署。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能创建 Next.js 项目、写页面与 API、服务端取数、部署上线——这就是全栈前端的能力基线。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

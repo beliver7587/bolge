@@ -2,84 +2,119 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>富文本与 PDF · 小白通关教程</title>
+<title>富文本编辑 / PDF · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">富文本/PDF<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 富文本编辑器</a>
-  <a href="#s3">3. 导出为 HTML/JSON</a>
-  <a href="#s4">4. 生成 PDF</a>
-  <a href="#s5">5. 实战：简历导出</a>
-  <a href="#s6">6. 常见坑</a>
-  <a href="#s7">7. 下一步</a>
+  <div class="tbrand">富文本/PDF<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 核心概念</a>
+  <a href="#s4">4. 方案对比</a>
+  <a href="#s5">5. 编辑器架构</a>
+  <a href="#s6">6. 序列化与安全</a>
+  <a href="#s7">7. 简历工坊实战</a>
+  <a href="#s8">8. 导出 PDF</a>
+  <a href="#s9">9. 性能</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 调试</a>
+  <a href="#s12">12. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>富文本与 PDF</h1>
-  <p class="tsub">在网页里编辑带格式的文字（加粗/标题/列表），并把内容导出成 PDF —— 简历工坊的核心能力。学完你能做一个“在线编辑 + 一键导出 PDF”。</p>
+  <h1>富文本编辑 / PDF 导出：从小白到资深前端</h1>
+  <p class="tsub">富文本编辑器是前端最复杂的组件之一（简历工坊的核心）。本教程讲清<strong>为什么不能裸用 contenteditable、文档模型与 Schema、序列化与安全、PDF 导出</strong>——这是资深做“所见即所得”系统的硬骨头。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p>两块能力：</p>
-  <ul>
-    <li><b>富文本编辑</b>：让用户在网页里像用 Word 一样排版，底层是 <code>contentEditable</code> 或成熟编辑器（TipTap / Quill / Slate）。</li>
-    <li><b>导出 PDF</b>：把网页内容渲染成 PDF，用于打印/下载/分享。</li>
-  </ul>
-  <div class="box"><span class="bt">应用场景：</span>简历制作、合同编辑、报表导出、在线文档。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p><code>contenteditable</code> 原生可编辑，但光标、撤销、跨浏览器差异、结构化数据全是坑。要“所见即所得 + 可存可导出”，必须用成熟的编辑器框架把“文档模型”和“视图”分离。</p>
+  <div class="box"><span class="bt">一句话：</span>富文本编辑 = 把用户输入映射成<strong>结构化文档模型</strong>，再渲染成视图并支持编辑、序列化、导出。直接操作 DOM 字符串是错误的起点。</div>
 
-  <h2 id="s2">2. 富文本编辑器</h2>
-  <p>推荐 <strong>TipTap</strong>（基于 ProseMirror，React 友好）：</p>
-  <pre><code>npm install @tiptap/react @tiptap/starter-kit</code></pre>
-  <pre><code>import { useEditor, EditorContent } from '@tiptap/react';
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code">'use client';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
-const editor = useEditor({ extensions: [StarterKit], content: '&lt;p&gt;写点什么…&lt;/p&gt;' });
+const editor = useEditor({ extensions: [StarterKit], content: '&lt;p&gt;你好&lt;/p&gt;' });
 return &lt;EditorContent editor={editor} /&gt;;</code></pre>
-  <div class="box ok"><span class="bt">轻量替代：</span>不想引库可用原生 <code>contentEditable</code> + <code>document.execCommand</code>（已废弃但还能用），或 Quill。</div>
+  <p><a href="https://tiptap.dev" target="_blank" rel="noopener">TipTap</a>（基于 ProseMirror）是当前最易上手的方案，API 友好、扩展多。</p>
 
-  <h2 id="s3">3. 导出为 HTML/JSON</h2>
-  <pre><code>editor.getHTML();     // '&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;正文&lt;/p&gt;'
-editor.getJSON();     // 结构化数据，便于存库</code></pre>
+  <h2 id="s3">3. 核心概念</h2>
+  <ul>
+    <li><b>文档模型（Schema）</b>：定义“文档由哪些节点（paragraph/heading/text）组成、能嵌套什么”，是编辑器正确性的根基。</li>
+    <li><b>Selection</b>：光标/选区位置，是编辑操作的核心坐标。</li>
+    <li><b>命令（Command）</b>：<code>editor.chain().toggleBold().run()</code> 这类原子操作，保证模型一致。</li>
+    <li><b>受控分离</b>：编辑器内部维护文档状态，UI 只是投影——不要试图用 React state 直接驱动每个字符。</li>
+  </ul>
 
-  <h2 id="s4">4. 生成 PDF</h2>
-  <p>浏览器端最简单：用 <strong>html2pdf.js</strong>（基于 jsPDF + html2canvas）：</p>
-  <pre><code>npm install html2pdf.js
-import html2pdf from 'html2pdf.js';
-html2pdf().from(element).save('简历.pdf');</code></pre>
-  <p>更可控的服务端方案：用 <strong>Playwright/Puppeteer</strong> 无头浏览器把页面打印成 PDF；或用 <strong>pdf-lib</strong> 直接拼装 PDF。</p>
+  <h2 id="s4">4. 方案对比</h2>
+  <table>
+    <tr><th>方案</th><th>特点</th><th>适合</th></tr>
+    <tr><td>ProseMirror</td><td>最严谨的 Schema/插件体系，底层</td><td>要深度定制的大型编辑器</td></tr>
+    <tr><td>TipTap</td><td>基于 PM 的友好封装，扩展生态好</td><td>大多数业务（含简历）</td></tr>
+    <tr><td>Slate</td><td>纯 React、文档即 JSON、灵活</td><td>React 重度定制</td></tr>
+    <tr><td>Lexical</td><td>Meta 出品，性能与可扩展新秀</td><td>新项目、追求性能</td></tr>
+  </table>
 
-  <h2 id="s5">5. 实战：简历导出</h2>
-  <pre><code>// 拿到编辑区 DOM，导出为 PDF
-function exportPDF() {
-  const el = document.getElementById('resume');
-  html2pdf().set({
-    margin: 10,
-    filename: '我的简历.pdf',
-    html2canvas: { scale: 2 },     // 清晰度
-    jsPDF: { unit: 'mm', format: 'a4' }
-  }).from(el).save();
-}</code></pre>
-  <div class="box ok"><span class="bt">流程：</span>用户在编辑器排版 → <code>getHTML</code> 存数据库 → 展示页渲染 → 点“导出”用 html2pdf 截取该区域生成 PDF。</div>
+  <h2 id="s5">5. 编辑器架构</h2>
+  <ul>
+    <li><b>状态/视图分离</b>：文档模型是真理源，视图（DOM）由它渲染；编辑产生“事务”改模型，再投影。</li>
+    <li><b>扩展/插件</b>：加粗、列表、表格、图片都是“扩展”，按需拼装，避免臃肿。</li>
+    <li><b>撤销/重做</b>：框架内置历史栈（基于事务），别自己存字符串快照。</li>
+  </ul>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>html2pdf 截的是“当前屏幕渲染”，分页处内容被截断——用 CSS 控制 <code>page-break-inside: avoid</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>字体未在 PDF 中嵌入，导出后字体不对；html2canvas 依赖页面已有字体。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>图片跨域导致截图失败；图片需同源或允许 CORS。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>TipTap 内容含 XSS 风险，渲染用户 HTML 时要做消毒（sanitize）。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>服务端 PDF（Puppeteer）需要服务器环境，纯静态站点做不到，要配 <a href="nodejs.html">Node.js</a> 后端。</div>
+  <h2 id="s6">6. 序列化与安全</h2>
+  <ul>
+    <li><b>存储格式</b>：优先存 JSON（结构化、可校验、可 diff），需要展示时再转 HTML；纯 HTML 易带入杂乱/恶意标签。</li>
+    <li><b>XSS 防护</b>：渲染存储的 HTML 前必须净化（<code>DOMPurify</code>），尤其用户可粘贴外部内容。千万别直接 <code>dangerouslySetInnerHTML</code>。</li>
+    <li><b>粘贴净化</b>：粘贴 Word/网页会带垃圾样式与脚本，要在 paste 事件里清洗。</li>
+  </ul>
 
-  <h2 id="s7">7. 下一步</h2>
-  <ol>
-    <li>用 TipTap 做一个能加粗/插图的编辑器。</li>
-    <li>接 html2pdf 做导出按钮。</li>
-    <li>学 <a href="react.html">React</a> 把编辑器做成组件。</li>
-    <li>看简历工坊源码，富文本 + PDF 导出完整实现。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能集成富文本编辑器、存取内容、用 html2pdf 导出 PDF——这类“编辑+导出”需求你已能独立实现。</div>
+  <h2 id="s7">7. 简历工坊实战</h2>
+  <p>简历工坊的链路是：富文本编辑 → 存 JSON → 实时预览 → 一键导出 PDF。关键是<strong>编辑态与导出态共用同一份内容模型</strong>，保证“所见即所得”。</p>
+
+  <h2 id="s8">8. 导出 PDF</h2>
+  <pre><code">import html2pdf from 'html2pdf.js';
+const opt = { margin: 0, filename: 'resume.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } };
+html2pdf().set(opt).from(element).save();</code></pre>
+  <ul>
+    <li><b>中文/字体</b>：确保字体已加载再导出，否则空白；可用 <code>document.fonts.ready</code> 等待。</li>
+    <li><b>分页</b>：A4 高度约 297mm，长内容要处理分页避免截断（css <code>break-inside: avoid</code>）。</li>
+    <li><b>清晰度</b>：<code>html2canvas scale: 2</code> 提高导出清晰度。</li>
+  </ul>
+
+  <h2 id="s9">9. 性能</h2>
+  <ul>
+    <li>大文档考虑虚拟滚动或分块渲染。</li>
+    <li>频繁操作（如输入）走框架的事务批处理，别每键重建视图。</li>
+    <li>导出 PDF 用离屏渲染，避免卡住编辑界面。</li>
+  </ul>
+
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>裸用 contenteditable + 存 innerHTML → 光标乱、跨浏览器不一致、XSS。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>渲染用户 HTML 不净化 → XSS（粘贴脚本执行）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>用 React state 强控每个字符 → 光标跳、性能崩。交给编辑器内部状态。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>PDF 导出中文空白 → 字体没等加载完。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>长简历导出截断 → 没处理分页。</div>
+
+  <h2 id="s11">11. 调试</h2>
+  <ul>
+    <li>TipTap 有官方调试扩展看文档 JSON；浏览器看 contenteditable 结构。</li>
+    <li>导出异常先 <code>document.fonts.ready</code> 排查字体。</li>
+  </ul>
+
+  <h2 id="s12">12. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能接一个富文本组件、存 HTML</td></tr>
+    <tr><td>初级</td><td>会扩展、基本序列化</td></tr>
+    <tr><td>中级</td><td>懂文档模型、粘贴净化、PDF 导出</td></tr>
+    <tr><td>资深</td><td>设计编辑器架构、安全闭环、导出质量与性能</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 TipTap 做一个带加粗/列表的编辑器 ② 把内容存 JSON 并净化后再渲染 ③ 实现“导出 PDF”并处理中文与分页 ④ 处理粘贴 Word 内容净化。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解“文档模型为真理源”的编辑器哲学，能做出安全、可导出、可维护的所见即所得系统——这是资深前端的高难领域。</div>
 </main>
 </div>
 <script>

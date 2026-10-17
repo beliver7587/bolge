@@ -11,43 +11,107 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Vite<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么快</a>
+  <a href="#s2">2. 环境准备</a>
   <a href="#s3">3. 创建项目</a>
-  <a href="#s4">4. 开发与打包</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s4">4. 目录与脚本</a>
+  <a href="#s5">5. 配置入门</a>
+  <a href="#s6">6. 引入资源</a>
+  <a href="#s7">7. 环境变量</a>
+  <a href="#s8">8. 打包部署</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Vite</h1>
-  <p class="tsub">秒级启动的前端构建工具 —— 三个项目都用它跑开发服务器和打包产物。</p>
+  <p class="tsub">当下最主流的前端构建工具 / 开发服务器 —— 启动秒开、热更新飞快。React、Vue 官方都推荐用它。学完你能自己从零搭一个现代前端工程。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>Vite（法语“快”）是一个<strong>前端构建工具 + 开发服务器</strong>。它有两件事：① 开发时给你一个带“热更新”的本地服务器（改代码秒级刷新）；② 上线时把 TS/React 等源码编译、压缩成浏览器能直接跑的静态文件。</p>
+  <p><strong>Vite</strong>（法语“快”）是前端构建工具，干两件事：</p>
+  <ul>
+    <li><b>开发服务器</b>：启动极快，改代码毫秒级热更新（比老牌 Webpack 快很多）。</li>
+    <li><b>打包器</b>：<code>npm run build</code> 把代码压缩、合并成浏览器能跑的静态文件。</li>
+  </ul>
+  <div class="box"><span class="bt">一句话：</span>Vite 让你不用懂打包原理，也能拥有“现代前端工程”的开发体验。它不绑死框架，React / Vue / 原生都能用。</div>
 
-  <h2 id="s2">2. 为什么快</h2>
-  <table>
-    <tr><th>老工具(Webpack)</th><th>Vite</th></tr>
-    <tr><td>启动要先打包整个项目，慢</td><td>用浏览器原生 ESM，按需编译，秒启</td></tr>
-    <tr><td>改一处重打包</td><td>改一处只更新那个模块（HMR）</td></tr>
-  </table>
+  <h2 id="s2">2. 环境准备</h2>
+  <div class="step"><div class="n">1</div><div class="b"><h4>装 Node.js（≥18）</h4><p>见 <a href="react.html">React 教程</a>。</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>验证</h4><pre><code>node -v &amp;&amp; npm -v</code></pre></div></div>
 
   <h2 id="s3">3. 创建项目</h2>
-  <pre><code>npm create vite@latest my-app -- --template react-ts
-cd my-app &amp;&amp; npm install</code></pre>
+  <pre><code>npm create vite@latest my-app -- --template react
+cd my-app
+npm install
+npm run dev</code></pre>
+  <p>可选模板：<code>react</code> / <code>vue</code> / <code>vanilla</code>（纯 JS）/ <code>react-ts</code> 等。打开终端给的 <code>localhost</code> 地址即可。</p>
 
-  <h2 id="s4">4. 开发与打包</h2>
-  <pre><code>npm run dev      # 开发：http://localhost:5173 ，改代码自动刷新
-npm run build    # 打包：产物输出到 dist/ ，可直接丢给 Nginx
-npm run preview  # 本地预览打包后的效果</code></pre>
-  <div class="box ok"><span class="bt">部署关键：</span><code>dist/</code> 里是一堆 <code>.html/.js/.css</code>，传到服务器用 Nginx 托管即可（见 <a href="nginx.html">Nginx</a> 教程）。</div>
+  <h2 id="s4">4. 目录与脚本</h2>
+  <pre><code>my-app/
+├─ index.html        # 入口（Vite 从这儿开始）
+├─ vite.config.js    # Vite 配置
+├─ package.json
+└─ src/
+   ├─ main.jsx       # JS 入口
+   ├─ App.jsx
+   └─ assets/        # 图片等
+package.json 脚本：
+  "dev":   "vite"            # 开发
+  "build": "vite build"      # 打包
+  "preview":"vite preview"   # 预览打包结果</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>打包后路径 404？在 <code>vite.config</code> 设 <code>base: '/子路径/'</code>（子路径部署必看）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>用了旧浏览器，要配 <code>@vitejs/plugin-legacy</code> 做兼容。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>环境变量必须以 <code>VITE_</code> 开头才会被打进前端代码。</div>
+  <h2 id="s5">5. 配置入门</h2>
+  <p><code>vite.config.js</code> 里常改两项：</p>
+  <pre><code>import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: { port: 3000, open: true },   // 改端口 + 自动开浏览器
+  build: { outDir: 'dist' }             // 打包输出目录
+});</code></pre>
+
+  <h2 id="s6">6. 引入资源</h2>
+  <pre><code>import logo from './assets/logo.png';   // 直接 import 图片
+import './style.css';                   // 引入 CSS
+import data from './data.json';         // 引入 JSON</code></pre>
+  <div class="box ok"><span class="bt">爽点：</span>Vite 帮你处理路径、哈希文件名，不用手动配 loader。</div>
+
+  <h2 id="s7">7. 环境变量</h2>
+  <p>项目根目录建 <code>.env</code>：</p>
+  <pre><code>VITE_API_URL=https://api.example.com</code></pre>
+  <p>代码里读取：<code>import.meta.env.VITE_API_URL</code>。注意变量必须以 <code>VITE_</code> 开头才会暴露给前端。</p>
+
+  <h2 id="s8">8. 打包部署</h2>
+  <pre><code>npm run build      # 生成 dist/
+npm run preview    # 本地先看一眼</code></pre>
+  <p>把 <code>dist/</code> 整个上传到任意静态托管（GitHub Pages、Vercel、Nginx）即可上线。注意：<code>dist/index.html</code> 用了绝对路径 <code>/assets/...</code>，若部署在子目录需配 <code>base</code>。</p>
+
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span><code>import</code> 图片路径写错或没加扩展名，报“Failed to resolve import”。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>部署后白屏：多半是 <code>base</code> 路径问题（子目录部署要设 <code>base: '/子目录/'</code>）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>环境变量不生效：忘了加 <code>VITE_</code> 前缀，或写在 <code>.env.local</code> 但没重启 dev。</div>
+  <div class="box warn"><span class="bt">坑 4：</span><code>vite.config.js</code> 用了 <code>require</code>：配置文件是 ESM，用 <code>import</code> 而不是 <code>require</code>。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>端口被占用：改 <code>server.port</code> 或用 <code>--port 4000</code>。</div>
+
+  <h2 id="s10">10. 下一步</h2>
+  <ol>
+    <li>用 Vite + React 搭个自己的小项目。</li>
+    <li>配 <a href="tailwind.html">Tailwind</a> 提速样式。</li>
+    <li>学 <a href="react.html">React</a> 或 Vue 框架本身。</li>
+    <li>学 <a href="nginx.html">Nginx</a> 把 <code>dist/</code> 部署到服务器。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能创建 Vite 项目、改配置、引入资源、用环境变量、打包部署——现代前端工程你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

@@ -11,48 +11,94 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Zustand<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么不用 Redux</a>
-  <a href="#s3">3. 创建 Store</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 创建 store</a>
   <a href="#s4">4. 在组件里用</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s5">5. 改状态的几种写法</a>
+  <a href="#s6">6. 跨组件共享</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Zustand</h1>
-  <p class="tsub">极简的 React 状态管理库 —— 三个项目都用它管全局状态。</p>
+  <p class="tsub">极简的 React 状态管理库 —— 不用 Provider 包裹、不用写 reducers，一个函数搞定全局状态。学完你能优雅地跨组件共享数据。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>当多个组件要共享同一份数据（比如“当前登录用户”“购物车”），就需要“状态管理”。<strong>Zustand</strong>（德语“状态”）是一个极轻量的方案：一个 <code>store</code> 存全局状态，任何组件直接读、直接改，没有 Provider 包裹、没有样板代码。</p>
+  <p>当状态需要在<strong>多个不相邻组件</strong>之间共享（比如登录用户、主题、购物车），React 的 <code>useState</code> 就不够用了。传统 Redux 太啰嗦，<strong>Zustand</strong> 用极简 API 解决：</p>
+  <div class="box"><span class="bt">一句话：</span>Zustand 就是一个“全局变量 + 订阅”，任何组件都能读、都能改，且改了相关组件自动刷新。</div>
+  <div class="box ok"><span class="bt">优点：</span>无 Provider 嵌套、API 极小（<code>create</code> 一个函数）、TS 友好、可脱离 React 使用。</div>
 
-  <h2 id="s2">2. 为什么不用 Redux</h2>
-  <div class="box"><span class="bt">对比：</span>Redux 要写 action、reducer、dispatch，样板代码多；Zustand 一个 <code>create</code> 搞定，心智负担小，中小项目首选。</div>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>已有 <a href="react.html">React</a> 项目（Vite/Next 均可）。安装：</p>
+  <pre><code>npm install zustand</code></pre>
 
-  <h2 id="s3">3. 创建 Store</h2>
+  <h2 id="s3">3. 创建 store</h2>
+  <p>新建 <code>store.js</code>：</p>
   <pre><code>import { create } from 'zustand';
 
-const useStore = create((set) =&gt; ({
-  count: 0,
-  user: null,
-  inc: () =&gt; set((s) =&gt; ({ count: s.count + 1 })),
-  setUser: (u) =&gt; set({ user: u }),
+export const useUserStore = create((set) =&gt; ({
+  name: '游客',
+  isLogin: false,
+  login: (name) =&gt; set({ name, isLogin: true }),
+  logout: () =&gt; set({ name: '游客', isLogin: false })
 }));</code></pre>
-  <div class="box ok"><span class="bt">要点：</span><code>set</code> 用来更新状态；函数（如 <code>inc</code>）也定义在 store 里，组件调用即可。</div>
+  <div class="box"><span class="bt">要点：</span><code>create</code> 里返回一个对象，包含“状态”和“修改状态的函数”；函数内部用 <code>set</code> 来更新。</div>
 
   <h2 id="s4">4. 在组件里用</h2>
-  <pre><code>function Counter(){
-  const count = useStore(s =&gt; s.count);   // 只订阅 count
-  const inc = useStore(s =&gt; s.inc);
-  return &lt;button onClick={inc}&gt;{count}&lt;/button&gt;;
-}</code></pre>
-  <div class="box ok"><span class="bt">性能技巧：</span>用选择器 <code>s =&gt; s.count</code> 只取需要的字段，其它字段变了不会触发本组件重渲染。</div>
+  <pre><code>import { useUserStore } from './store';
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>把整个 store 解构成对象 <code>const {count} = useStore()</code> 会让组件在“任何状态变化”时都重渲染——记得用选择器。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>异步数据：在 action 里 <code>await</code> 后再 <code>set</code>，不要直接返回 Promise 当状态。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>SSR（Next.js）要注意 store 是全局单例，可能跨请求串数据——可用 <code>createStore</code> 每请求新建。</div>
+function Header() {
+  const name = useUserStore((s) =&gt; s.name);
+  const isLogin = useUserStore((s) =&gt; s.isLogin);
+  return &lt;div&gt;{isLogin ? name : '请登录'}&lt;/div&gt;;
+}</code></pre>
+  <div class="box ok"><span class="bt">关键写法：</span><code>useUserStore((s) =&gt; s.name)</code> 只订阅 <code>name</code> 这一项——只有 name 变时这个组件才重渲染，性能好。</div>
+
+  <h2 id="s5">5. 改状态的几种写法</h2>
+  <pre><code>// 直接 set 新对象
+useUserStore.getState().login('小王');   // 非组件里也能调用
+
+// 组件内调用 action
+const login = useUserStore((s) =&gt; s.login);
+login('小王');
+
+// 基于旧值更新
+set((state) =&gt; ({ count: state.count + 1 }));</code></pre>
+
+  <h2 id="s6">6. 跨组件共享（实战）</h2>
+  <p>A 组件登录后，B、C 组件立刻读到新用户——无需把 state 一层层传 props：</p>
+  <pre><code>function LoginBtn() {
+  const login = useUserStore((s) =&gt; s.login);
+  return &lt;button onClick={() =&gt; login('小红')}&gt;登录&lt;/button&gt;;
+}
+// Header 里已 useUserStore 读 name，点登录后自动变成“小红”</code></pre>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>订阅了整个 store（<code>const s = useUserStore()</code>），任何字段变都重渲染。应只选需要的字段。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>在 <code>set</code> 里直接改原对象（<code>state.name='x'</code>）不生效，必须返回新对象 <code>set({name:'x'})</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>Next.js 的 SSR 中 store 是模块级单例，多个请求会共享状态；需要按请求隔离时用 <code>createStore</code> + Context。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>非组件环境（如工具函数）用 <code>useUserStore.getState()</code> 取值，而不是当成普通对象。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>把项目里的“全局数据”（用户、主题）迁到 Zustand。</li>
+    <li>配合 <a href="react.html">React</a> 做中型应用。</li>
+    <li>复杂异步用 Zustand 的 <code>async</code> action 或中间件 <code>immer</code>。</li>
+    <li>看 Memora 源码，状态管理大量使用 Zustand。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能创建 store、在组件里读写、跨组件共享状态——React 应用的数据层你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

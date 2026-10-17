@@ -11,57 +11,101 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Canvas 2D<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 画第一笔</a>
-  <a href="#s3">3. 动画循环</a>
-  <a href="#s4">4. 监听输入</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个画布</a>
+  <a href="#s4">4. 画图形/文字</a>
+  <a href="#s5">5. 动画循环</a>
+  <a href="#s6">6. 鼠标交互</a>
+  <a href="#s7">7. 实战：弹球</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Canvas 2D</h1>
-  <p class="tsub">浏览器原生 2D 绘图 API —— 土豆勇士用它零依赖画游戏画面。</p>
+  <p class="tsub">浏览器原生的“画布”绘图 API —— 不依赖任何库，画线、画图、做动画、做小游戏都行。学完你能脱离框架直接画 2D 画面。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><code>&lt;canvas&gt;</code> 是 HTML 里一块“画布”，配合 2D 绘图上下文（Context），你可以用代码画矩形、圆、文字、图片，甚至做动画。它不依赖任何库，是最轻量的绘图方案。</p>
-  <div class="box"><span class="bt">对比：</span>Canvas 用 CPU 画，适合简单场景；大量精灵/高帧率游戏用 <a href="pixijs.html">PixiJS(WebGL)</a> 更好。</div>
+  <p><strong>Canvas</strong> 是 HTML 的一个 <code>&lt;canvas&gt;</code> 元素，配 JavaScript 的 2D 上下文（<code>getContext('2d')</code>），可以像素级地绘制图形、文字、图像。</p>
+  <div class="box"><span class="bt">一句话：</span>它是一个“画板”，你用 JS 命令在上面画点、线、矩形、圆，并一帧帧更新做成动画。</div>
+  <div class="box ok"><span class="bt">vs PixiJS：</span>Canvas 2D 是底层标准、零依赖、易上手；PixiJS 在其上封装、用 GPU 更快。新手先学 Canvas 2D 打基础。</div>
 
-  <h2 id="s2">2. 画第一笔</h2>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>零依赖，只要一个浏览器 + 文本编辑器。新建 <code>index.html</code> 即可。</p>
+
+  <h2 id="s3">3. 第一个画布</h2>
   <pre><code>&lt;canvas id="cv" width="400" height="300"&gt;&lt;/canvas&gt;
 &lt;script&gt;
-  const cv = document.getElementById('cv');
-  const ctx = cv.getContext('2d');        // 拿到画笔
-  ctx.fillStyle = '#5b8cff';              // 颜色
-  ctx.fillRect(50, 50, 120, 80);          // 画一个矩形 (x,y,宽,高)
-  ctx.beginPath();
-  ctx.arc(250, 100, 40, 0, Math.PI*2);    // 画个圆
-  ctx.fill();
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');      // 拿到画笔
+ctx.fillStyle = '#5b8cff';
+ctx.fillRect(50, 50, 120, 80);        // 画一个矩形
 &lt;/script&gt;</code></pre>
+  <div class="box ok"><span class="bt">提示：</span>canvas 的 <code>width/height</code> 属性才是真实像素尺寸；用 CSS 改大小会拉伸模糊，要用 <code>cv.width = ...</code>。</div>
 
-  <h2 id="s3">3. 动画循环</h2>
-  <p>每帧清屏→重画，就成动画。用 <code>requestAnimationFrame</code> 跟随屏幕刷新：</p>
-  <pre><code>let x = 0;
-function loop(){
-  ctx.clearRect(0,0,400,300);     // 先清屏
-  ctx.fillRect(x, 100, 30, 30);   // 画方块
-  x = (x + 2) % 400;              // 移动
-  requestAnimationFrame(loop);     // 下一帧继续
+  <h2 id="s4">4. 画图形/文字</h2>
+  <pre><code>ctx.fillStyle = '#39e0d0';  ctx.fillRect(0,0,40,40);   // 实心矩形
+ctx.strokeStyle = '#fff';  ctx.strokeRect(60,0,40,40); // 描边矩形
+ctx.beginPath(); ctx.arc(150, 40, 20, 0, Math.PI*2); ctx.fill(); // 圆
+ctx.fillStyle = '#fff'; ctx.font = '20px sans-serif';
+ctx.fillText('你好', 200, 45);</code></pre>
+
+  <h2 id="s5">5. 动画循环</h2>
+  <pre><code>function loop() {
+  ctx.clearRect(0, 0, cv.width, cv.height);   // 清空上一帧
+  // ...在这里画新位置...
+  requestAnimationFrame(loop);                // 下一帧
 }
 loop();</code></pre>
 
-  <h2 id="s4">4. 监听输入</h2>
-  <pre><code>canvas.addEventListener('mousemove', e =&gt; {
-  const r = canvas.getBoundingClientRect();
-  const mx = e.clientX - r.left, my = e.clientY - r.top;  // 画布内坐标
+  <h2 id="s6">6. 鼠标交互</h2>
+  <pre><code>cv.addEventListener('mousemove', (e) =&gt; {
+  const x = e.offsetX, y = e.offsetY;   // 相对画布坐标
+  console.log(x, y);
 });</code></pre>
-  <div class="box ok"><span class="bt">手机端：</span>把 <code>mousemove</code> 换成 <code>touchmove</code>，用 <code>e.touches[0].clientX</code> 取手指坐标（土豆勇士的摇杆就是这么做的）。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>canvas 的 <code>width/height</code> 是“画布像素”，CSS 的宽高是“显示大小”，二者不一致会模糊——建议用 JS 按 DPR 设置。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>clearRect</code>，旧画面会叠加成一团。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>频繁创建对象（如每帧 new Image）会 GC 卡顿，图片要预加载复用。</div>
+  <h2 id="s7">7. 实战：弹球</h2>
+  <pre><code>const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let x = 50, y = 50, vx = 3, vy = 2;
+function loop() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  x += vx; y += vy;
+  if (x &lt; 10 || x &gt; cv.width-10) vx *= -1;
+  if (y &lt; 10 || y &gt; cv.height-10) vy *= -1;
+  ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2);
+  ctx.fillStyle = '#facc15'; ctx.fill();
+  requestAnimationFrame(loop);
+}
+loop();</code></pre>
+  <div class="box ok"><span class="bt">运行：</span>在 <code>&lt;canvas id="cv" width="400" height="300"&gt;&lt;/canvas&gt;</code> 下方放这段脚本，黄小球会在框内反弹。</div>
+
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>用 CSS 设宽高导致画面模糊——用 <code>cv.width/height</code> 属性设真实分辨率（高 DPI 屏乘以 devicePixelRatio）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>beginPath()</code>，多条路径连在一起乱画。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>动画不清除上一帧，画面糊成一片——每帧 <code>clearRect</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>ctx 状态（fillStyle 等）会保留，连续画不同颜色要重新赋值。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>大量对象逐帧重画卡顿——考虑用 <a href="pixijs.html">PixiJS</a>/WebGL。</div>
+
+  <h2 id="s9">9. 下一步</h2>
+  <ol>
+    <li>用 Canvas 做一个随鼠标移动的光标特效。</li>
+    <li>学 <a href="pixijs.html">PixiJS</a> 提升渲染性能。</li>
+    <li>学 <a href="socketio.html">Socket.IO</a> 把画布状态同步给多人。</li>
+    <li>看主页动态背景，就是 Canvas 粒子。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能拿画笔、画图形文字、做动画循环与交互——原生 2D 绘图你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

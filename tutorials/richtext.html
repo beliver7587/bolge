@@ -2,52 +2,95 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>富文本编辑 / PDF 导出 · 小白通关教程</title>
+<title>富文本与 PDF · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">富文本 / PDF<small>小白通关教程</small></div>
+  <div class="tbrand">富文本/PDF<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
   <a href="#s2">2. 富文本编辑器</a>
-  <a href="#s3">3. 导出 PDF</a>
-  <a href="#s4">4. 简历工坊怎么做</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s3">3. 导出为 HTML/JSON</a>
+  <a href="#s4">4. 生成 PDF</a>
+  <a href="#s5">5. 实战：简历导出</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>富文本编辑 / PDF 导出</h1>
-  <p class="tsub">简历工坊的核心能力：所见即所得地编辑，并一键导出 PDF。</p>
+  <h1>富文本与 PDF</h1>
+  <p class="tsub">在网页里编辑带格式的文字（加粗/标题/列表），并把内容导出成 PDF —— 简历工坊的核心能力。学完你能做一个“在线编辑 + 一键导出 PDF”。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>富文本编辑器</strong>让用户像用 Word 一样排版（加粗、列表、标题），底层存的是带格式的 HTML。<strong>PDF 导出</strong>则把网页/HTML 变成可下载的 PDF 文件。两者结合，就是“在线写简历 → 导出成 PDF 投递”。</p>
+  <p>两块能力：</p>
+  <ul>
+    <li><b>富文本编辑</b>：让用户在网页里像用 Word 一样排版，底层是 <code>contentEditable</code> 或成熟编辑器（TipTap / Quill / Slate）。</li>
+    <li><b>导出 PDF</b>：把网页内容渲染成 PDF，用于打印/下载/分享。</li>
+  </ul>
+  <div class="box"><span class="bt">应用场景：</span>简历制作、合同编辑、报表导出、在线文档。</div>
 
   <h2 id="s2">2. 富文本编辑器</h2>
-  <p>常见方案：<code>contenteditable</code> 原生属性（浏览器自带可编辑）、或成熟库如 <code>TipTap</code>（基于 ProseMirror）、<code>Slate</code>。简历工坊用 React 生态的编辑器实现模块拖拽与分栏。</p>
-  <pre><code>// 最简单的可编辑区
-&lt;div contenteditable="true"&gt;在这里直接打字，可选中加粗…&lt;/div&gt;</code></pre>
+  <p>推荐 <strong>TipTap</strong>（基于 ProseMirror，React 友好）：</p>
+  <pre><code>npm install @tiptap/react @tiptap/starter-kit</code></pre>
+  <pre><code>import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
-  <h2 id="s3">3. 导出 PDF</h2>
-  <p>前端常用 <code>html2pdf.js</code>（内部用 html2canvas 截图 + jsPDF 生成）：</p>
-  <pre><code>import html2pdf from 'html2pdf.js';
-function exportPdf(){
-  html2pdf().set({ filename:'我的简历.pdf', jsPDF:{ unit:'mm', format:'a4' } })
-            .from(document.getElementById('resume')).save();
+const editor = useEditor({ extensions: [StarterKit], content: '&lt;p&gt;写点什么…&lt;/p&gt;' });
+return &lt;EditorContent editor={editor} /&gt;;</code></pre>
+  <div class="box ok"><span class="bt">轻量替代：</span>不想引库可用原生 <code>contentEditable</code> + <code>document.execCommand</code>（已废弃但还能用），或 Quill。</div>
+
+  <h2 id="s3">3. 导出为 HTML/JSON</h2>
+  <pre><code>editor.getHTML();     // '&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;正文&lt;/p&gt;'
+editor.getJSON();     // 结构化数据，便于存库</code></pre>
+
+  <h2 id="s4">4. 生成 PDF</h2>
+  <p>浏览器端最简单：用 <strong>html2pdf.js</strong>（基于 jsPDF + html2canvas）：</p>
+  <pre><code>npm install html2pdf.js
+import html2pdf from 'html2pdf.js';
+html2pdf().from(element).save('简历.pdf');</code></pre>
+  <p>更可控的服务端方案：用 <strong>Playwright/Puppeteer</strong> 无头浏览器把页面打印成 PDF；或用 <strong>pdf-lib</strong> 直接拼装 PDF。</p>
+
+  <h2 id="s5">5. 实战：简历导出</h2>
+  <pre><code>// 拿到编辑区 DOM，导出为 PDF
+function exportPDF() {
+  const el = document.getElementById('resume');
+  html2pdf().set({
+    margin: 10,
+    filename: '我的简历.pdf',
+    html2canvas: { scale: 2 },     // 清晰度
+    jsPDF: { unit: 'mm', format: 'a4' }
+  }).from(el).save();
 }</code></pre>
-  <div class="box warn"><span class="bt">注意：</span>html2pdf 是“截图式”，复杂 CSS（如 flex 分页）可能不理想；追求精准可用后端 <code>pdfkit</code> 或浏览器自带 <code>window.print()</code> + 打印样式。</div>
+  <div class="box ok"><span class="bt">流程：</span>用户在编辑器排版 → <code>getHTML</code> 存数据库 → 展示页渲染 → 点“导出”用 html2pdf 截取该区域生成 PDF。</div>
 
-  <h2 id="s4">4. 简历工坊怎么做</h2>
-  <p>思路：① 每个简历模块是可拖拽卡片，用户排序；② 内容存为结构化数据（JSON），同时渲染成 HTML 预览；③ 调大模型（见 <a href="llm.html">LLM</a>）一键润色文案；④ 导出时把预览 DOM 转 PDF。</p>
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>html2pdf 截的是“当前屏幕渲染”，分页处内容被截断——用 CSS 控制 <code>page-break-inside: avoid</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>字体未在 PDF 中嵌入，导出后字体不对；html2canvas 依赖页面已有字体。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>图片跨域导致截图失败；图片需同源或允许 CORS。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>TipTap 内容含 XSS 风险，渲染用户 HTML 时要做消毒（sanitize）。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>服务端 PDF（Puppeteer）需要服务器环境，纯静态站点做不到，要配 <a href="nodejs.html">Node.js</a> 后端。</div>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>PDF 分页截断——给模块加 <code>break-inside: avoid</code>（CSS）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>字体未嵌入，换设备打开样式跑偏——优先用系统通用字体。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>编辑器粘贴 Word 带来脏样式，要过滤白名单标签。</div>
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>用 TipTap 做一个能加粗/插图的编辑器。</li>
+    <li>接 html2pdf 做导出按钮。</li>
+    <li>学 <a href="react.html">React</a> 把编辑器做成组件。</li>
+    <li>看简历工坊源码，富文本 + PDF 导出完整实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能集成富文本编辑器、存取内容、用 html2pdf 导出 PDF——这类“编辑+导出”需求你已能独立实现。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

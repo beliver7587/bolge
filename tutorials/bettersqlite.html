@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>better-sqlite3 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">better-sqlite3<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 同步 vs 异步</a>
+  <a href="#s3">3. 基本用法</a>
+  <a href="#s4">4. 事务</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>better-sqlite3</h1>
+  <p class="tsub">Node 的嵌入式 SQLite 库 —— Memora 用单机文件存用户与记忆。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>SQLite</strong> 是“单文件数据库”，不用启服务，一个 <code>.db</code> 文件就是整个库。<strong>better-sqlite3</strong> 是 Node 上最快的 SQLite 驱动，而且 API 是<strong>同步</strong>的，写起来直观，没有回调/Promise 缠绕。</p>
+
+  <h2 id="s2">2. 同步 vs 异步</h2>
+  <div class="box"><span class="bt">对比：</span>多数 Node 库是异步（await）；better-sqlite3 故意用同步——因为本地文件 IO 很快，同步反而更简单且性能更好（Memora 实测足够）。</div>
+
+  <h2 id="s3">3. 基本用法</h2>
+  <pre><code>import Database from 'better-sqlite3';
+const db = new Database('memora.db');   // 没有就自动创建
+
+db.exec(`CREATE TABLE IF NOT EXISTS user(
+  id INTEGER PRIMARY KEY, name TEXT)`);
+const ins = db.prepare('INSERT INTO user(name) VALUES(?)');
+ins.run('王越');
+
+const row = db.prepare('SELECT * FROM user WHERE id=?').get(1);
+console.log(row);</code></pre>
+
+  <h2 id="s4">4. 事务</h2>
+  <pre><code>const tx = db.transaction((items) =&gt; {
+  for (const it of items) ins.run(it);
+});
+tx([{name:'a'},{name:'b'}]);   // 要么全写，要么全不写</code></pre>
+  <div class="box ok"><span class="bt">Memora 用法：</span>记忆去重/冲突消解就是在事务里批量比对+写入，保证一致性。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>它是原生模块，安装时要本地编译——Node 22 可能失败，锁 <b>Node 20</b> 并用 <code>npm rebuild</code>（Memora 真实踩坑）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>同步阻塞：单次查询很慢（如大批量）会卡住事件循环，大数据量请换 <a href="mysql.html">MySQL</a>/Postgres。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>并发写要小心，单连接串行；高并发场景不适合。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MySQL · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">MySQL<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 表与 SQL</a>
+  <a href="#s3">3. 建表实战</a>
+  <a href="#s4">4. 索引与事务</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>MySQL</h1>
+  <p class="tsub">最流行的开源关系型数据库 —— 简历工坊的结构化数据全存这里。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>MySQL 是<strong>关系型数据库</strong>：数据按“表（行和列）”组织，表之间可以建立关联。它用 SQL 语言增删改查，成熟稳定、社区庞大，是绝大多数网站后台的默认选择。</p>
+
+  <h2 id="s2">2. 表与 SQL</h2>
+  <p>表就像 Excel：列是字段（姓名、年龄），行是一条记录。常用 SQL：</p>
+  <pre><code>SELECT * FROM user WHERE id = 1;          -- 查
+INSERT INTO user(name) VALUES('王越');     -- 增
+UPDATE user SET name='越' WHERE id=1;      -- 改
+DELETE FROM user WHERE id=1;               -- 删</code></pre>
+
+  <h2 id="s3">3. 建表实战</h2>
+  <pre><code>CREATE TABLE resume (
+  id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id   BIGINT NOT NULL,
+  title     VARCHAR(120),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user (user_id)                  -- 给常用查询字段加索引
+);</code></pre>
+
+  <h2 id="s4">4. 索引与事务</h2>
+  <ul>
+    <li><b>索引</b>：像书的目录，加速查询；但会拖慢写入，别乱加。</li>
+    <li><b>事务</b>：把多个操作绑成“要么全成、要么全退”的一笔，保证数据一致（转账必备）。</li>
+  </ul>
+  <pre><code>START TRANSACTION;
+UPDATE account SET balance=balance-100 WHERE id=1;
+UPDATE account SET balance=balance+100 WHERE id=2;
+COMMIT;   -- 或 ROLLBACK 回退</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>用字符串拼接 SQL 会 SQL 注入——务必用参数化（见 <a href="mybatisplus.html">MyBatis-Plus</a> 的安全写法）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>没有主键或索引，数据一大查询就慢。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>字符集用 <code>utf8mb4</code> 而非旧 <code>utf8</code>，否则存不了 emoji/生僻字。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

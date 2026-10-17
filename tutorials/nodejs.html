@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Node.js · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Node.js<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 事件循环</a>
+  <a href="#s3">3. 第一个服务</a>
+  <a href="#s4">4. npm 包管理</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Node.js</h1>
+  <p class="tsub">让 JavaScript 跑在服务端的运行时 —— Memora 与游戏中转服务都基于它。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>浏览器之外，JS 需要运行环境。Node.js 用 Chrome 的 V8 引擎把 JS 带到服务器端，让你用同一门语言写前端和后端。它还内置了文件、网络等系统能力，是 <a href="express.html">Express</a>、<a href="pm2.html">PM2</a> 等工具的地基。</p>
+
+  <h2 id="s2">2. 事件循环</h2>
+  <p>Node 是<strong>单线程 + 异步非阻塞</strong>：一个线程处理大量并发请求，遇到 I/O（读文件、查库）不干等，先去处理别的，完了再回调。这让它特别适合“很多连接、但每次不重”的场景（如聊天、API）。</p>
+  <div class="box"><span class="bt">记忆：</span>CPU 密集型（如大规模计算）不是 Node 强项，那种用多进程/其他语言。</div>
+
+  <h2 id="s3">3. 第一个服务</h2>
+  <pre><code>// server.js
+const http = require('http');
+const srv = http.createServer((req, res) =&gt; {
+  res.end('Hello from Node!');
+});
+srv.listen(3010, () =&gt; console.log('跑在 3010'));</code></pre>
+  <pre><code>node server.js   # 终端运行，访问 http://localhost:3010</code></pre>
+
+  <h2 id="s4">4. npm 包管理</h2>
+  <p><code>npm</code> 是 Node 的包管理器（装第三方库、管依赖）：</p>
+  <pre><code>npm init -y        # 生成 package.json
+npm install express # 装依赖，写进 package.json
+npm run start      # 运行 scripts 里定义的命令</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>回调地狱——用 <code>async/await</code> 替代层层回调。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>版本兼容性：某些原生模块（如 isolated-vm）在 Node 22 编译失败，要锁 <b>Node 20</b>（Memora 真实踩坑）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>require</code> 与 <code>import</code> 混用（CommonJS vs ESM）会报错，项目里保持一致。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tailwind CSS · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Tailwind CSS<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 原子化思想</a>
+  <a href="#s3">3. 第一个例子</a>
+  <a href="#s4">4. 响应式</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Tailwind CSS</h1>
+  <p class="tsub">原子化 CSS 框架 —— Memora 前端用它快速搭出整齐的界面。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Tailwind 是<strong>原子化</strong>的 CSS 框架：它不给你现成“卡片组件”，而是给你一堆极小的工具类（如 <code>flex</code>、<code>p-4</code>、<code>text-center</code>），你直接在 HTML 的 <code>class</code> 里拼出样式。不用再写单独的 <code>.css</code> 文件。</p>
+
+  <h2 id="s2">2. 原子化思想</h2>
+  <div class="box"><span class="bt">对比：</span>传统写法先起名 <code>.card</code> 再写样式；Tailwind 直接 <code>class="rounded-lg p-4 bg-white shadow"</code>，所见即所得，且全局不会起名冲突。</div>
+
+  <h2 id="s3">3. 第一个例子</h2>
+  <pre><code>&lt;button class="px-4 py-2 rounded-lg bg-blue-600 text-white
+                hover:bg-blue-700 font-semibold"&gt;
+  点击
+&lt;/button&gt;</code></pre>
+  <p>拆开看：<code>px-4</code> 左右内边距、<code>py-2</code> 上下、<code>rounded-lg</code> 圆角、<code>bg-blue-600</code> 蓝底、<code>hover:bg-blue-700</code> 悬停变色。</p>
+
+  <h2 id="s4">4. 响应式</h2>
+  <p>加前缀即可按屏幕宽度生效：<code>md:</code>（≥768px）、<code>lg:</code>（≥1024px）。</p>
+  <pre><code>&lt;div class="grid grid-cols-1 md:grid-cols-3 gap-4"&gt;
+  &lt;!-- 手机一列，电脑三列 --&gt;
+&lt;/div&gt;</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>HTML 里 class 一长串看着乱——习惯后其实是“样式就近”，改起来更快。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记配置 <code>content</code> 扫描路径，会导致样式没生成（Tailwind v3 必配）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>重复样式多时，可用 <code>@apply</code> 或抽成组件类收敛。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

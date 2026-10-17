@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyBatis-Plus · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">MyBatis-Plus<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么用它</a>
+  <a href="#s3">3. 定义实体与 Mapper</a>
+  <a href="#s4">4. 常用 CRUD</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>MyBatis-Plus</h1>
+  <p class="tsub">MyBatis 的增强工具 —— 简历工坊数据层用它，单表 CRUD 几乎零 SQL。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>MyBatis</strong> 是 Java 里把 SQL 和代码解耦的持久层框架；<strong>MyBatis-Plus（MP）</strong> 在它之上加了“通用 CRUD”——你不用为每张表写增删改查的 SQL，MP 自动生成。对单表操作，开发效率极高。</p>
+
+  <h2 id="s2">2. 为什么用它</h2>
+  <div class="box"><span class="bt">对比：</span>原生 JDBC 要手写大量样板；MP 只要实体类 + 一个接口，<code>selectById</code>、<code>insert</code>、<code>update</code> 全白送，复杂查询再手写 SQL。</div>
+
+  <h2 id="s3">3. 定义实体与 Mapper</h2>
+  <pre><code>@TableName("resume")
+public class Resume {
+  @TableId(type = IdType.AUTO)
+  private Long id;
+  private String title;
+  private Long userId;
+  // getter / setter 省略
+}
+
+public interface ResumeMapper extends BaseMapper&lt;Resume&gt; {
+  // 什么都不用写，已继承 select/insert/update/delete
+}</code></pre>
+
+  <h2 id="s4">4. 常用 CRUD</h2>
+  <pre><code>// 注入 mapper 后直接使用
+Resume r = mapper.selectById(1L);          // 按主键查
+mapper.insert(r);                           // 插
+mapper.updateById(r);                        // 改
+mapper.deleteById(1L);                       // 删
+
+// 条件构造器（不用写 SQL）
+mapper.selectList(new QueryWrapper&lt;Resume&gt;()
+  .eq("user_id", 10).like("title", "前端"));</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>实体类名/字段名和表对不上要用 <code>@TableName</code> / <code>@TableField</code> 显式指定。</div>
+  <div class="box warn"><span class="bt">坑 2：</span><code>QueryWrapper</code> 拼条件易 SQL 注入风险——用 <code>.eq()</code> 等安全方法而非 <code>last("...")</code> 拼字符串。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>逻辑删除、乐观锁等要加注解才生效，别以为默认开启。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

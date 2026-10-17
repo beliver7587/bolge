@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RRF 融合排序 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">RRF<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么按排名</a>
+  <a href="#s3">3. 公式与代码</a>
+  <a href="#s4">4. 在 RAG 的位置</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>RRF 融合排序</h1>
+  <p class="tsub">按“排名”而非“分数”融合多路召回 —— 规避分数量纲不一致。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>RRF = Reciprocal Rank Fusion（倒数排名融合）</strong>。当你有两路（或多路）检索结果——比如 <a href="embedding.html">向量检索</a>一路、<a href="bm25.html">BM25</a>一路——怎么把它们的排序合到一起？RRF 用“排名”而非“分数”来融合，避免两路分数不可比的问题。</p>
+
+  <h2 id="s2">2. 为什么按排名</h2>
+  <div class="box"><span class="bt">痛点：</span>向量路的分数在 0~1，BM25 可能是 0~20，直接加权平均不公平。但“第 1 名”“第 3 名”这种排名是量纲无关的，所以按排名融合最稳。</div>
+
+  <h2 id="s3">3. 公式与代码</h2>
+  <p>每个文档的得分 = Σ 1/(k + 排名)，k 一般取 60 防止第一名权重过大。</p>
+  <pre><code>function rrfFusion(rankLists, k=60){
+  const merged = new Map();
+  for(const list of rankLists){
+    list.forEach((item, rank) =&gt; {
+      const key = item.id;
+      const cur = merged.get(key) || { score:0 };
+      cur.score += 1/(k + rank + 1);   // 排名越靠前，贡献越大
+      merged.set(key, cur);
+    });
+  }
+  return [...merged.values()].sort((a,b)=&gt;b.score-a.score);
+}</code></pre>
+
+  <h2 id="s4">4. 在 RAG 的位置</h2>
+  <div class="diagram">向量召回 Top-K ┐
+BM25 召回 Top-K ┼─→ RRF 融合 ─→ 取 Top-5 ─→ 大模型精排 ─→ 生成</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>直接把两路分数加权平均，结果被分数大的那路主导——用 RRF 而非加权。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>k 太小会让头部过强、尾部噪声；60 是经验值，可按效果微调。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>融合后要再让大模型精排，RRF 只是粗排。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

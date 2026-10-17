@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixiJS / WebGL · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">PixiJS / WebGL<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么用 GPU</a>
+  <a href="#s3">3. 第一个例子</a>
+  <a href="#s4">4. 游戏主循环</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>PixiJS / WebGL</h1>
+  <p class="tsub">用 GPU 加速画 2D 图形的渲染库 —— 网页游戏火柴人派对用它画大屏画面。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>WebGL</strong> 是浏览器调用显卡（GPU）画图的标准接口；<strong>PixiJS</strong> 是把 WebGL 难用的底层 API 封装成简单好用的 2D 渲染库。网页游戏要画几百个精灵、做丝滑动画，用 DOM 元素会卡死，必须用 GPU 渲染——这就是 PixiJS 的舞台。</p>
+
+  <h2 id="s2">2. 为什么用 GPU</h2>
+  <table>
+    <tr><th>方式</th><th>原理</th><th>适合</th></tr>
+    <tr><td>DOM / CSS</td><td>浏览器排版引擎</td><td>普通网页，几十个元素</td></tr>
+    <tr><td>Canvas 2D</td><td>CPU 软件绘制</td><td>简单动画、少量图形</td></tr>
+    <tr><td>WebGL / PixiJS</td><td>GPU 并行渲染</td><td>游戏、海量精灵、60fps</td></tr>
+  </table>
+
+  <h2 id="s3">3. 第一个例子</h2>
+  <pre><code>import { Application, Sprite, Texture } from 'pixi.js';
+
+const app = new Application();
+await app.init({ width: 800, height: 600, background: '#0b1020' });
+document.body.appendChild(app.canvas);
+
+const sprite = Sprite.from('hero.png');   // 一个“精灵”（可移动的图像）
+sprite.x = 100; sprite.y = 100;
+app.stage.addChild(sprite);                // 加到舞台才显示</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>所有要显示的物体都 <code>addChild</code> 到 <code>app.stage</code>（舞台），每帧 PixiJS 自动用 GPU 重绘。</div>
+
+  <h2 id="s4">4. 游戏主循环</h2>
+  <p>游戏每秒要重画 60 次，PixiJS 提供 <code>ticker</code>：</p>
+  <pre><code>app.ticker.add((ticker) =&gt; {
+  sprite.x += 3;                       // 每帧让精灵右移
+  if (sprite.x &gt; 800) sprite.x = 0;    // 出界回到左边
+});</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>资源没加载完就 <code>Sprite.from</code> 会得到空白——用 <code>Assets.load</code> 先加载再创建。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>addChild</code>，物体不显示，是最常见的新手错误。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>移动端注意 <code>resolution</code> 与 <code>autoDensity</code>，否则高分屏模糊。</div>
+  <div class="box"><span class="bt">延伸：</span>更底层的图形学概念可看 <a href="canvas2d.html">Canvas 2D</a> 与 <a href="aabb.html">游戏物理 / AABB 碰撞</a>。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

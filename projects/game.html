@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网页游戏平台 · 从零到上线 · 完全手册（面试 + 小白向）</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --text:#e6e9ef; --muted:#9aa4b2; --accent:#FFD23F; --accent2:#3DDC84;
+    --blue:#4FC3F7; --red:#ff6b6b; --code:#0b0d11;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;font-size:15px}
+  a{color:var(--blue);text-decoration:none}
+  .wrap{display:flex;min-height:100vh}
+  /* 侧边目录 */
+  nav{position:sticky;top:0;align-self:flex-start;height:100vh;overflow:auto;
+    width:280px;background:var(--panel);border-right:1px solid var(--line);padding:22px 18px;flex:0 0 280px}
+  nav h2{font-size:13px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:18px 0 8px}
+  nav a{display:block;color:var(--muted);padding:5px 8px;border-radius:6px;font-size:13.5px}
+  nav a:hover{background:var(--panel2);color:var(--text)}
+  nav a.active{background:#202833;color:var(--accent);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
+  nav a.sub{padding-left:20px;font-size:12.5px}
+  html{scroll-behavior:smooth}
+  h2[id],h3[id]{scroll-margin-top:24px}
+  main{flex:1;max-width:960px;margin:0 auto;padding:40px 48px 120px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:23px;margin:46px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);color:#fff}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--accent)}
+  h4{font-size:15px;margin:20px 0 8px;color:var(--accent2)}
+  p{margin:10px 0}
+  code{background:#0b0d11;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+    font-family:"JetBrains Mono",Consolas,Menlo,monospace;font-size:13px;color:#ffd98a}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+    overflow:auto;font-family:"JetBrains Mono",Consolas,Menlo,monospace;font-size:12.7px;line-height:1.6;color:#d7e0ee}
+  pre code{background:none;border:none;padding:0;color:inherit}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+    padding:2px 10px;font-size:12px;color:var(--muted);margin:2px 4px 2px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .callout{border-left:4px solid var(--accent);background:var(--panel2);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .callout.warn{border-color:var(--red)}
+  .callout.ok{border-color:var(--accent2)}
+  .callout.tip{border-color:var(--blue)}
+  .callout.white{border-color:#fff;background:#10131a}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:#fff}
+  tr:nth-child(even) td{background:#14171d}
+  .diagram{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;font-family:"JetBrains Mono",monospace;font-size:12.5px;white-space:pre;overflow:auto;color:#bcd2ff;line-height:1.5}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+  .q{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);
+    border-radius:0 10px 10px 0;padding:14px 18px;margin:14px 0}
+  .q b{color:var(--blue)}
+  .a{margin:6px 0 0;color:#dfe6f1}
+  .a .hl{color:var(--accent)}
+  .pill{font-size:11px;background:#233;color:#9fe6c0;border:1px solid #2c5;padding:1px 7px;border-radius:5px}
+  hr{border:none;border-top:1px dashed var(--line);margin:30px 0}
+  .kbd{background:#222;border:1px solid #444;border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-size:12px}
+  .toc-note{font-size:12px;color:var(--muted);margin-top:10px}
+  .explain{background:#0c0f14;border:1px dashed var(--line);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:13.5px}
+  .explain b{color:var(--accent2)}
+  .step{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:14px 16px;margin:12px 0}
+  .step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#111;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:14px}
+  .step .b{flex:1}
+  .step .b h4{margin:0 0 6px;color:#fff}
+  @media print{body{background:#fff;color:#000}nav{display:none}main{max-width:100%;padding:0 12px}
+    pre,code{background:#f4f4f4;color:#111;border-color:#ccc}*{box-shadow:none!important}}
+  /* 折叠目录按钮：仅在移动端显示，桌面隐藏 */
+  #navToggle{display:none}
+  /* 移动端（≤900px）：可折叠顶栏目录 + 手机友好排版，桌面完全不受影响 */
+  @media(max-width:900px){
+    .wrap{flex-direction:column}
+    nav{position:sticky;top:0;width:100%;height:auto;flex:0 0 auto;padding:0;border-right:none;
+        border-bottom:1px solid var(--line);z-index:100;background:var(--panel)}
+    #navToggle{display:flex;align-items:center;justify-content:space-between;width:100%;
+        padding:14px 18px;background:var(--panel);color:var(--text);border:none;
+        font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.05em}
+    #navToggle .chev{transition:transform .25s ease;font-size:12px;color:var(--muted)}
+    nav.open #navToggle .chev{transform:rotate(180deg)}
+    .nav-inner{max-height:0;overflow:hidden;transition:max-height .28s ease;padding:0 18px}
+    nav.open .nav-inner{max-height:78vh;overflow:auto;padding:6px 18px 16px}
+    main{margin:0;min-width:0;padding:24px 16px 90px}
+    h1{font-size:23px}
+    h2{font-size:20px;margin:34px 0 12px}
+    h3{font-size:16.5px}
+    pre{font-size:11.3px;padding:12px 12px}
+    code{font-size:12px}
+    table{font-size:12px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    th,td{padding:6px 7px}
+    body{overflow-x:hidden;overflow-wrap:break-word}
+    .diagram{font-size:11px}
+    h2[id],h3[id]{scroll-margin-top:64px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <button id="navToggle" aria-label="目录">☰ 目录 <span class="chev">▾</span></button>
+  <div class="nav-inner">
+  <h2>目录</h2>
+  <a href="#top">0. 写在前面（怎么用这本手册）</a>
+  <a href="#basics">0.1 小白前置知识（名词白话）</a>
+  <a href="#overview">1. 项目概览</a>
+  <a href="#arch">2. 整体架构（大白话）</a>
+  <a href="#arch-pattern">2.1 端侧权威运算模式</a>
+  <a href="#flow">3. 开发流程全景（从想法到上线）</a>
+  <a href="#feature">4. 核心功能实现</a>
+  <a href="#feat-sfp">4.1 火柴人派对乱斗</a>
+  <a href="#feat-td">4.2 土豆勇士（肉鸽生存）</a>
+  <a href="#feat-others">4.3 泡泡堂 / 弹弹堂</a>
+  <a href="#deploy">5. 手动部署：从零到发布（逐命令）</a>
+  <a href="#deploy-prep">5.1 前置准备</a>
+  <a href="#deploy-normal">5.2 正常流程（无安全问题时）</a>
+  <a href="#deploy-cmd">5.3 每条命令逐字解释</a>
+  <a href="#deploy-script">5.4 本项目的自动化脚本</a>
+  <a href="#proxy">6. 反向代理 Nginx 详解</a>
+  <a href="#proxy-subpath">6.1 为什么用子路径</a>
+  <a href="#proxy-ws">6.2 WebSocket 透传</a>
+  <a href="#proxy-ssl">6.3 HTTPS、缓存与安全头</a>
+  <a href="#security">7. 网络安全</a>
+  <a href="#sec-layers">7.1 三层防护</a>
+  <a href="#sec-ssh">7.2 SSH 是什么</a>
+  <a href="#sec-incident">7.3 UseDNS 事故完整复盘</a>
+  <a href="#sec-hardening">7.4 正确加固（别再踩坑）</a>
+  <a href="#qa">8. 面试高频 & 刁钻问答</a>
+  <a href="#intro">9. 自我介绍话术</a>
+  <a href="#appendix-a">附录 A：命令速查表</a>
+  <a href="#appendix-b">附录 B：名词表 Glossary</a>
+  <a href="#appendix-c">附录 C：从零到上线 Checklist</a>
+  <a href="#appendix-d">附录 D：故障排查流程图</a>
+  <div class="toc-note">提示：本手册可整页打印（Ctrl/Cmd+P），已做打印样式适配。手机上点右上「☰ 目录」可折叠导航。</div>
+  </div>
+</nav>
+
+<main id="top">
+<h1>网页游戏平台 · 从零到上线 · 完全手册</h1>
+<p style="color:var(--muted)">一份能让你从「完全不懂」看懂整个开发→构建→部署→发布→网络安全流程的讲解文档，每一段代码、每一条命令都逐行拆解。既可用于面试讲解，也可当入门书看。</p>
+<div class="card">
+  <span class="tag">域名 wy2398.icu</span>
+  <span class="tag">单台阿里云 ECS（Ubuntu）</span>
+  <span class="tag">Nginx 反代 + HTTPS</span>
+  <span class="tag">PM2 进程守护</span>
+  <span class="tag">Node/Bun 后端</span>
+  <span class="tag">WebSocket 实时</span>
+  <span class="tag">Canvas/WebGL 渲染</span>
+  <span class="tag">端侧权威运算架构</span>
+</div>
+
+<div class="callout tip">
+  <b>一句话定位（背下来）：</b> 这是一个自部署的 HTML5 网页游戏平台，把多款独立小游戏（火柴人派对乱斗、泡泡堂、土豆勇士、弹弹堂等）统一跑在<strong>同一域名、同一台服务器</strong>下，用 Nginx 按<strong>子路径</strong>反代到各自的后端服务；并采用"<strong>端侧权威运算</strong>"架构——所有游戏逻辑在房主设备本地计算，服务器只做消息中转，因此单台 2 核 2G 机器就能支撑上百个房间。
+</div>
+
+<h2 id="basics">0.1 小白前置知识（名词白话）</h2>
+<p>如果你第一次接触"服务器/域名/端口/反代"，先读完这一节，后面所有内容都会变得好懂。</p>
+
+<h4>① 网页游戏是什么？</h4>
+<p>不用下载安装，打开浏览器（输入网址或在微信里点开）就能玩的游戏。它本质是<strong>网页</strong>，靠三种技术运行：</p>
+<ul>
+  <li><code>HTML</code>：骨架，决定有哪些元素（按钮、画布）。</li>
+  <li><code>CSS</code>：样式，决定长什么样、什么颜色。</li>
+  <li><code>JavaScript（JS）</code>：逻辑，决定"按了跳就跳、敌人会动"。游戏画面用 <code>Canvas</code>/<code>WebGL</code> 画在浏览器里。</li>
+</ul>
+
+<h4>② 服务器是什么？</h4>
+<p>一台 24 小时不关机的电脑，放在机房（本项目用的是阿里云 ECS，云上的一台虚拟机）。你的游戏代码跑在上面，全世界的人通过网址访问它。你自己的笔记本关机了网站照样能开，因为服务在云服务器上。</p>
+
+<h4>③ IP、域名、端口（用"快递"打比方）</h4>
+<table>
+  <tr><th>名词</th><th>白话</th><th>本项目例子</th></tr>
+  <tr><td>IP 地址</td><td>服务器在网络上的"门牌号"</td><td><code>8.130.129.18</code></td></tr>
+  <tr><td>域名</td><td>好记的地址，解析到 IP（不用背数字）</td><td><code>wy2398.icu</code></td></tr>
+  <tr><td>端口</td><td>一栋楼（服务器）里的"房间号"，不同服务占不同端口</td><td><code>22</code>=SSH 远程控制、<code>80</code>=HTTP、<code>443</code>=HTTPS、<code>3000</code>=火柴人后端、<code>8095</code>=土豆勇士</td></tr>
+</table>
+<div class="callout white">
+  <b>关键直觉：</b> 用户只该访问 <code>443</code>（HTTPS）。游戏后端（3000、8095…）就像公司的"内部办公室"，不能让外人直接敲门，所以只监听 <code>127.0.0.1</code>（本机），外人必须经前台（Nginx）<strong>转接</strong>才能进。
+</div>
+
+<h4>④ 浏览器和服务器怎么对话？</h4>
+<ul>
+  <li><b>HTTP 请求</b>：你在地址栏输入网址 → 浏览器发一个"我要这个页面"的请求 → 服务器返回 HTML 文件 → 浏览器渲染。一次请求一次回应，完事就断开。</li>
+  <li><b>HTTPS</b>：加密版的 HTTP。不加它，数据会被窃听/篡改，而且<strong>微信、苹果等强制要求 HTTPS</strong>，否则扫码打不开。</li>
+  <li><b>WebSocket</b>：建立一次连接后<strong>持续双向通信</strong>（像打电话，不是寄信）。实时游戏（你的位置、对手的动作）必须用它，否则每次都用 HTTP 请求会卡死。</li>
+</ul>
+
+<h4>⑤ 反向代理（Nginx）是什么？</h4>
+<p>前台/总机。所有用户只访问 <code>443</code>，Nginx 这个"前台"根据 URL 路径把请求分给内部不同服务：</p>
+<div class="diagram">用户浏览器
+   │  只认 https://wy2398.icu  (Nginx 前台, 端口443)
+   ▼
+┌──────────── Nginx ────────────┐
+│  /pc/    → 转给内部 127.0.0.1:3000 │
+│  /td/    → 转给内部 127.0.0.1:8095 │
+│  /ppt/   → 转给内部 127.0.0.1:8090 │
+└───────────────────────────────┘</div>
+<p>好处：① 统一 HTTPS（内部不用各自配证书）；② 隐藏真实端口（黑客看不到 3000）；③ 集中做限流/安全头。</p>
+
+<h4>⑥ PM2 是什么？</h4>
+<p>Node.js 程序的"保姆"：崩溃了自动重启、开机自动启动、随时看日志。没有它，你关掉终端程序就死了。</p>
+
+<h4>⑦ Bun 是什么？</h4>
+<p>一个比 Node 更快的 JavaScript 运行环境，启动快、自带打包。本项目前端用它构建，部分后端用它跑。</p>
+
+<h2 id="overview">1. 项目概览</h2>
+<p>平台当前在一台服务器上同时运行 <strong>6 个后端进程</strong>（通过 PM2 守护），由 Nginx 在 80/443 端口统一对外：</p>
+<table>
+  <tr><th>游戏 / 服务</th><th>入口路径</th><th>后端端口</th><th>技术要点</th></tr>
+  <tr><td>火柴人派对乱斗（主站）</td><td><code>/pc/</code> <code>/m/</code> <code>/socket.io/</code></td><td>3000（生产）/ 3001（测试）</td><td>房主大屏运算 + 手机扫码当手柄；PixiJS + Socket.IO + Bun/Elysia</td></tr>
+  <tr><td>泡泡堂</td><td><code>/ppt/</code></td><td>8090</td><td>经典炸弹人玩法，手机扫码当手柄</td></tr>
+  <tr><td>土豆勇士</td><td><code>/td/</code></td><td>8095</td><td>类土豆兄弟肉鸽生存，原生 JS + ws 中继</td></tr>
+  <tr><td>弹弹堂</td><td><code>/ddtank/</code></td><td>3003</td><td>nginx 直接托管 + socket.io 透传</td></tr>
+  <tr><td>手抓饼后端</td><td><code>/api/</code></td><td>3002</td><td>REST API 服务</td></tr>
+</table>
+<p>大厅页（<code>/pc/</code> 的 Lobby）用卡片展示三款可玩游戏，点击即跳转对应子路径：</p>
+<pre><code>// pc-client/src/pages/Lobby.tsx（节选）
+&lt;GameCard title="火柴人派对乱斗" onClick={createRoom} .../&gt;
+&lt;GameCard title="泡泡堂"   onClick={() =&gt; { window.location.href = '/ppt/'; }}/&gt;
+&lt;GameCard title="土豆勇士" onClick={() =&gt; { window.location.href = '/td/'; }}/&gt;</code></pre>
+<div class="explain">
+  <b>逐行解释：</b><br>
+  • <code>GameCard</code> 是页面里一个"游戏卡片"组件（就是一块可点击的方块）。<br>
+  • <code>onClick={createRoom}</code> 表示点"火柴人"卡片时执行 <code>createRoom</code> 函数（它会创建一个房间并跳进游戏）。<br>
+  • 另外两个卡片用的是 <code>window.location.href = '/ppt/'</code>，意思是"把浏览器地址直接改成 /ppt/"，也就是跳到泡泡堂页面。用的是相对路径，所以完整网址是 <code>https://wy2398.icu/ppt/</code>。
+</div>
+
+<h2 id="arch">2. 整体架构（大白话）</h2>
+<p>请求链路（真实配置，已在服务器上验证）：</p>
+<div class="diagram">玩家浏览器 / 手机微信
+        │  HTTPS (443)  wy2398.icu
+        ▼
+┌─────────────────────────────────────────────┐
+│  Nginx  (80→443 强制跳转, SSL 终止, 限流)      │
+│  按路径分流:                                   │
+│   /pc/  /m/  /socket.io/  → 127.0.0.1:3000    │
+│   /test/...               → 127.0.0.1:3001   │
+│   /ddtank/...             → 127.0.0.1:3003   │
+│   /api/                   → 127.0.0.1:3002   │
+│   /ppt/                   → 127.0.0.1:8090   │
+│   /td/                    → 127.0.0.1:8095   │
+└───────────────┬───────────────┬──────────────┘
+                │ (各自端口, 仅本地监听)
+   ┌────────────┴─────────┐   ┌──────────────────┐
+   │  Bun/Elysia + SocketIO│   │ Node http + ws    │
+   │  (sfp 中转/静态)      │   │ (tudou/paopao 等) │
+   └──────────────────────┘   └──────────────────┘
+        全部由 PM2 守护 (crash 自动重启)</div>
+
+<p>关键设计取舍：<strong>后端端口绝不暴露公网</strong>，只监听 <code>127.0.0.1</code>，所有入站流量必须过 Nginx。这样既隐藏了真实端口、统一了 HTTPS，又能在 Nginx 层集中做限流、连接数限制、安全响应头。</p>
+<div class="explain">
+  <b>为什么 <code>127.0.0.1</code> 这么重要？</b> <code>127.0.0.1</code> 是"本机回环地址"，意思是"只接受来自这台服务器自己内部的连接"。游戏后端绑定它，就等于只对内开门；外网用户（<code>8.130.129.18:3000</code>）直接敲这个门会被拒绝，只能走 Nginx 前台转接。这是第一道天然安全屏障。
+</div>
+
+<h3 id="arch-pattern">2.1 端侧权威运算模式（项目最核心的设计思想）</h3>
+<p>这是整个平台区别于普通网游的地方。以火柴人/土豆勇士为例，一台"房主"设备（打开大屏的那台电脑）<strong>既是客户端又是服务器逻辑端</strong>：</p>
+<table>
+  <tr><th>角色</th><th>设备</th><th>职责</th></tr>
+  <tr><td>房主端（Host）</td><td>PC 浏览器大屏</td><td>运行游戏引擎、算物理/碰撞/战斗、渲染画面、把状态广播给所有人</td></tr>
+  <tr><td>控制端（Pad）</td><td>手机浏览器</td><td>只采集输入（摇杆/按钮）并上报，接收房主发来的画面/商店数据</td></tr>
+  <tr><td>中转服务器</td><td>云端 Nginx + WS</td><td>只按房间转发消息字符串，<strong>完全不解析游戏内容</strong></td></tr>
+</table>
+<div class="callout ok">
+  <b>为什么这么设计（面试必答）：</b> 普通网游把"谁打中谁、谁掉血"放在服务器算，服务器又贵又容易成瓶颈；本项目把运算下放给房主设备，服务器只做"微信群转发"，所以<strong>一台最便宜的 2 核 2G 服务器能扛上百个房间</strong>，成本极低。同时天然防作弊——手机端改不了任何游戏数据，因为它手里根本没有运算逻辑。
+</div>
+
+<h2 id="flow">3. 开发流程全景（从想法到上线）</h2>
+<p>一个功能从你脑子里冒出来，到全世界能玩，要走完下面这条流水线。理解这条线，面试时你就能讲清"你到底干了啥"。</p>
+
+<div class="step"><div class="n">1</div><div class="b"><h4>本地开发（写代码）</h4>在自家电脑上写前端（React/PixiJS 画面）、游戏引擎（物理/碰撞）、后端（中转服务）、手机端（手柄）。此时所有东西跑在 <code>localhost</code>（本机），只有你能访问。</div></div>
+<div class="step"><div class="n">2</div><div class="b"><h4>本地联调（自己先玩）</h4>电脑开"大屏（房主）"，手机扫电脑上显示的二维码连进来当"手柄"，测试两人能联机、不卡、不闪退。</div></div>
+<div class="step"><div class="n">3</div><div class="b"><h4>构建 / 打包（Build）</h4>把人类写的 TS/React 源代码，用 Vite/Bun 编译、压缩、混淆成浏览器能直接跑的静态文件（一堆 <code>.html / .js / .css</code>）。就像把"源代码菜谱"做成"成品罐头"。</div></div>
+<div class="step"><div class="n">4</div><div class="b"><h4>上传（Deploy）</h4>用 <code>SSH/SFTP</code>（安全文件传输）把打包好的文件，连同后端代码，传到云服务器指定目录（如 <code>/opt/tudou</code>）。</div></div>
+<div class="step"><div class="n">5</div><div class="b"><h4>启动服务</h4>在服务器上 <code>npm install</code> 装依赖，用 <code>PM2</code> 把后端进程起起来，常驻运行。</div></div>
+<div class="step"><div class="n">6</div><div class="b"><h4>配置反代</h4>在 Nginx 里加一段"路径→后端端口"的规则，并把域名证书接上 HTTPS，让外网能访问。</div></div>
+<div class="step"><div class="n">7</div><div class="b"><h4>真机验证 & 运维</h4>用手机/电脑打开网址，多人对战实测；之后看日志、续证书、盯监控。出事故就排障（第 7.3 节就是一次真实事故）。</div></div>
+
+<div class="callout tip"><b>一句话串起来：</b> 本地写完 → 本地联调 → Build 成静态文件 → 上传服务器 → PM2 起后端 → Nginx 反代 + HTTPS → 对外发布。安全（第 7 节）贯穿全程，但第 5 节先讲"没出问题时正常怎么发"。</div>
+
+<h2 id="feature">4. 核心功能实现</h2>
+
+<h3 id="feat-sfp">4.1 火柴人派对乱斗（旗舰项目）</h3>
+<p>技术栈：<span class="tag">TypeScript</span><span class="tag">React 18</span><span class="tag">Zustand</span><span class="tag">PixiJS v8 (WebGL)</span><span class="tag">Vite</span><span class="tag">Socket.IO</span><span class="tag">Bun + Elysia</span></p>
+
+<h4>4.1.1 中转服务器（index.ts）</h4>
+<p>服务器只做三件事：托管静态前端、按房间转发 WebSocket、维护房间元数据。转发逻辑（项目自带文档中的核心片段，与代码一致）：</p>
+<pre><code>// server/src/index.ts —— 收到消息后只做两种转发
+if (CLIENT_EVENTS.has(msg.type)) {
+  handleClientMessage(socket, msg, clientIP);   // 操作类消息 → 处理房间逻辑
+}
+if (HOST_BROADCAST_EVENTS.has(msg.type)) {
+  io.to(binding.roomCode).emit('message', msg);  // 房主画面 → 广播给同房间所有人
+}</code></pre>
+<div class="explain">
+  <b>逐行解释：</b><br>
+  • <code>CLIENT_EVENTS</code> 和 <code>HOST_BROADCAST_EVENTS</code> 是两个"白名单"集合，里面列着允许的消息类型（比如"移动""攻击""画面状态"）。<br>
+  • <code>if (CLIENT_EVENTS.has(msg.type))</code>：如果这条消息是"操作类"（如手机发来的按键），就交给 <code>handleClientMessage</code> 处理——比如给它在某个房间"安家"。<br>
+  • <code>io.to(roomCode).emit('message', msg)</code>：如果是"房主广播的画面状态"，就把这条消息原样发给<strong>该房间所有人</strong>（<code>io.to(房间号)</code> 是 Socket.IO 的"群发到某房间"语法）。<br>
+  • 注意：服务器<strong>从不解析 <code>game_state</code> 的内容</strong>，收到房主发来的状态原样转发——这就是"只传话不运算"。
+</div>
+<p>房间用内存 Map 记账，无需数据库：</p>
+<pre><code>private rooms = new Map&lt;string, Room&gt;();          // 房间号 → 房间信息
+private bindings = new Map&lt;string, SocketBinding&gt;(); // 连接 → 属于哪个房间/玩家</code></pre>
+<div class="explain"><b>逐行解释：</b> <code>Map</code> 是 JS 的"键值对"结构（像字典）。第一条把"房间号"映射到"房间对象"（里面有谁、什么状态）；第二条把"每条 WebSocket 连接"映射到"它属于哪个房间/哪个玩家"。因为它们在内存里，速度极快，服务器不需要查数据库就能转发。代价是服务器重启房间就没了——但这无所谓，因为真正的游戏状态在房主设备上。</div>
+
+<h4>4.1.2 游戏引擎（GameEngine.ts）—— 全项目最硬核</h4>
+<p>引擎负责"物理 + 碰撞 + 战斗 + 胜负"，以 <strong>60Hz</strong> 步进、<strong>30Hz</strong> 广播。为平台格斗手感，项目<strong>自研轻量 AABB 物理</strong>而非用 Matter.js：</p>
+<pre><code>// 自研物理原因：平台格斗需要精准的"贴地/二段跳/击退"，自研包体更小、控制更直接、性能更优（适配低端主机）
+const GRAVITY_RISING = GAME_CONFIG.gravityRising;  // 上升阶段重力更轻（跳得爽）
+const GRAVITY_FALLING = GAME_CONFIG.gravityFalling;// 下落阶段重力更大（落得干脆）
+const MAX_JUMPS = GAME_CONFIG.maxJumps;            // 二段跳</code></pre>
+<div class="explain"><b>逐行解释：</b> <code>GAME_CONFIG</code> 是一个"配置对象"，把所有可调参数集中放好，方便调手感。<code>const</code> 表示常量（不可改）。两段重力让跳跃"上去轻、下来重"——这是格斗游戏让操作跟手的经典技巧。<code>MAX_JUMPS=2</code> 就是允许空中再跳一次（二段跳）。</div>
+<p>碰撞检测用最简高效的矩形重叠（AABB）：</p>
+<pre><code>private aabb(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax &lt; bx + bw &amp;&amp; ax + aw &gt; bx &amp;&amp; ay &lt; by + bh &amp;&amp; ay + ah &gt; by;
+}</code></pre>
+<div class="explain"><b>逐行解释：</b> AABB = 轴对齐包围盒（Axis-Aligned Bounding Box），就是用两个矩形是否重叠来判断"撞没撞上"。<code>(ax,ay)</code> 是矩形 A 的左上角坐标，<code>(aw,ah)</code> 是它的宽高；B 同理。四个条件同时满足（A 的左右都跨过 B、上下都跨过 B）才返回 true，表示重叠。这是 2D 游戏最便宜的碰撞算法。</div>
+<p>手感优化细节（这些在面试里非常加分，说明你懂游戏）：</p>
+<ul>
+  <li><b>分段重力</b>：上升轻、下落重，跳跃更跟手；</li>
+  <li><b>加速度 + 摩擦力</b>：不是一按就满速，而是加速/减速，避免僵硬；</li>
+  <li><b>土狼时间（Coyote Time）</b>：离开平台边缘的一瞬间仍允许跳；</li>
+  <li><b>跳跃缓冲（Jump Buffer）</b>：落地前提前按跳，落地瞬间自动起跳；</li>
+  <li><b>二段跳 / 冲刺无敌帧 / 招架窗口</b>：帧数博弈，参考格斗游戏。</li>
+</ul>
+<p>游戏主循环（算→画→发）：</p>
+<pre><code>const loop = () =&gt; {
+  engine.step(now);                    // 1. 算：更新世界（60Hz）
+  renderer.render(engine.getState());  // 2. 画：PixiJS 渲染（30~60Hz）
+  network.broadcastState(state);       // 3. 发：状态广播给其他人（15~30Hz）
+  requestAnimationFrame(loop);
+};</code></pre>
+<div class="explain"><b>逐行解释：</b> 这是游戏每秒跑 60 次的"心跳"。<code>requestAnimationFrame</code> 是浏览器提供的"下一帧回调"，让循环跟着屏幕刷新走。每次循环做三件事：① <code>engine.step</code> 推进物理（移动、碰撞、掉血）；② <code>renderer.render</code> 把新状态画出来；③ <code>network.broadcastState</code> 把画面状态发给其他人。<code>now</code> 是时间戳，用来算"过了多少毫秒"，保证不同设备速度一致。</div>
+
+<h4>4.1.3 手机手柄（mobile-client）</h4>
+<p>手机端不做任何运算，只<strong>每秒固定上报 20 次</strong>当前按键状态（省流量、稳定），而非每次按键立即发：</p>
+<pre><code>useEffect(() =&gt; {
+  const interval = setInterval(() =&gt; {
+    network.sendInput({ moveX, jump: jumpQueue, attack: attackQueue, drop });
+    jumpQueue = attackQueue = false;   // 发完清空一次性按键
+  }, 1000 / 20);                       // 20Hz 上报
+}, []);</code></pre>
+<div class="explain"><b>逐行解释：</b> <code>useEffect(...,[])</code> 是 React 的"组件一挂载就执行一次"钩子。<code>setInterval(函数, 50)</code> 表示每 50 毫秒（=1/20 秒）执行一次里面的函数，所以叫 20Hz 上报。<code>sendInput</code> 把当前摇杆方向和是否按了跳/攻击打包发给房主。<code>jumpQueue=false</code> 是因为"跳"是一次性动作，发完就要清零，否则会一直跳。<code>1000/20=50</code> 毫秒，即 20 次/秒。</div>
+
+<h4>4.1.4 完整数据流（手机按跳 → 大屏跳起，&lt;100ms）</h4>
+<pre><code>① 手机按跳跃 → ② 20Hz 定时器打包 player_input → ③ WS 发到服务器
+④ 服务器查房间，原样转给房主 → ⑤ 房主 GameEngine 算跳跃物理 → ⑥ 房主渲染+广播 game_state
+⑦ 服务器转发给房间所有人 → ⑧ 手机收到状态更新 UI</code></pre>
+<div class="callout white"><b>为什么延迟低？</b> 关键洞察：延迟主要发生在"手机→房主"这一跳。同 WiFi 下 &lt;10ms，所以操作感接近本地。而"房主→手机"只是看画面，玩家对"看"的延迟不敏感。</div>
+
+<h3 id="feat-td">4.2 土豆勇士（肉鸽生存，最近上线）</h3>
+<p>技术栈更轻：<span class="tag">原生 JS</span><span class="tag">Canvas 2D</span><span class="tag">Node http + ws</span>。架构与火柴人一致（大屏算、手机发输入），但用原生实现、便于快速迭代。下面这段是<strong>服务器真实代码</strong>（<code>tudou-game/server/server.js</code>）：</p>
+<pre><code>// 房间中继：host(大屏) 与 pad(手机) 的角色分离，服务器仅按房间转发字符串
+const wss = new WebSocketServer({ server, path: '/ws' });
+wss.on('connection', (ws) =&gt; {
+  ws.on('message', (buf) =&gt; {
+    const m = JSON.parse(buf.toString());
+    switch (m.t) {
+      case 'join': {                       // 手机加入房间
+        const r = rooms.get(String(m.code));
+        if (!r || !r.host) { send(ws,{t:'err',msg:'房间不存在'}); return; }
+        if (r.pads.size &gt;= 4) { send(ws,{t:'err',msg:'房间已满'}); return; }
+        r.pads.set(seat, ws); ws.role='pad'; ws.seat=seat;
+        send(r.host, { t:'pad', seat, name:m.name });  // 通知大屏有人加入
+        break;
+      }
+      case 'ph':                           // pad→host 转发（不解析内容）
+        sendRaw(r.host, { t:'ph', seat:ws.seat, m:m.m });
+        break;
+      case 'hall':                         // host→所有 pad 广播
+        for (const pw of r.pads.values()) sendRaw(pw, { t:'hf', m:m.m });
+        break;
+    }
+  });
+  ws.on('close', () =&gt; {                   // 房主掉线 → 整个房间销毁
+    if (ws.role === 'host') { for (const pw of r.pads.values()) send(pw,{t:'err',msg:'大屏已关闭'}); rooms.delete(r.code); }
+  });
+});</code></pre>
+<div class="explain">
+  <b>逐行解释：</b><br>
+  • <code>new WebSocketServer({server, path:'/ws'})</code>：在已有的 HTTP 服务上挂一个 WebSocket 端点，路径是 <code>/ws</code>。<br>
+  • <code>wss.on('connection', ws =&gt; {...})</code>：每当有人连上来，就拿到一个 <code>ws</code> 连接对象。<br>
+  • <code>ws.on('message', buf =&gt; {...})</code>：收到消息时触发。<code>buf.toString()</code> 把二进制转成字符串，<code>JSON.parse</code> 转成对象 <code>m</code>。<br>
+  • <code>switch(m.t)</code>：根据消息类型分支。<br>
+  • <code>case 'join'</code>：手机说"我要进房间"。<code>rooms.get(m.code)</code> 查房间；<code>if(!r.host)</code> 表示房间还没大屏，拒绝。<code>r.pads.size &gt;= 4</code> 限制最多 4 个手机。<code>r.pads.set(seat, ws)</code> 把这个手机连接存进房间的"手柄列表"。最后告诉大屏"有个手机坐了第 seat 号位"。<br>
+  • <code>case 'ph'</code>：手机发来的操作（pad→host），直接原样转给大屏 <code>r.host</code>。<br>
+  • <code>case 'hall'</code>：大屏发来的商店/状态（host→所有手机），循环转给每个手机。<br>
+  • <code>ws.on('close')</code>：连接断开。如果是房主掉线，就通知所有手机"大屏已关闭"并删除房间——因为房主是权威，它没了游戏结束。
+</div>
+<p>手机手柄的摇杆上报（<code>tudou-game/js/pad.js</code>，真实代码）：</p>
+<pre><code>// 触摸摇杆 → 归一化坐标 → 发给大屏
+function joyMove(e){
+  const r = zone.getBoundingClientRect();
+  let dx = t.clientX - (r.left + r.width/2), dy = t.clientY - (r.top + r.height/2);
+  const max = r.width/2, l = Math.hypot(dx,dy);
+  if (l &gt; max){ dx=dx/l*max; dy=dy/l*max; }
+  joyX = dx/max; joyY = dy/max;
+  send({ t:'in', x:joyX, y:joyY });        // 通过 /td/ws 透传
+}</code></pre>
+<div class="explain"><b>逐行解释：</b> 这是手机上"拖动摇杆"的处理。<code>getBoundingClientRect()</code> 拿到摇杆区域的屏幕坐标和大小。<code>dx,dy</code> 是手指相对摇杆中心的位置。<code>Math.hypot(dx,dy)</code> 算距离（勾股定理）。如果手指超出摇杆圆（<code>l&gt;max</code>），就把方向"夹"在边缘（归一化）。最后 <code>joyX/joyY</code> 是 -1~1 的方向值，连同 <code>t:'in'</code> 发给大屏。注意它发的是<strong>方向</strong>不是坐标——大屏自己据此移动角色。</div>
+<p>玩法：20 波生存、材料=金币=经验、波间商店买/合成武器构筑流派、升级四选一、第 20 波 BOSS 决战。商店和升级界面直接渲染在手机端（大屏算好数据，手机只显示并回传购买/升级指令）。</p>
+
+<h3 id="feat-others">4.3 泡泡堂 / 弹弹堂</h3>
+<ul>
+  <li><b>泡泡堂（/ppt/，端口 8090）</b>：经典炸弹人，放泡泡炸箱子、道具成长（多泡/火力/加速/踢泡），同样手机扫码当手柄。</li>
+  <li><b>弹弹堂（/ddtank/，端口 3003）</b>：nginx 直接 <code>alias</code> 托管其 <code>client/dist</code> 静态资源，WebSocket 单独透传 <code>/ddtank/socket.io/</code>。</li>
+</ul>
+<p>这说明平台具备<strong>异构后端共存</strong>能力：有的项目由 nginx 托管静态 + 只透传 WS（sfp/ddtank），有的项目整站（含静态）都由 Node 自己托管再被整体反代（tudou/paopao）。</p>
+
+<h2 id="deploy">5. 手动部署：从零到发布（逐命令）</h2>
+<p>这一章是给"完全没部署过"的人写的。先讲<strong>正常、没出网络安全问题</strong>时该怎么一步步做，再讲本项目实际用的自动化脚本，最后讲事故。</p>
+
+<h3 id="deploy-prep">5.1 前置准备（一次性）</h3>
+<table>
+  <tr><th>准备项</th><th>做什么</th><th>为什么</th></tr>
+  <tr><td>买云服务器</td><td>阿里云/腾讯云开一台 Ubuntu 的 ECS（本项目 2 核 2G）</td><td>这是跑你网站的"永远开机的电脑"</td></tr>
+  <tr><td>拿到 IP</td><td>控制台会给你公网 IP，如 <code>8.130.129.18</code></td><td>服务器的门牌号</td></tr>
+  <tr><td>设 SSH 密码/密钥</td><td>控制台设 root 密码，或上传公钥</td><td>远程控制服务器的钥匙</td></tr>
+  <tr><td>域名 & 解析</td><td>买域名，在 DNS 里加一条 A 记录指向服务器 IP</td><td>让用户用 <code>wy2398.icu</code> 而不是记数字</td></tr>
+  <tr><td>放行端口</td><td>云"安全组"只开放 <code>22/80/443</code> 入站</td><td>防火墙第一道，别暴露游戏端口</td></tr>
+</table>
+<div class="callout warn"><b>新手最容易错的一步：</b> DNS 解析（A 记录）要等几分钟到几小时才生效，期间用 IP 访问就行。先别急着怪自己部署错了。</div>
+
+<h3 id="deploy-normal">5.2 正常流程（无安全问题时）</h3>
+<p>下面是一套<strong>标准、安全、可复现</strong>的手动发布流程。假设服务器是全新的 Ubuntu，域名已解析到它。</p>
+
+<div class="step"><div class="n">1</div><div class="b"><h4>远程登录服务器</h4>
+<pre><code>ssh root@8.130.129.18</code></pre>
+<div class="explain">这行在你的<strong>本地电脑</strong>终端输入。<code>ssh</code> 是"安全远程登录"工具；<code>root</code> 是服务器管理员账号；<code>@</code> 后面是服务器 IP。回车后输入密码即可进入服务器命令行。进去后你输入的每条命令都是在"那台云电脑"上执行。</div></div></div>
+
+<div class="step"><div class="n">2</div><div class="b"><h4>更新系统并装运行环境</h4>
+<pre><code>apt update &amp;&amp; apt upgrade -y
+curl -fsSL https://bun.sh/install | bash
+npm i -g pm2</code></pre>
+<div class="explain">
+<b>逐行解释：</b><br>
+• <code>apt update</code>：刷新 Ubuntu 的"软件源列表"（像刷新应用商店的货架）。<br>
+• <code>apt upgrade -y</code>：把所有已装软件升级到最新（<code>-y</code> 表示一路同意，不用每条都按 y）。<code>&amp;&amp;</code> 表示"前一条成功才执行后一条"。<br>
+• <code>curl ... | bash</code>：下载 Bun 官方安装脚本并执行，装好 JS 运行环境。<br>
+• <code>npm i -g pm2</code>：用 Node 的包管理器全局（<code>-g</code>）安装 PM2 进程管理器。
+</div></div></div>
+
+<div class="step"><div class="n">3</div><div class="b"><h4>本地构建（在你自己电脑上）</h4>
+<pre><code>cd shared &amp;&amp; npm run build
+cd ../pc-client &amp;&amp; bun run build
+cd ../mobile-client &amp;&amp; bun run build</code></pre>
+<div class="explain">这步<strong>不在服务器上</strong>，在你开发机执行。把 TS/React 源码编译成浏览器能跑的静态文件，输出到 <code>server/public/pc</code> 和 <code>server/public/mobile</code>。</div></div></div>
+
+<div class="step"><div class="n">4</div><div class="b"><h4>上传文件到服务器</h4>
+<pre><code>scp -r ./server root@8.130.129.18:/opt/tudou</code></pre>
+<div class="explain">
+<b>逐行解释：</b><br>
+• <code>scp</code> = 基于 SSH 的<strong>安全拷贝</strong>（传文件用，不是登录）。<br>
+• <code>-r</code> = recursive（递归），因为 <code>./server</code> 是文件夹，必须加 <code>-r</code> 才能把整个目录传过去。<br>
+• <code>./server</code> = 本地要传的源目录。<br>
+• <code>root@8.130.129.18:/opt/tudou</code> = 目标：服务器上的 <code>/opt/tudou</code> 目录。<br>
+传完之后，服务器上就有 <code>/opt/tudou/server/...</code> 全部文件了。
+</div></div></div>
+
+<div class="step"><div class="n">5</div><div class="b"><h4>在服务器上装依赖并启动</h4>
+<pre><code>ssh root@8.130.129.18 "cd /opt/tudou/server && npm install --omit=dev && PORT=8095 pm2 start server/server.js --name tudou && pm2 save"</code></pre>
+<div class="explain">
+<b>逐行解释（这是一条组合命令，用引号包起来在服务器上执行）：</b><br>
+• <code>cd /opt/tudou/server</code>：进到后端目录。<br>
+• <code>npm install --omit=dev</code>：装运行所需依赖（<code>--omit=dev</code> 跳过开发工具，体积小、更安全）。<br>
+• <code>PORT=8095</code>：临时环境变量，告诉程序"用 8095 端口"（运行时读 <code>process.env.PORT</code>）。<br>
+• <code>pm2 start server/server.js --name tudou</code>：用 PM2 以名字 <code>tudou</code> 启动这个 JS 文件（常驻、崩溃自启）。<br>
+• <code>pm2 save</code>：把当前进程列表存档，下次服务器重启会自动恢复。
+</div></div></div>
+
+<div class="step"><div class="n">6</div><div class="b"><h4>安装并配置 Nginx 反代</h4>
+<pre><code>apt install -y nginx</code></pre>
+<p>然后新建一个反代配置（用 <code>nano</code> 或 <code>vim</code> 编辑 <code>/etc/nginx/conf.d/game.conf</code>），内容见第 6 节。写完校验并热加载：</p>
+<pre><code>nginx -t                 # 先校验语法，必须看到 "test is successful"
+systemctl reload nginx   # 平滑重载，不中断现有连接</code></pre>
+<div class="explain">
+<b>逐行解释：</b><br>
+• <code>nginx -t</code>：<strong>最重要的一步</strong>。它只检查配置文件有没有写错，不真正生效。配错直接 <code>reload</code> 会让 Nginx 起不来、全站瘫痪。<code>-t</code> 通过会显示 <code>configuration test is successful</code>。<br>
+• <code>systemctl reload nginx</code>：让 Nginx 重新读取配置。<code>reload</code>（重载）和 <code>restart</code>（重启）不同——reload 不切断已经在连接的用户，更优雅。
+</div></div></div>
+
+<div class="step"><div class="n">7</div><div class="b"><h4>申请 HTTPS 证书（Let's Encrypt）</h4>
+<pre><code>apt install -y certbot python3-certbot-nginx
+certbot --nginx -d wy2398.icu</code></pre>
+<div class="explain">
+<b>逐行解释：</b><br>
+• <code>certbot</code> 是免费证书工具，<code>python3-certbot-nginx</code> 是它配合 Nginx 的插件。<br>
+• <code>certbot --nginx -d wy2398.icu</code> 会<strong>自动</strong>：① 向证书机构证明你拥有这个域名；② 签发免费证书；③ 帮你改好 Nginx 配置，把 80 跳转 443 并启用 HTTPS。新手几乎零配置。<br>
+• 证书 90 天有效，到期前用 <code>certbot renew</code> 自动续（可放进定时任务）。
+</div></div></div>
+
+<div class="step"><div class="n">8</div><div class="b"><h4>验证发布成功</h4>
+<pre><code># 在你自己电脑的浏览器打开：
+https://wy2398.icu/td/</code></pre>
+<div class="explain">能看到游戏页面、手机扫码能连、多人能联机，就说明发布成功。如果打不开，按第 7 节/附录 D 排查。</div></div></div>
+
+<div class="callout ok"><b>正常流程小结：</b> <code>ssh</code> 登录 → 装环境 → 本地 <code>build</code> → <code>scp</code> 上传 → 服务器 <code>npm install</code> + <code>pm2 start</code> → <code>nginx</code> 反代 → <code>certbot</code> 证书 → 浏览器验证。全程没动 <code>sshd_config</code>，所以 SSH 一直能连，不会出现第 7.3 节的事故。</div>
+
+<h3 id="deploy-cmd">5.3 常用运维命令逐字解释</h3>
+<table>
+  <tr><th>命令</th><th>作用</th><th>关键参数</th></tr>
+  <tr><td><code>pm2 list</code></td><td>看所有进程及状态</td><td>—</td></tr>
+  <tr><td><code>pm2 logs tudou</code></td><td>实时看某进程日志</td><td><code>tudou</code>=进程名</td></tr>
+  <tr><td><code>pm2 restart sfp-prod</code></td><td>重启一个服务（发版后常用）</td><td>名字换成你的</td></tr>
+  <tr><td><code>pm2 save</code></td><td>持久化进程列表</td><td>—</td></tr>
+  <tr><td><code>nginx -t</code></td><td>校验配置语法</td><td>必须先过</td></tr>
+  <tr><td><code>systemctl reload nginx</code></td><td>平滑重载配置</td><td>不切断连接</td></tr>
+  <tr><td><code>certbot renew --quiet</code></td><td>续期证书</td><td>放进 crontab</td></tr>
+  <tr><td><code>ss -tlnp | grep -E ':80|:443|:8095'</code></td><td>看哪些端口在监听</td><td>确认服务起来了</td></tr>
+</table>
+<div class="explain"><b>关于 <code>ss -tlnp</code>：</b> <code>-t</code>=TCP，<code>-l</code>=只看监听中的，<code>-n</code>=数字显示端口（不解析服务名），<code>-p</code>=显示进程。配合 <code>grep</code> 过滤端口，用来确认"我的 8095 到底起没起"。</div>
+
+<h3 id="deploy-script">5.4 本项目的自动化脚本（deploy_td.py）</h3>
+<p>实际部署用脚本完成，避免手工敲命令出错。脚本本质是 <strong>SSH 连接 + SFTP 上传 + 远端执行</strong>（下面是 <code>deploy_td.py</code> 的真实骨架）：</p>
+<pre><code>import paramiko, os
+HOST='8.130.129.18'; PORT=22; USER='root'
+PASS=os.environ['PPT_SSH_PASS']          # 密码走环境变量，不写死在脚本里
+ssh = paramiko.SSHClient(); ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+ssh.connect(HOST, port=PORT, username=USER, password=PASS, timeout=25)
+
+# 1) SFTP 递归上传（跳过 .git/node_modules）
+sftp = ssh.open_sftp()
+for root, dirs, files in os.walk(LOCAL):
+    for f in files:
+        sftp.put(local_path, remote_path)
+
+# 2) 远端：装依赖 + pm2 启动/重启 + 保存
+ssh.exec_command(f'cd {REMOTE} &amp;&amp; npm install --omit=dev')
+ssh.exec_command(f'pm2 delete tudou 2&gt;/dev/null; cd {REMOTE} &amp;&amp; PORT=8095 pm2 start server/server.js --name tudou')
+ssh.exec_command('pm2 save')
+
+# 3) 修改 nginx 子路径反代（在 443 server 块插入 location /td/，先备份）
+ssh.exec_command(f'cp -f {cf} {cf}.bak.td')
+# ... 写入 location 块 ...
+ssh.exec_command('nginx -t &amp;&amp; nginx -s reload')   # 校验后再热加载</code></pre>
+<div class="explain">
+  <b>逐行解释：</b><br>
+  • <code>import paramiko</code>：paramiko 是 Python 的 SSH 库，让脚本能像人一样 SSH 登录、传文件。<br>
+  • <code>os.environ['PPT_SSH_PASS']</code>：从<strong>环境变量</strong>读密码，而不是把密码明文写进代码（避免泄露、也避免提交到 Git）。<br>
+  • <code>set_missing_host_key_policy(AutoAddPolicy())</code>：首次连陌生服务器自动接受它的"指纹"，否则脚本会卡住问你 yes/no。<br>
+  • <code>ssh.connect(...)</code>：建立连接，<code>timeout=25</code> 秒超时防卡死。<br>
+  • <code>sftp.put(...)</code>：把本地文件传到远端对应路径（<code>os.walk</code> 遍历文件夹实现递归上传）。<br>
+  • <code>2&gt;/dev/null</code>：把错误输出丢掉（<code>pm2 delete tudou</code> 在第一次部署时进程还不存在会报错，丢错误不影响后续）。<br>
+  • <code>cp -f ... .bak.td</code>：改 nginx 配置前<strong>先备份</strong>，出问题能还原。这是运维铁律。<br>
+  • <code>nginx -t &amp;&amp; nginx -s reload</code>：先校验，通过后发信号平滑重载。
+</div>
+
+<h2 id="proxy">6. 反向代理 Nginx 详解</h2>
+<p>所有对外服务都经 Nginx。下面都是<strong>服务器上正在运行的真实配置</strong>。</p>
+
+<h4>子路径分流（生产环境核心片段）</h4>
+<pre><code># /etc/nginx/conf.d/stick-fight-party.conf —— 真实生效配置
+location /pc/ {                 # 火柴人 PC 端静态
+    alias /opt/stick-fight-party/frontend/current/pc/;
+    try_files $uri $uri/ /pc/index.html;   # SPA 回退
+}
+location /m/  { alias /opt/stick-fight-party/frontend/current/mobile/; ... }
+location /socket.io/ {                    # WebSocket 透传
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_read_timeout 86400s;             # 长连接，避免秒断
+    proxy_buffering off;                   # WS 不能缓冲
+}
+location /td/ {                 # 土豆勇士（整站反代）
+    proxy_pass http://127.0.0.1:8095/;    # 末尾斜杠：去掉 /td 前缀再转发
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 3600s;
+}</code></pre>
+<div class="explain">
+  <b>逐行解释：</b><br>
+  • <code>location /pc/</code>：当浏览器请求的 URL 路径以 <code>/pc/</code> 开头，就走这段规则。<br>
+  • <code>alias</code>：把 URL 路径映射到服务器上的真实文件夹。外面访问 <code>/pc/index.html</code>，实际读的是 <code>/opt/.../pc/index.html</code>。<br>
+  • <code>try_files $uri $uri/ /pc/index.html</code>：先试"精确文件"，再试"目录"，都没有就回退到 <code>index.html</code>。因为前端是单页应用（SPA），用户直接刷 <code>/pc/room/123</code> 这种前端路由时，服务器没这文件，必须回退到 index.html 让前端自己处理——<strong>少这一句会刷新 404</strong>。<br>
+  • <code>proxy_pass http://127.0.0.1:3000</code>：把请求"代理"给内部 3000 端口的服务（WebSocket 专用）。<br>
+  • <code>proxy_http_version 1.1</code>：WebSocket 必须 HTTP/1.1。<br>
+  • <code>proxy_set_header Upgrade/Connection</code>：把"升级为 WebSocket"的握手头转发给后端，否则握手失败（见 6.2）。<br>
+  • <code>proxy_read_timeout 86400s</code>：等后端响应的最长时间设为 1 天，否则游戏长连接会被默认 60 秒掐断。<br>
+  • <code>proxy_buffering off</code>：关掉缓冲，消息实时透传（缓冲会让实时消息延迟）。<br>
+  • <code>location /td/</code> 的 <code>proxy_pass ...:8095/</code>：<strong>末尾的斜杠很关键</strong>——它表示"把 <code>/td/</code> 这个前缀剥掉再转发"。用户访问 <code>/td/foo</code>，后端收到的是 <code>/foo</code>。没这斜杠，后端会收到 <code>/td/foo</code>，路径对不上。
+</div>
+
+<h3 id="proxy-subpath">6.1 为什么用子路径而不是子域名？</h3>
+<table>
+  <tr><th>维度</th><th>子路径（本项目采用）</th><th>子域名</th></tr>
+  <tr><td>HTTPS 证书</td><td>一张证书覆盖全站，成本低</td><td>每个子域都要证书（或用泛域名）</td></tr>
+  <tr><td>微信扫码</td><td>同域同源，扫码跳转无障碍</td><td>需额外配置，HTTP 限制更严</td></tr>
+  <tr><td>运维</td><td>一个 server 块管全部</td><td>多个 server 块</td></tr>
+  <tr><td>缺点</td><td>后端要正确处理基础路径（base href）、cookie 路径</td><td>隔离更干净，便于独立扩容</td></tr>
+</table>
+<div class="callout tip">
+  <b>面试话术：</b> "我选子路径主要是为了<strong>微信扫码必须 HTTPS 同源</strong>和<strong>一张证书管全部</strong>这两点；代价是前端构建要带 base path、Cookie 要注意 path。如果日后某个游戏流量暴涨需要独立扩容，我会把它拆成子域名 + 独立后端实例，Nginx 只需加一个 server 块，改动很小。"
+</div>
+
+<h3 id="proxy-ws">6.2 WebSocket 透传（最容易踩坑的点）</h3>
+<p>WebSocket 握手是 HTTP Upgrade，Nginx 必须显式转发这两个头，否则握手失败：</p>
+<pre><code>map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection $connection_upgrade;
+proxy_http_version 1.1;     # WS 必须 HTTP/1.1
+proxy_read_timeout 86400s;  # 长连接，否则 60s 默认超时断线
+proxy_buffering off;        # 关缓冲，消息实时透传</code></pre>
+<div class="callout warn">
+  <b>两个真实坑：</b> ① 漏掉 <code>Connection $connection_upgrade</code> → 握手 400/断连；② <code>proxy_read_timeout</code> 用默认 60s → 玩家挂机一会儿就掉线。本项目直接设成 86400s（1 天）配合后端心跳，彻底解决。
+</div>
+
+<h3 id="proxy-ssl">6.3 HTTPS、缓存与安全头</h3>
+<pre><code># HTTP 全量 301 跳转 HTTPS
+server { listen 80; server_name wy2398.icu; location / { return 301 https://$host$request_uri; } }
+
+# HTTPS：TLS1.2/1.3 + HSTS + 安全响应头
+ssl_certificate /etc/letsencrypt/live/wy2398.icu/fullchain.pem;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+
+# 缓存策略：HTML 不缓存（保证发版即时生效），哈希资源缓存 1 年
+location ~* \.html$ { add_header Cache-Control "no-cache, no-store, must-revalidate"; }
+location ~* \.(js|css|png|...)$ { add_header Cache-Control "public, max-age=31536000, immutable"; }</code></pre>
+<div class="explain">
+  <b>逐行解释：</b><br>
+  • <code>return 301 https://...</code>：所有用 http 访问的人，永久跳到 https 版本（301=永久重定向）。<br>
+  • <code>HSTS</code>（Strict-Transport-Security）：告诉浏览器"接下来一年只准用 HTTPS 访问我"，防中间人降级攻击。<br>
+  • <code>X-Content-Type-Options nosniff</code>：禁止浏览器"猜"文件类型，防某些 XSS。<br>
+  • <code>X-Frame-Options SAMEORIGIN</code>：只允许同源网页把我嵌进 iframe，防点击劫持。<br>
+  • 缓存：<code>\.html$</code> 用正则匹配所有 html，设 <code>no-cache</code> 让它每次都拉最新（发版秒生效）；带 hash 的 <code>.js/.css</code> 设 1 年缓存——因为内容变了文件名就变，缓存旧文件不会被引用到。
+</div>
+<p>这套缓存策略是前端发版"秒生效"的关键：带 hash 的文件名（<code>index-a1b2.js</code>）内容变才变，可放心长效缓存；<code>index.html</code> 不缓存，永远拉最新。</p>
+
+<h2 id="security">7. 网络安全</h2>
+<p>网络安全 = 保护服务器不被入侵、不被滥用、服务不中断。本项目的防护分三层：<strong>云安全组 → Nginx 边界 → 应用层校验</strong>。</p>
+
+<h3 id="sec-layers">7.1 三层防护（白话）</h3>
+<table>
+  <tr><th>层</th><th>作用</th><th>本项目做法</th></tr>
+  <tr><td>① 云安全组（最外层防火墙）</td><td>决定"谁能敲门"</td><td>只放行 80/443 入站；游戏端口（3000/8095…）仅在 <code>127.0.0.1</code> 监听，外网根本敲不到</td></tr>
+  <tr><td>② Nginx 边界</td><td>统一收口 + 限流</td><td>单 IP 限流 10 次/秒、WS 连接数限 5、禁大包、禁隐藏文件、加安全响应头</td></tr>
+  <tr><td>③ 应用层校验</td><td>防乱发消息/刷接口</td><td>消息格式校验、单 IP 频率限制、黑名单、全局异常捕获、空房 5 分钟自动清理、房间总数上限</td></tr>
+</table>
+<div class="callout white"><b>为什么三层？</b> 任何一层都可能漏，多层叠加才稳。比如安全组挡住了"直接敲 3000 端口"的人，但挡不住"通过 443 正常进来的恶意请求"，所以 Nginx 要限流、应用层要校验。</div>
+
+<h3 id="sec-ssh">7.2 SSH 是什么（为什么它坏了最要命）</h3>
+<p><code>SSH</code>（Secure Shell）是你远程控制服务器的唯一正常通道——部署、看日志、改配置全靠它。可以把它理解成"服务器的远程桌面/命令行通道"。<strong>SSH 一坏，你就进不去服务器了</strong>，只能靠云厂商的 VNC 控制台（网页版"紧急通道"）救场。</p>
+<table>
+  <tr><th>认证方式</th><th>说明</th><th>安全性</th></tr>
+  <tr><td>密码登录</td><td>输入 root 密码</td><td>方便但易被暴力破解</td></tr>
+  <tr><td>密钥登录</td><td>本地放私钥、服务器放公钥，免密且极难伪造</td><td>推荐（本项目那个 AI 用的就是密钥）</td></tr>
+</table>
+<div class="explain"><b>相关配置（在 <code>/etc/ssh/sshd_config</code>）：</b> <code>PasswordAuthentication yes/no</code>（是否允许密码）、<code>PermitRootLogin yes/no</code>（是否允许 root 直接登）、<code>UseDNS yes/no</code>（连接时是否做反向 DNS 查询）。<strong>改这个文件后必须 <code>sshd -t</code> 校验 + 重启 sshd 才生效</strong>，而且改之前最好先备份。</div>
+
+<h3 id="sec-incident">7.3 UseDNS 事故完整复盘（真实发生）</h3>
+<p>某次"网络加固"后，任何人（包括部署脚本）都 SSH 不上服务器，现象是<strong>TCP 能连上 22 端口、但 sshd 迟迟不发 SSH banner，所有客户端在握手前卡死</strong>。排查过程（用三种方式从本机探测）：</p>
+<pre><code># 1) 确认不是端口/防火墙问题：TCP 通，但 banner 挂起
+#    用原始 TCP 抓 banner → 连接建立后 Read 超时，说明 sshd 接受连接但不发握手包
+# 2) 排除改端口：扫描 22/2222/2200/2022... 只有 22 在监听
+
+# 3) 登录云厂商 VNC 控制台（SSH 进不去时唯一的口子），怀疑 SSH 握手前卡在反向 DNS 查询
+sshd -t                                  # 配置语法 OK，无报错
+sudo sed -i 's/^#*UseDNS.*/UseDNS no/' /etc/ssh/sshd_config
+systemctl restart ssh                    # 重启后立刻恢复
+
+# 4) 验证：auth.log 出现 Accepted password / publickey，部署脚本 SFTP 恢复</code></pre>
+<div class="explain">
+  <b>逐行解释与根因：</b><br>
+  • <code>sshd -t</code>：校验配置语法（没报错说明不是写错）。<br>
+  • <code>sed -i 's/^#*UseDNS.*/UseDNS no/'</code>：这是"就地替换"命令。把以 <code>UseDNS</code> 或 <code>#UseDNS</code> 开头的行，整行改成 <code>UseDNS no</code>。<code>^#*</code> 匹配行首零个或多个 <code>#</code>（兼容被注释的默认值），<code>.*</code> 匹配整行其余内容。<br>
+  • <code>systemctl restart ssh</code>：重启 ssh 服务使配置生效。<br>
+  • <b>根因：</b> 服务器开了 <code>UseDNS yes</code>（默认值），每次有人连 SSH，sshd 都会先做"这个 IP 反向查域名"的操作；而本机 DNS 解析不通，查询卡住 → sshd 不发 banner → 所有人卡在握手前。改成 <code>UseDNS no</code> 跳过这步，立刻恢复。<br>
+  • 那个 AI 用的是<strong>密钥</strong>登录，之前也被卡死是因为 sshd 在发 banner 之前就卡住了——密钥和密码都救不了，必须先修 sshd 本身。
+</div>
+<div class="callout ok">
+  <b>结论 & 复盘：</b> 这是"想做安全加固却把自己锁门外"的典型。教训：① 改 sshd 前<strong>先备份</strong>、改完<strong>一定开一个新终端测试能不能连上</strong>再关旧连接；② 排障从"分层"入手——先网络层（TCP 通不通）、再应用层（banner/握手）、最后认证；③ <strong>云厂商 VNC 控制台是最后兜底</strong>，SSH 进不去时永远能靠它。
+</div>
+
+<h3 id="sec-hardening">7.4 正确加固（别再踩坑）</h3>
+<p>想真正提高安全性又不破坏 SSH，按这个顺序做：</p>
+<div class="step"><div class="n">1</div><div class="b"><h4>先关掉 UseDNS 这个隐患</h4><pre><code>sed -i 's/^#*UseDNS.*/UseDNS no/' /etc/ssh/sshd_config</code></pre>放在加固第一步，因为它单独就能避免本次事故。</div></div>
+<div class="step"><div class="n">2</div><div class="b"><h4>用密钥替代密码</h4>把你的公钥追加进 <code>~/.ssh/authorized_keys</code>，确认能用密钥登录后，再设 <code>PasswordAuthentication no</code>。顺序反过来会把自己锁外面。</div></div>
+<div class="step"><div class="n">3</div><div class="b"><h4>校验 + 测试 + 再关旧连接</h4><pre><code>sshd -t &amp;&amp; systemctl restart ssh</code></pre>重启后<strong>另开一个终端</strong>试连，成功才放心。绝不在没验证新会话能连的情况下断开当前连接。</div></div>
+<div class="step"><div class="n">4</div><div class="b"><h4>依赖安全组而非暴露端口</h4>安全组只开 22/80/443；游戏端口始终绑 <code>127.0.0.1</code>。即便 sshd 出事，游戏服务也不受影响（本项目正是如此——SSH 卡死时网页游戏照常能玩）。</div></div>
+<div class="callout tip"><b>加固 ≠ 乱改配置。</b> 真正有效且安全的做法是：密钥登录 + 安全组最小开放 + 定期更新 + 证书自动续期。本项目当前就是这套，稳定且符合"网络安全"的本意。</div>
+
+<h2 id="qa">8. 面试高频 & 刁钻问答</h2>
+
+<div class="q"><b>Q1：你这个"端侧权威"架构，如果房主掉线/作弊/手机和房主状态不一致怎么办？</b>
+<div class="a"><span class="hl">答：</span>房主掉线时服务器会收到 WebSocket <code>close</code>，立即销毁房间并通知所有手机"大屏已关闭"——因为房主是权威源，它没了游戏就无法继续，这是该架构的固有取舍。作弊方面反而更安全：手机端没有任何运算逻辑，改本地数据没用，所有判定都在房主。至于一致性：手机<strong>不跑物理</strong>，只接收房主每帧广播的状态来显示，所以天然不会出现"你说打中、我说没打中"的分歧（这正是状态同步 vs 帧同步的区别，我们选了状态同步里最省服务器的一种）。代价是房主网络差会拖垮全房间——所以对房主端做了 30Hz 广播 + 输入 20Hz 上报的带宽控制。</div></div>
+
+<div class="q"><b>Q2：单台服务器怎么扛上百房间？瓶颈在哪？怎么演进？</b>
+<div class="a"><span class="hl">答：</span>因为服务器只转发不运算，CPU/内存开销极低（实测单进程 ~50-65MB，2 核 2G 跑 6 个进程还不到 41% 内存）。瓶颈首先是<strong>单房主端的性能</strong>（房主设备决定一局流畅度），其次才是服务器带宽。演进路径：① 多实例——把不同游戏/不同房间分散到多台后端，Nginx 按路径或一致性哈希分流；② WebSocket 水平扩展需要<strong>粘性问题</strong>（同房间连同一台），可用 Redis 适配器做跨进程广播；③ 最终上容器 + K8s，按房间数弹性扩缩。</div></div>
+
+<div class="q"><b>Q3：WebSocket 在 Nginx 后怎么做水平扩展？粘性是啥？</b>
+<div class="a"><span class="hl">答：</span>默认 Nginx <code>proxy_pass</code> 不保证同房间连同一后端。要扩展需：① <strong>IP/房间哈希</strong>做粘性（同一房间落到同一后端）；或 ② 用 <strong>Socket.IO Redis Adapter / NATS</strong>，让多个无状态中转节点通过消息总线互相广播房间消息，这样任意节点收到消息都能转发给全房间。本项目房间在内存 Map，单机内转发即可，还没到跨机阶段。</div></div>
+
+<div class="q"><b>Q4：为什么不用 Docker？直接裸跑 PM2 不专业吧？</b>
+<div class="a"><span class="hl">答：</span>这是取舍。Docker 的好处是环境一致、易迁移，但对单机小项目反而增加复杂度（守护、卷、网络）。PM2 在 Node 生态里做进程守护、日志、开机自启已经够用，且和 Bun 配合简单。如果项目要上多机/CI/CD 自动发布，我会引入 Docker Compose 或 K8s——架构是分层的，加容器只是把"进程"换成"容器"，Nginx 反代那一层几乎不动。我会如实说这是<strong>成本与复杂度权衡</strong>，不是不会。</div></div>
+
+<div class="q"><b>Q5：游戏延迟怎么处理？100ms 手感不会很差吗？</b>
+<div class="a"><span class="hl">答：</span>关键洞察：<strong>延迟主要发生在"手机→房主"这一跳</strong>（同局域网/同 WiFi 下 &lt;10ms，跨公网几十 ms），而"房主→手机"只是看画面延迟，玩家对"看"的延迟不敏感。手机上报的是<strong>输入状态</strong>而非位置，房主本地立即响应，所以操作感接近本地。跨公网时还会丢包，故用 20Hz 固定上报 + 房主 60Hz 本地模拟来平滑。</div></div>
+
+<div class="q"><b>Q6：前端用 Bun 构建、后端用 Bun 跑，和 Node 比优势在哪？踩过坑吗？</b>
+<div class="a"><span class="hl">答：</span>Bun 启动快、内置打包/测试、兼容 Node API，构建速度明显优于 Node+npm。坑：① 个别 Node 原生模块在 Bun 下需要兼容处理；② 生产用 Bun 跑长驻服务要确认稳定性，本项目 sfp 用 Bun、tudou 用 Node，是<b>务实混用</b>。我会强调：工具选择服务于交付效率，不是炫技。</div></div>
+
+<div class="q"><b>Q7：你这个算"全栈"吗？你最擅长哪层？</b>
+<div class="a"><span class="hl">答：</span>算，且是端到端：从前端 React/PixiJS、游戏引擎物理、WebSocket 协议设计、Node/Bun 后端中转、到 Nginx 反代与服务器运维都自己搞定。我最能讲透的是<strong>实时 multiplayer 的架构设计（端侧权威 + WS 中转）</strong>和<strong>部署/反代/排障</strong>这一整条链路，因为这些都是我实际踩过坑、跑在公网真机上的。</div></div>
+
+<div class="q"><b>Q8：如果让你重做，哪里会改？</b>
+<div class="a"><span class="hl">答：</span>① 房主掉线体验——加"房主转移/观战托管"而非直接散房；② 把中转服务做成无状态 + Redis 适配器，为水平扩展铺路；③ 静态资源上 CDN，减轻单台带宽；④ 引入基础设施即代码（Docker/CI），让部署可重复；⑤ 后端服务不要用 root 跑，降权更安全（这也是我从安全加固里学到的）。</div></div>
+
+<div class="q"><b>Q9：你这个发版后用户为啥不会拿到旧 JS？</b>
+<div class="a"><span class="hl">答：</span>因为构建工具（Vite）对产物做了<strong>内容 hash 命名</strong>（如 <code>index.a1b2c3.js</code>），内容一变文件名就变。<code>index.html</code> 不缓存永远拉最新，它里面引用的就是新 hash 的 JS 路径——所以旧文件即使还缓着也不会被引用到。这是前端发版"秒生效且可长效缓存"的标准做法。</div></div>
+
+<div class="q"><b>Q10：Nginx 反代 WebSocket 时，连接数和超时你怎么设的，依据是什么？</b>
+<div class="a"><span class="hl">答：</span>单 IP <code>limit_conn 5</code> 防一个 IP 开太多房间刷连接；<code>proxy_read_timeout 86400s</code> 是因为游戏 WS 是长连接，默认 60s 会把挂机玩家踢掉，配合后端 30s 心跳保活；<code>proxy_buffering off</code> 因为游戏消息要实时，缓冲会引入延迟。这些都是从"玩家掉线""消息卡顿"的真实工单里调出来的。</div></div>
+
+<div class="q"><b>Q11（刁钻）：你说端侧权威省钱，那房主作弊改内存不就无敌了？你怎么防？</b>
+<div class="a"><span class="hl">答：</span>承认这是该架构的软肋——房主确实是"法官"，能改自己本地的运算结果（比如让自己无敌）。应对分场景：① 休闲/好友局：风险可接受，作弊只影响自己房间，不影响他人，靠社交约束；② 想认真防：可以把"关键判定"（伤害/胜负）移到一个轻量权威节点（比如房主之外再选一个旁观校验端，或关键事件上链/上服务器验签），但那会牺牲"单台扛百房"的成本优势。我会坦诚这是<strong>成本与信任的权衡</strong>，不是没考虑到，而是当前阶段有意取舍。这反而体现你对"架构没有银弹"的理解。</div></div>
+
+<div class="q"><b>Q12（刁钻）：你的服务器才 2 核 2G，真有上百人同时玩会不会炸？你怎么证明？</b>
+<div class="a"><span class="hl">答：</span>证明靠实测数据而非嘴说：① <code>pm2</code> 报告单进程常驻内存 ~50-65MB，6 个进程合计不到 41% 内存；② 因为服务器只转发字符串（每条消息几十到几百字节），CPU 主要耗在加密/网络 IO，2 核足够；③ 真要验证可以做压测（比如用 <code>artillery</code>/<code>wsbench</code> 模拟 N 个房间并发收发），看 p99 延迟和 CPU 曲线。我会主动说"规模再上一个量级我会引入前面讲的 Redis 适配器 + 多实例"，展现 scalability 意识。</div></div>
+
+<h2 id="intro">9. 自我介绍话术（可直接背）</h2>
+<div class="card">
+<p style="margin-top:0"><b>30 秒版：</b></p>
+<p>"我独立做了一套自部署的网页游戏平台，跑在单台云服务器上，用 Nginx 子路径反代把多款 H5 小游戏统一到一个域名下。核心架构叫<strong>端侧权威运算</strong>——所有游戏逻辑在玩家房主设备本地算，云端服务器只做 WebSocket 消息中转，所以一台 2 核 2G 机器能扛上百房间。我从前端（React/PixiJS 游戏引擎、物理碰撞、手感优化）、实时通信（Socket.IO/ws 协议设计）、后端（Node/Bun 中转）、到 Nginx 反代与服务器运维全链路都自己完成，并且真实部署在公网、真机多人联机跑通。"</p>
+<p><b>加一句亮点：</b>"过程中我独立排查过 SSH 握手卡死（UseDNS）、WebSocket 在 Nginx 后掉线、前端发版缓存不一致等线上问题，比较擅长从分层角度定位故障。"</p>
+</div>
+
+<hr>
+<h2 id="appendix-a">附录 A：命令速查表</h2>
+<table>
+  <tr><th>场景</th><th>命令</th></tr>
+  <tr><td>远程登录</td><td><code>ssh root@IP</code></td></tr>
+  <tr><td>安全传文件</td><td><code>scp -r 本地目录 root@IP:/目标目录</code></td></tr>
+  <tr><td>本地构建</td><td><code>bun run build</code> / <code>npm run build</code></td></tr>
+  <tr><td>服务器装依赖</td><td><code>npm install --omit=dev</code></td></tr>
+  <tr><td>PM2 启动</td><td><code>PORT=8095 pm2 start server.js --name tudou</code></td></tr>
+  <tr><td>PM2 存盘</td><td><code>pm2 save</code></td></tr>
+  <tr><td>看进程</td><td><code>pm2 list</code> / <code>pm2 logs 名字</code></td></tr>
+  <tr><td>改 Nginx 前备份</td><td><code>cp 配置 配置.bak</code></td></tr>
+  <tr><td>校验 Nginx</td><td><code>nginx -t</code></td></tr>
+  <tr><td>平滑重载</td><td><code>systemctl reload nginx</code></td></tr>
+  <tr><td>申请证书</td><td><code>certbot --nginx -d 域名</code></td></tr>
+  <tr><td>续期证书</td><td><code>certbot renew</code></td></tr>
+  <tr><td>看监听端口</td><td><code>ss -tlnp</code></td></tr>
+  <tr><td>校验 sshd</td><td><code>sshd -t</code></td></tr>
+  <tr><td>重启 ssh</td><td><code>systemctl restart ssh</code></td></tr>
+</table>
+
+<h2 id="appendix-b">附录 B：名词表 Glossary</h2>
+<table>
+  <tr><th>名词</th><th>一句话</th></tr>
+  <tr><td>服务器 / ECS</td><td>24h 开机的云电脑，跑你的网站</td></tr>
+  <tr><td>域名 / IP / 端口</td><td>门牌号 / 好记别名 / 楼内房间号</td></tr>
+  <tr><td>HTTP / HTTPS</td><td>网页协议 / 加密版（微信强要求）</td></tr>
+  <tr><td>WebSocket</td><td>建立后持续双向通信（实时游戏用）</td></tr>
+  <tr><td>反向代理</td><td>前台，按路径把外部请求转给内部服务</td></tr>
+  <tr><td>Nginx</td><td>做反代/静态托管/SSL 终止的高性能软件</td></tr>
+  <tr><td>PM2</td><td>Node 进程保姆（自启/重启/日志）</td></tr>
+  <tr><td>Bun / Node</td><td>JavaScript 运行环境</td></tr>
+  <tr><td>127.0.0.1</td><td>本机回环，只接受内部连接（隐藏端口）</td></tr>
+  <tr><td>端侧权威</td><td>运算放玩家设备，服务器只中转</td></tr>
+  <tr><td>SPA</td><td>单页应用，靠前端路由，需 try_files 回退</td></tr>
+  <tr><td>安全组</td><td>云防火墙，决定哪些端口对外</td></tr>
+  <tr><td>SSH</td><td>远程控制服务器的命令行通道</td></tr>
+  <tr><td>VNC 控制台</td><td>云厂商提供的"网页紧急通道"，SSH 挂了用它</td></tr>
+  <tr><td>UseDNS</td><td>sshd 连接时反向查域名的开关，建议关</td></tr>
+  <tr><td>certbot</td><td>免费 HTTPS 证书工具</td></tr>
+</table>
+
+<h2 id="appendix-c">附录 C：从零到上线 Checklist</h2>
+<ol>
+  <li>☐ 买云服务器（Ubuntu），拿到公网 IP</li>
+  <li>☐ 设 root 密码 / 上传 SSH 公钥</li>
+  <li>☐ 买域名，加 A 记录指向 IP</li>
+  <li>☐ 安全组只开放 22/80/443</li>
+  <li>☐ <code>ssh root@IP</code> 登录成功</li>
+  <li>☐ 装 Bun、PM2、Nginx（见 5.2）</li>
+  <li>☐ 本地 <code>build</code> 产物</li>
+  <li>☐ <code>scp</code> 上传到 <code>/opt/项目</code></li>
+  <li>☐ 服务器 <code>npm install</code> + <code>pm2 start</code> + <code>pm2 save</code></li>
+  <li>☐ 写 Nginx 反代配置（子路径 / WebSocket 透传）</li>
+  <li>☐ <code>nginx -t</code> 通过 → <code>systemctl reload nginx</code></li>
+  <li>☐ <code>certbot --nginx -d 域名</code> 拿到 HTTPS</li>
+  <li>☐ 浏览器打开域名，真机联机测试</li>
+  <li>☐ （安全）确认 <code>UseDNS no</code>、必要时密钥替代密码</li>
+  <li>☐ 设置 <code>certbot renew</code> 定时任务</li>
+</ol>
+
+<h2 id="appendix-d">附录 D：故障排查流程图</h2>
+<div class="diagram">用户打不开网站 / 部署失败
+        │
+        ▼
+┌──────────────────────┐
+│ 1. 网站打不开？        │
+│    ping 域名/IP 通吗？ │
+└──┬───────────────┬───┘
+   │通            │不通
+   ▼              ▼
+后端进程起了？   检查 DNS 解析 / 安全组是否放行 80/443
+(pm2 list / ss)       
+   │             
+   ▼             
+Nginx 配对了吗？   看 nginx -t、location 路径、proxy_pass 斜杠
+   │
+   ▼
+WebSocket 断？     检查 Upgrade/Connection 头、proxy_read_timeout
+   │
+   ▼
+SSH 连不上？  ──► 用云厂商 VNC 控制台进
+   │               │
+   │               ▼
+   │           sshd -t 校验 → 查 UseDNS/密码/端口 → systemctl restart ssh
+   ▼
+pm2 崩了？     pm2 logs 看报错 → 修代码 → pm2 restart</div>
+
+<hr>
+<p style="color:var(--muted);font-size:13px">本手册内容均来自项目真实代码与服务器配置（域名 wy2398.icu，已在生产环境验证）。讲解时建议结合"架构图 + 一段真实代码 + 一个踩坑故事"三件套，比纯背概念更有说服力。</p>
+
+</main>
+</div>
+<script>
+(function(){
+  var nav=document.querySelector('nav');
+  var tg=document.getElementById('navToggle');
+  if(tg){
+    tg.addEventListener('click',function(){
+      var open=nav.classList.toggle('open');
+      tg.firstChild.nodeValue=(open?'✕ 收起目录 ':'☰ 目录 ');
+    });
+  }
+  var links=Array.prototype.slice.call(document.querySelectorAll('nav a[href^="#"]'));
+  var map={};
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1);if(id)map[id]=a;});
+  function setActive(id){
+    links.forEach(function(a){a.classList.remove('active');});
+    if(map[id])map[id].classList.add('active');
+  }
+  var sections=Object.keys(map).map(function(id){return document.getElementById(id);}).filter(Boolean);
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting) setActive(e.target.id); });
+    },{rootMargin:'-15% 0px -70% 0px',threshold:0});
+    sections.forEach(function(s){io.observe(s);});
+  } else {
+    window.addEventListener('scroll',function(){
+      var pos=window.scrollY+window.innerHeight*0.3, cur=null;
+      sections.forEach(function(s){ if(s.offsetTop<=pos) cur=s.id; });
+      if(cur) setActive(cur);
+    });
+  }
+  links.forEach(function(a){a.addEventListener('click',function(){
+    if(window.innerWidth<=900 && nav.classList.contains('open')){
+      nav.classList.remove('open'); tg.firstChild.nodeValue='☰ 目录 ';
+    }
+  });});
+  if(sections.length){ setActive(sections[0].id); }
+})();
+</script>
+</body>
+</html>

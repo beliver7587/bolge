@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG 检索增强生成 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">RAG<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么需要它</a>
+  <a href="#s3">3. RAG 四步</a>
+  <a href="#s4">4. 分块与混合检索</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>RAG 检索增强生成</h1>
+  <p class="tsub">让 AI“开卷考试”而不是“闭卷” —— 解决幻觉与知识截止。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>RAG = Retrieval-Augmented Generation（检索增强生成）</strong>。一句话：在让大模型回答前，先去“资料库”里翻出最相关的几段，贴到问题旁边，再让模型基于这些资料作答并标注出处。相当于让 AI 开卷考试。</p>
+
+  <h2 id="s2">2. 为什么需要它</h2>
+  <table>
+    <tr><th>闭卷（纯大模型）</th><th>开卷（RAG）</th></tr>
+    <tr><td>只靠记忆答，遇公司规定/最新政策就瞎编（幻觉）</td><td>现查现答，有据可依</td></tr>
+    <tr><td>不知道你公司的内部信息</td><td>你给什么资料它就懂什么</td></tr>
+    <tr><td>答案不可溯源</td><td>带 [1][2] 引用，可查出处</td></tr>
+  </table>
+
+  <h2 id="s3">3. RAG 四步</h2>
+  <div class="diagram">用户提问
+ → ① 把问题向量化（见 Embedding）
+ → ② 在知识库找语义最相近的片段（向量检索）
+ → ③ 把“问题 + 检索片段”拼成提示词
+ → ④ 模型基于片段生成答案，标注出处</div>
+
+  <h2 id="s4">4. 分块与混合检索</h2>
+  <ul>
+    <li><b>分块</b>：文档太大先切小块（如 180 字）去检索，命中小块再返回所属大块（700 字）给模型读，叫 Small-to-Big。</li>
+    <li><b>混合检索</b>：向量（懂语义）+ <a href="bm25.html">BM25</a>（精确词）两路召回，用 <a href="rrf.html">RRF</a> 融合，取长补短。</li>
+  </ul>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把整本文档塞进提示词，成本和噪声爆炸——要“精准召回 Top-5”。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>检索到的资料被投毒（含恶意指令），要加 <a href="promptinject.html">提示注入防护</a>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>向量接口挂了就 500——做好降级到 BM25（Memora 实测）。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

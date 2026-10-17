@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>向量检索 / Embedding · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">向量检索 / Embedding<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 向量怎么来</a>
+  <a href="#s3">3. 相似度检索</a>
+  <a href="#s4">4. 存储与计算</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>向量检索 / Embedding</h1>
+  <p class="tsub">把文字变成数字向量、按语义距离找相似 —— RAG 召回的灵魂。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Embedding（向量化）</strong>是把一段文字变成一串固定长度数字（如 1024 维）的技术。<b>关键性质：语义越接近的文字，向量在空间里距离越近</b>。于是“手机充不进电”和“iPhone 无法充电”会离得很近——这就是“懂语义”的检索。</p>
+
+  <h2 id="s2">2. 向量怎么来</h2>
+  <p>调用“嵌入模型”（如 bge-m3）把文本转成向量：</p>
+  <pre><code>// 伪代码：用嵌入模型把问题向量化
+const qVec = await embed("怎么重置密码");   // 得到 [0.12, -0.3, ...] 共 1024 个数</code></pre>
+  <div class="box ok"><span class="bt">例子：</span>Memora 用 <code>bge-m3</code> 生成 1024 维向量；知识库每段文字都预先向量化存好。</div>
+
+  <h2 id="s3">3. 相似度检索</h2>
+  <p>把用户问题也向量化，算它和库里每段的“距离”（常用余弦相似度），距离越小越相关，取 Top-K：</p>
+  <pre><code>function cosine(a, b){
+  let dot=0,na=0,nb=0;
+  for(let i=0;i&lt;a.length;i++){ dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
+  return dot/(Math.sqrt(na)*Math.sqrt(nb));   // 1 最相似，-1 最不相似
+}</code></pre>
+
+  <h2 id="s4">4. 存储与计算</h2>
+  <table>
+    <tr><th>规模</th><th>方案</th></tr>
+    <tr><td>千级（Memora 现状）</td><td>向量存 SQLite BLOB，内存算余弦，无需向量库</td></tr>
+    <tr><td>百万级</td><td>专用向量库：Qdrant / pgvector / Milvus</td></tr>
+  </table>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>查询和入库必须用<b>同一个嵌入模型</b>，否则向量不可比。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>向量接口限流/故障要降级（Memora 自动降到只用 <a href="bm25.html">BM25</a>）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>纯向量对“订单号/型号”等精确词不敏感，要和 BM25 混合（见 <a href="rrf.html">RRF</a>）。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

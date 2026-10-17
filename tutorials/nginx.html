@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nginx 反向代理 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Nginx<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 正向 vs 反向</a>
+  <a href="#s3">3. 子路径反代</a>
+  <a href="#s4">4. WebSocket 透传</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Nginx 反向代理</h1>
+  <p class="tsub">网站的“前台” —— 统一收口、HTTPS 终止、WebSocket 透传，三个项目都用它。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Nginx 是高性能的 Web 服务器，最常用来做<strong>反向代理</strong>：所有用户只访问 443 端口，Nginx 这个“前台”按 URL 路径把请求分给内部不同服务。三个项目都靠它统一对外。</p>
+
+  <h2 id="s2">2. 正向 vs 反向</h2>
+  <table>
+    <tr><th></th><th>正向代理</th><th>反向代理（本项目用）</th></tr>
+    <tr><td>立场</td><td>帮“客户端”上网（梯子）</td><td>帮“服务器”收口（前台）</td></tr>
+    <tr><td>谁配置</td><td>客户端</td><td>服务端</td></tr>
+  </table>
+
+  <h2 id="s3">3. 子路径反代</h2>
+  <pre><code># 把 /td/ 转发给内部 8095 端口的游戏服务
+location /td/ {
+  proxy_pass http://127.0.0.1:8095/;   # 末尾斜杠：去掉 /td 前缀再转发
+  proxy_set_header Host $host;
+}</code></pre>
+  <div class="box ok"><span class="bt">关键：</span><code>proxy_pass</code> 末尾的斜杠表示“剥掉前缀”，漏写会让后端收到带前缀的路径而 404。</div>
+
+  <h2 id="s4">4. WebSocket 透传</h2>
+  <pre><code>location /socket.io/ {
+  proxy_pass http://127.0.0.1:3000;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;     # ★ 必须
+  proxy_set_header Connection $connection_upgrade;
+  proxy_read_timeout 86400s;                  # 长连接别被掐
+  proxy_buffering off;                        # 实时消息不缓冲
+}</code></pre>
+  <div class="box danger"><span class="bt">两个真实坑：</span>漏掉 Upgrade 头 → 握手失败；<code>proxy_read_timeout</code> 用默认 60s → 玩家挂机就掉线。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>改完配置不校验：先 <code>nginx -t</code> 再 <code>systemctl reload nginx</code>，否则配错全站瘫。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>SSE 流式要 <code>proxy_buffering off</code>（见 <a href="sse.html">SSE</a>）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>后端端口直接暴露公网——只绑 <code>127.0.0.1</code>，外网只走 Nginx。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

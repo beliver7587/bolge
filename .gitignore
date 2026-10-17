@@ -1,0 +1,21 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+.cache/
+
+# 环境变量与密钥（红线：绝不提交）
+.env
+.env.*
+*.local
+
+# 日志
+*.log
+npm-debug.log*
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

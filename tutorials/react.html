@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">React<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 三个核心概念</a>
+  <a href="#s3">3. 第一个例子</a>
+  <a href="#s4">4. Hooks 入门</a>
+  <a href="#s5">5. 常见坑</a>
+  <a href="#s6">6. 小结与上手</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>React</h1>
+  <p class="tsub">用“组件”拼出界面的前端库 —— 简历工坊、网页游戏、Memora 前端都基于 React 生态。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>React 是 Facebook 开源的<strong>前端 JavaScript 库</strong>，用来构建用户界面。它的核心思想是：把页面拆成一个个<strong>可复用的组件</strong>，每个组件管自己的一小块界面和状态，拼起来就是完整应用。</p>
+  <div class="box"><span class="bt">一句话：</span>React 像一个“乐高积木盒”，你用组件（积木）拼出整个网站，数据变了界面自动跟着变。</div>
+
+  <h2 id="s2">2. 三个核心概念</h2>
+  <h3>① 组件（Component）</h3>
+  <p>一个函数，返回一段界面（JSX）。比如一个“按钮”或“卡片”都可以是组件。</p>
+  <h3>② JSX</h3>
+  <p>把 HTML 写进 JS 里的语法糖，看起来像 HTML，其实是 JavaScript。浏览器不认识 JSX，需要 Vite/打包工具编译成 <code>React.createElement(...)</code>。</p>
+  <h3>③ Props 与 State</h3>
+  <ul>
+    <li><b>Props</b>：父组件传给子组件的数据，像函数的入参，<b>只读</b>。</li>
+    <li><b>State</b>：组件自己内部的数据，变了会触发界面重新渲染。</li>
+  </ul>
+
+  <h2 id="s3">3. 第一个例子</h2>
+  <pre><code>import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);   // 声明一个状态 count
+  return (
+    &lt;div&gt;
+      &lt;p&gt;你点了 {count} 次&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+1&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+export default Counter;</code></pre>
+  <div class="box ok"><span class="bt">逐行看：</span><code>useState(0)</code> 给组件一个初始为 0 的状态；点按钮调用 <code>setCount</code> 改值，React 自动重画 <code>{count}</code> 那一行。</div>
+
+  <h2 id="s4">4. Hooks 入门</h2>
+  <p>Hook 是“钩子”，让你在函数组件里用上状态、副作用等能力，最常用的两个：</p>
+  <table>
+    <tr><th>Hook</th><th>作用</th><th>例子</th></tr>
+    <tr><td><code>useState</code></td><td>声明状态</td><td>表单输入、计数器</td></tr>
+    <tr><td><code>useEffect</code></td><td>处理副作用</td><td>请求接口、监听事件</td></tr>
+  </table>
+  <pre><code>useEffect(() =&gt; {
+  fetch('/api/user').then(r =&gt; r.json()).then(setUser);
+}, []);   // 第二个参数 [] 表示“只在挂载时执行一次”</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>直接改 state 不生效：<code>count++</code> 不行，必须用 <code>setCount(count+1)</code>，React 靠“新引用”判断变化。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记加 <code>key</code>：用 <code>map</code> 渲染列表时每个子项要带唯一 <code>key</code>，否则增删会错乱。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>useEffect</code> 依赖没写全会拿到旧值；依赖数组要列出所有用到的外部变量。</div>
+
+  <h2 id="s6">6. 小结与上手</h2>
+  <p>React 本质是“组件 + 数据驱动界面”。下一步建议：用 <code>npm create vite@latest</code> 选 React 模板跑起来，照着改上面的 Counter 例子，再学状态管理 <a href="zustand.html">Zustand</a> 和路由。三个项目的源码里都有大量组件可参考。</p>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+</body></html>

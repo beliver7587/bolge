@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redis · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Redis<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么快</a>
+  <a href="#s3">3. 常用数据结构</a>
+  <a href="#s4">4. 实战用法</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Redis</h1>
+  <p class="tsub">内存键值数据库 —— 用作缓存与会话存储，给后端提速。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Redis 是<strong>把数据放在内存里</strong>的键值数据库，读写极快（微秒级），常用于“缓存”（把慢查询的结果暂存）、“会话存储”、“排行榜”、“限流计数”。它是 <a href="mysql.html">MySQL</a> 的好搭档：热数据放 Redis，冷数据放 MySQL。</p>
+
+  <h2 id="s2">2. 为什么快</h2>
+  <div class="box"><span class="bt">核心：</span>数据在内存 + 单线程事件循环 + 极简协议，所以快；但内存贵、重启可能丢（可配持久化）。</div>
+
+  <h2 id="s3">3. 常用数据结构</h2>
+  <table>
+    <tr><th>类型</th><th>用途</th></tr>
+    <tr><td>String</td><td>缓存值、计数器（<code>INCR</code>）</td></tr>
+    <tr><td>Hash</td><td>存对象（用户信息）</td></tr>
+    <tr><td>List</td><td>队列、最新列表</td></tr>
+    <tr><td>ZSet</td><td>排行榜（带分数排序）</td></tr>
+  </table>
+
+  <h2 id="s4">4. 实战用法</h2>
+  <pre><code># 缓存：先查 Redis，没有再查库并写入
+GET resume:1
+SET resume:1 "{...}" EX 300     # 缓存 5 分钟
+
+# 限流：1 分钟内最多 60 次
+INCR rate:ip:1.2.3.4
+EXPIRE rate:ip:1.2.3.4 60</code></pre>
+  <div class="box ok"><span class="bt">简历工坊用法：</span>把频繁读取的简历/模板缓存起来，减轻 MySQL 压力；登录会话也可放 Redis 实现多端共享。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>键没设过期时间，内存被撑爆——缓存必须带 TTL。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>把 Redis 当主库，重启丢数据——重要数据要持久化(AOF/RDB)或仍落 MySQL。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>大 key（单值过大）会阻塞，注意拆分。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

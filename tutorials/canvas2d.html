@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas 2D · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Canvas 2D<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 画第一笔</a>
+  <a href="#s3">3. 动画循环</a>
+  <a href="#s4">4. 监听输入</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Canvas 2D</h1>
+  <p class="tsub">浏览器原生 2D 绘图 API —— 土豆勇士用它零依赖画游戏画面。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><code>&lt;canvas&gt;</code> 是 HTML 里一块“画布”，配合 2D 绘图上下文（Context），你可以用代码画矩形、圆、文字、图片，甚至做动画。它不依赖任何库，是最轻量的绘图方案。</p>
+  <div class="box"><span class="bt">对比：</span>Canvas 用 CPU 画，适合简单场景；大量精灵/高帧率游戏用 <a href="pixijs.html">PixiJS(WebGL)</a> 更好。</div>
+
+  <h2 id="s2">2. 画第一笔</h2>
+  <pre><code>&lt;canvas id="cv" width="400" height="300"&gt;&lt;/canvas&gt;
+&lt;script&gt;
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');        // 拿到画笔
+  ctx.fillStyle = '#5b8cff';              // 颜色
+  ctx.fillRect(50, 50, 120, 80);          // 画一个矩形 (x,y,宽,高)
+  ctx.beginPath();
+  ctx.arc(250, 100, 40, 0, Math.PI*2);    // 画个圆
+  ctx.fill();
+&lt;/script&gt;</code></pre>
+
+  <h2 id="s3">3. 动画循环</h2>
+  <p>每帧清屏→重画，就成动画。用 <code>requestAnimationFrame</code> 跟随屏幕刷新：</p>
+  <pre><code>let x = 0;
+function loop(){
+  ctx.clearRect(0,0,400,300);     // 先清屏
+  ctx.fillRect(x, 100, 30, 30);   // 画方块
+  x = (x + 2) % 400;              // 移动
+  requestAnimationFrame(loop);     // 下一帧继续
+}
+loop();</code></pre>
+
+  <h2 id="s4">4. 监听输入</h2>
+  <pre><code>canvas.addEventListener('mousemove', e =&gt; {
+  const r = canvas.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;  // 画布内坐标
+});</code></pre>
+  <div class="box ok"><span class="bt">手机端：</span>把 <code>mousemove</code> 换成 <code>touchmove</code>，用 <code>e.touches[0].clientX</code> 取手指坐标（土豆勇士的摇杆就是这么做的）。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>canvas 的 <code>width/height</code> 是“画布像素”，CSS 的宽高是“显示大小”，二者不一致会模糊——建议用 JS 按 DPR 设置。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>clearRect</code>，旧画面会叠加成一团。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>频繁创建对象（如每帧 new Image）会 GC 卡顿，图片要预加载复用。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ant Design · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Ant Design<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 安装与引入</a>
+  <a href="#s3">3. 常用组件</a>
+  <a href="#s4">4. 表单实战</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Ant Design</h1>
+  <p class="tsub">蚂蚁出品的企业级 React 组件库 —— 简历工坊的表单、弹窗、表格都靠它。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Ant Design（简称 antd）是一套<strong>开箱即用的 React UI 组件库</strong>：按钮、表单、表格、弹窗、日期选择器等几百个精心设计的组件。你不用自己写样式，直接像搭积木一样拼出专业后台界面。它背后是“设计语言”，保证整站风格统一。</p>
+
+  <h2 id="s2">2. 安装与引入</h2>
+  <pre><code>npm install antd
+// 在组件里直接用
+import { Button, Form, Input } from 'antd';</code></pre>
+  <div class="box ok"><span class="bt">提示：</span>antd v5 用 CSS-in-JS，<b>不需要</b>再手动引 CSS 文件，引入组件即可。</div>
+
+  <h2 id="s3">3. 常用组件</h2>
+  <table>
+    <tr><th>组件</th><th>用途</th></tr>
+    <tr><td><code>Button</code></td><td>按钮（type 控制主/次/危险）</td></tr>
+    <tr><td><code>Form / Input</code></td><td>表单与输入框，自带校验</td></tr>
+    <tr><td><code>Table</code></td><td>数据表格，支持分页/排序</td></tr>
+    <tr><td><code>Modal</code></td><td>弹窗</td></tr>
+    <tr><td><code>message</code></td><td>顶部轻提示（成功/失败）</td></tr>
+  </table>
+
+  <h2 id="s4">4. 表单实战</h2>
+  <pre><code>import { Form, Input, Button, message } from 'antd';
+
+function LoginForm(){
+  const [form] = Form.useForm();
+  const onFinish = (v) =&gt; { message.success('提交：' + v.username); };
+  return (
+    &lt;Form form={form} onFinish={onFinish}&gt;
+      &lt;Form.Item name="username" rules={[{ required:true, message:'必填' }]}&gt;
+        &lt;Input placeholder="用户名" /&gt;
+      &lt;/Form.Item&gt;
+      &lt;Button type="primary" htmlType="submit"&gt;登录&lt;/Button&gt;
+    &lt;/Form&gt;
+  );
+}</code></pre>
+  <div class="box"><span class="bt">亮点：</span><code>rules</code> 自带校验，<code>onFinish</code> 拿到已校验的数据，省去手写验证逻辑。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>v4 到 v5 变化大，教程若引用 <code>import 'antd/dist/antd.css'</code> 在 v5 会报错——v5 不需要。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>自定义主题用 <code>ConfigProvider</code>，别去改 node_modules。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>表单默认值用 <code>initialValues</code> 或 <code>form.setFieldsValue</code>，直接改 state 不一定生效。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

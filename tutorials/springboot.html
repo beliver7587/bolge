@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spring Boot · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Spring Boot<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么用它</a>
+  <a href="#s3">3. 第一个接口</a>
+  <a href="#s4">4. 分层结构</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Spring Boot</h1>
+  <p class="tsub">Java 后端一站式框架 —— 简历工坊后端用它搭 REST 服务。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Spring Boot 是基于 Spring 的<strong>Java 后端框架</strong>，核心口号是“约定优于配置”：你不用写一堆 XML 和繁琐配置，它帮你把常用组件（Web、数据库、安全）自动装配好，几行代码就能起一个可运行的后端服务。</p>
+
+  <h2 id="s2">2. 为什么用它</h2>
+  <table>
+    <tr><th>能力</th><th>说明</th></tr>
+    <tr><td>内嵌服务器</td><td>自带 Tomcat，<code>java -jar</code> 直接跑，不用另装</td></tr>
+    <tr><td>自动配置</td><td>引入依赖即自动装配，极大减少样板</td></tr>
+    <tr><td>生态完整</td><td>安全、数据库、缓存、消息全家桶</td></tr>
+  </table>
+
+  <h2 id="s3">3. 第一个接口</h2>
+  <pre><code>@RestController
+@RequestMapping("/api/user")
+public class UserController {
+  @GetMapping("/{id}")                  // GET /api/user/1
+  public String get(@PathVariable Long id){
+    return "用户" + id;
+  }
+}</code></pre>
+  <div class="box ok"><span class="bt">注解是关键：</span><code>@RestController</code> 声明这是个接口类；<code>@GetMapping</code> 把方法映射到某个 URL；Spring 自动把返回值转成 JSON。</div>
+
+  <h2 id="s4">4. 分层结构</h2>
+  <div class="diagram">Controller（接收请求）
+   → Service（业务逻辑）
+   → Mapper / Repository（操作数据库，见 MyBatis-Plus）
+   → Entity（数据模型）</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>端口冲突：默认 8080，被占就在 <code>application.yml</code> 改 <code>server.port</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>依赖版本不匹配（JDK 与 Spring Boot 版本要对应），IDE 报一堆错。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>跨域：前端不同源访问接口要加 <code>@CrossOrigin</code> 或全局 CORS 配置。</div>
+  <div class="box"><span class="bt">搭配：</span>数据库访问看 <a href="mybatisplus.html">MyBatis-Plus</a>，部署看 <a href="systemd.html">systemd</a> / <a href="nginx.html">Nginx</a>。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

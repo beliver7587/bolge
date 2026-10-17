@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vite · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Vite<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么快</a>
+  <a href="#s3">3. 创建项目</a>
+  <a href="#s4">4. 开发与打包</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Vite</h1>
+  <p class="tsub">秒级启动的前端构建工具 —— 三个项目都用它跑开发服务器和打包产物。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Vite（法语“快”）是一个<strong>前端构建工具 + 开发服务器</strong>。它有两件事：① 开发时给你一个带“热更新”的本地服务器（改代码秒级刷新）；② 上线时把 TS/React 等源码编译、压缩成浏览器能直接跑的静态文件。</p>
+
+  <h2 id="s2">2. 为什么快</h2>
+  <table>
+    <tr><th>老工具(Webpack)</th><th>Vite</th></tr>
+    <tr><td>启动要先打包整个项目，慢</td><td>用浏览器原生 ESM，按需编译，秒启</td></tr>
+    <tr><td>改一处重打包</td><td>改一处只更新那个模块（HMR）</td></tr>
+  </table>
+
+  <h2 id="s3">3. 创建项目</h2>
+  <pre><code>npm create vite@latest my-app -- --template react-ts
+cd my-app &amp;&amp; npm install</code></pre>
+
+  <h2 id="s4">4. 开发与打包</h2>
+  <pre><code>npm run dev      # 开发：http://localhost:5173 ，改代码自动刷新
+npm run build    # 打包：产物输出到 dist/ ，可直接丢给 Nginx
+npm run preview  # 本地预览打包后的效果</code></pre>
+  <div class="box ok"><span class="bt">部署关键：</span><code>dist/</code> 里是一堆 <code>.html/.js/.css</code>，传到服务器用 Nginx 托管即可（见 <a href="nginx.html">Nginx</a> 教程）。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>打包后路径 404？在 <code>vite.config</code> 设 <code>base: '/子路径/'</code>（子路径部署必看）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>用了旧浏览器，要配 <code>@vitejs/plugin-legacy</code> 做兼容。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>环境变量必须以 <code>VITE_</code> 开头才会被打进前端代码。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Function Calling · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Function Calling<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 给模型工具说明书</a>
+  <a href="#s3">3. 执行流程</a>
+  <a href="#s4">4. Memora 的工具</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Function Calling 工具调用</h1>
+  <p class="tsub">把“工具说明书”交给模型 —— 让它自己决定调哪个、传什么参数。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>模型本身不会查数据库、不会算账、不会发消息。我们给它一份<strong>“工具说明书”</strong>（每个工具叫什么、要什么参数、返回什么），模型在需要时自己决定：调哪个工具、填什么参数。这就是 <strong>Function Calling</strong>。它让 AI 从“只会说”变成“还会做”。</p>
+
+  <h2 id="s2">2. 给模型工具说明书</h2>
+  <pre><code>const tools = [{
+  name: 'query_order',
+  description: '查询用户订单状态与物流',
+  parameters: {
+    type:'object',
+    properties:{ orderId:{ type:'string', description:'订单号' } },
+    required:['orderId']
+  }
+}];</code></pre>
+
+  <h2 id="s3">3. 执行流程</h2>
+  <div class="diagram">用户：“我的订单 A10086 到哪了？”
+ → 模型识别要查订单，返回调用 {tool:'query_order', args:{orderId:'A10086'}}
+ → 你的代码执行该工具，拿到结果
+ → 把结果回传模型 → 模型组织成自然语言回答</div>
+
+  <h2 id="s4">4. Memora 的工具</h2>
+  <table>
+    <tr><th>工具</th><th>作用</th></tr>
+    <tr><td><code>search_knowledge</code></td><td>主动检索公司知识库</td></tr>
+    <tr><td><code>search_memory</code></td><td>检索该用户长期记忆</td></tr>
+    <tr><td><code>query_order</code></td><td>查订单状态/物流</td></tr>
+    <tr><td><code>create_ticket</code></td><td>建售后工单</td></tr>
+    <tr><td><code>escalate_human</code></td><td>转人工</td></tr>
+  </table>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>工具描述写不清，模型乱传参——description 要写“何时用、参数含义”。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>工具执行失败直接抛错让链崩——要捕获并回传结构化错误，让模型自我纠正。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>暴露危险工具（如删库）给模型——要加权限与确认。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

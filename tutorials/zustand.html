@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zustand · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Zustand<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么不用 Redux</a>
+  <a href="#s3">3. 创建 Store</a>
+  <a href="#s4">4. 在组件里用</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Zustand</h1>
+  <p class="tsub">极简的 React 状态管理库 —— 三个项目都用它管全局状态。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>当多个组件要共享同一份数据（比如“当前登录用户”“购物车”），就需要“状态管理”。<strong>Zustand</strong>（德语“状态”）是一个极轻量的方案：一个 <code>store</code> 存全局状态，任何组件直接读、直接改，没有 Provider 包裹、没有样板代码。</p>
+
+  <h2 id="s2">2. 为什么不用 Redux</h2>
+  <div class="box"><span class="bt">对比：</span>Redux 要写 action、reducer、dispatch，样板代码多；Zustand 一个 <code>create</code> 搞定，心智负担小，中小项目首选。</div>
+
+  <h2 id="s3">3. 创建 Store</h2>
+  <pre><code>import { create } from 'zustand';
+
+const useStore = create((set) =&gt; ({
+  count: 0,
+  user: null,
+  inc: () =&gt; set((s) =&gt; ({ count: s.count + 1 })),
+  setUser: (u) =&gt; set({ user: u }),
+}));</code></pre>
+  <div class="box ok"><span class="bt">要点：</span><code>set</code> 用来更新状态；函数（如 <code>inc</code>）也定义在 store 里，组件调用即可。</div>
+
+  <h2 id="s4">4. 在组件里用</h2>
+  <pre><code>function Counter(){
+  const count = useStore(s =&gt; s.count);   // 只订阅 count
+  const inc = useStore(s =&gt; s.inc);
+  return &lt;button onClick={inc}&gt;{count}&lt;/button&gt;;
+}</code></pre>
+  <div class="box ok"><span class="bt">性能技巧：</span>用选择器 <code>s =&gt; s.count</code> 只取需要的字段，其它字段变了不会触发本组件重渲染。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把整个 store 解构成对象 <code>const {count} = useStore()</code> 会让组件在“任何状态变化”时都重渲染——记得用选择器。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>异步数据：在 action 里 <code>await</code> 后再 <code>set</code>，不要直接返回 Promise 当状态。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>SSR（Next.js）要注意 store 是全局单例，可能跨请求串数据——可用 <code>createStore</code> 每请求新建。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

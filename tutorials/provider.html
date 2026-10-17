@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>供应商抽象 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">供应商抽象<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么抽象</a>
+  <a href="#s3">3. 配置示例</a>
+  <a href="#s4">4. 代码形态</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>供应商抽象</h1>
+  <p class="tsub">把“用哪家风模型”做成配置 —— 换供应商只改 .env，业务代码零改动。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>我们一般不自己训练模型，而是<strong>调用别人家的大模型 API</strong>（智谱、OpenAI、SiliconFlow…），按量付费。调用要带 API Key（像门票）。<strong>供应商抽象</strong>就是把“到底用哪家模型”做成可配置项，业务代码通过一个统一接口调用，换家供应商只改配置、不碰代码。</p>
+
+  <h2 id="s2">2. 为什么抽象</h2>
+  <div class="box ok"><span class="bt">价值：</span>各家 API 格式不一、价格与稳定性波动。抽象后，今天用智谱、明天换 SiliconFlow 的 Qwen，只改 <code>.env</code> 几行，检索与编排层完全不动——避免被单一供应商绑定。</div>
+
+  <h2 id="s3">3. 配置示例</h2>
+  <pre><code># .env —— 设计写智谱，线上实际跑 Qwen
+AI_PROVIDER=zhipu
+ZHIPU_BASE_URL=https://api.siliconflow.cn/v1
+ZHIPU_MODEL=Qwen/Qwen2.5-7B-Instruct
+ZHIPU_EMBED_MODEL=BAAI/bge-m3
+EMBED_DIM=1024</code></pre>
+
+  <h2 id="s4">4. 代码形态</h2>
+  <pre><code>// 统一入口，内部按 AI_PROVIDER 选择具体实现
+const llm = createLLM(process.env.AI_PROVIDER);
+const ans = await llm.chat(messages);</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把 Key 写死在代码里提交到 Git——务必走环境变量（Memora 的红线）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>各家模型能力/价格不同，切换后不回归测试就上生产。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>只抽象对话不抽象嵌入，换家还得改向量代码——两层都要抽。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>四层记忆 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">四层记忆<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 四层分别</a>
+  <a href="#s3">3. 写入与检索</a>
+  <a href="#s4">4. 隐私隔离</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>四层记忆</h1>
+  <p class="tsub">让 AI 跨会话记得你 —— 会话/情景/语义/程序四层记忆的设计与实现。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>普通聊天机器人每刷新一次就变回陌生人。<strong>长期记忆</strong>让 AI 跨多次会话都记得你。Memora 把记忆拆成四层，分层管理、按需检索，是它“有记忆”的核心。</p>
+
+  <h2 id="s2">2. 四层分别</h2>
+  <table>
+    <tr><th>层</th><th>载体</th><th>说明</th></tr>
+    <tr><td>会话记忆</td><td>本次对话记录</td><td>短期，当前会话的完整问答</td></tr>
+    <tr><td>情景记忆</td><td>事件摘要</td><td>从对话总结的“事件”（如“上周投诉过物流”）</td></tr>
+    <tr><td>语义记忆</td><td>事实/画像</td><td>抽取的“事实”（如“VIP3、在深圳”）</td></tr>
+    <tr><td>程序记忆</td><td>规则话术</td><td>固定行为规则，可后台增删改</td></tr>
+  </table>
+
+  <h2 id="s3">3. 写入与检索</h2>
+  <p>每轮对话后<strong>异步</strong>抽取事实写入语义记忆（不阻塞首字响应）；检索时按“相似度 × 时间衰减 + 关键词”排序，越久远的记忆权重越低。</p>
+  <pre><code>const decay = Math.pow(0.5, ageDays/30);        // 半衰期 30 天
+const score = sim*(0.7+0.3*decay) + 0.15*kw;    // 越久越淡</code></pre>
+
+  <h2 id="s4">4. 隐私隔离</h2>
+  <div class="box ok"><span class="bt">铁律：</span>记忆与知识<strong>物理分表、检索路径完全分开</strong>，杜绝用户 A 的隐私被知识检索命中；所有记忆查询强制带 <code>user_id</code>，隔离下沉到 SQL 层。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>记忆写入阻塞主响应导致慢——务必异步（setImmediate/Worker）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>冲突不处理——“我换工作了”会被当成矛盾；应标记旧事实失效而非删除。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>忘记按 user_id 隔离，串号泄露隐私。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

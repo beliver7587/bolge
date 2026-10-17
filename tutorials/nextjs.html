@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next.js · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Next.js<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么用它</a>
+  <a href="#s3">3. App Router 路由</a>
+  <a href="#s4">4. 服务端组件 vs 客户端组件</a>
+  <a href="#s5">5. 第一个页面</a>
+  <a href="#s6">6. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Next.js</h1>
+  <p class="tsub">基于 React 的“全栈”框架 —— 简历工坊前端用它做服务端渲染与文件路由。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>Next.js 是 Vercel 出品、构建在 React 之上的<strong>全栈框架</strong>。普通 React 只是“前端库”，而 Next.js 额外给了你：<b>文件路由</b>、<b>服务端渲染(SSR)</b>、<b>API 路由</b>（能写后端）、<b>打包优化</b>。一句话：React 负责“画”，Next.js 负责“怎么组织、怎么上线”。</p>
+
+  <h2 id="s2">2. 为什么用它</h2>
+  <table>
+    <tr><th>能力</th><th>好处</th></tr>
+    <tr><td>SSR / SSG</td><td>页面先在服务器渲染好 HTML，首屏快、对 SEO 友好（简历被搜索引擎收录）</td></tr>
+    <tr><td>文件路由</td><td><code>app/about/page.tsx</code> 自动变成 <code>/about</code>，不用手写路由表</td></tr>
+    <tr><td>API 路由</td><td>在 <code>app/api/...</code> 写接口，前后端一个项目搞定</td></tr>
+    <tr><td>内置优化</td><td>图片、字体、代码分割开箱即用</td></tr>
+  </table>
+
+  <h2 id="s3">3. App Router 路由</h2>
+  <p>Next.js 14 推荐用 <code>app/</code> 目录组织页面，路径即路由：</p>
+  <pre><code>app/
+├── layout.tsx        # 所有页面的公共外壳（导航/页脚）
+├── page.tsx          # 对应网站根路径 /
+├── resume/
+│   └── page.tsx      # 对应 /resume
+└── api/
+    └── user/route.ts # 对应接口 /api/user</code></pre>
+
+  <h2 id="s4">4. 服务端组件 vs 客户端组件</h2>
+  <div class="box"><span class="bt">关键：</span>默认组件是“服务端组件”，能直接读数据库、不发到浏览器；需要点击事件/状态时要加 <code>'use client'</code> 变成“客户端组件”。</div>
+  <pre><code>// 服务端组件：直接在服务器取数据
+export default async function Page() {
+  const data = await db.query('SELECT * FROM resume');
+  return &lt;List items={data} /&gt;;
+}
+
+// 客户端组件：有交互
+'use client';
+function Btn(){ const [n,setN]=useState(0); return &lt;button onClick={()=&gt;setN(n+1)}&gt;{n}&lt;/button&gt;; }</code></pre>
+
+  <h2 id="s5">5. 第一个页面</h2>
+  <pre><code>npm create next-app@latest my-site   # 选 TypeScript + App Router
+cd my-site &amp;&amp; npm run dev            # 打开 http://localhost:3000</code></pre>
+  <p>改 <code>app/page.tsx</code> 里的内容，刷新浏览器即可看到变化。</p>
+
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>在“服务端组件”里用了 <code>onClick</code> 等浏览器事件会报错——记得加 <code>'use client'</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>环境变量：<code>NEXT_PUBLIC_</code> 前缀的才暴露给浏览器，其余只服务器可见。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>改了 <code>next.config</code> 要重启 dev 服务才生效。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

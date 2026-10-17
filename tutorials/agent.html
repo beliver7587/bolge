@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent 智能体 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Agent 智能体<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 思考循环</a>
+  <a href="#s3">3. 与工具配合</a>
+  <a href="#s4">4. 防止死循环</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Agent 智能体</h1>
+  <p class="tsub">会“思考→行动→观察”的 AI —— 自主调用工具完成多步任务。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>普通聊天是“一问一答”；<strong>Agent（智能体）</strong>是给大模型配上“手脚”（工具）和“循环”：它能自己规划、连续调用多个工具、根据中间结果调整策略，直到把任务做完。比如“帮我查订单并建工单”这种多步活，Agent 能一气呵成。</p>
+
+  <h2 id="s2">2. 思考循环</h2>
+  <div class="diagram">想：用户要啥？该调哪个工具？
+ → 做：执行工具（查知识/查订单/建工单）
+ → 看：拿到工具返回
+ → 再想：够了吗？不够继续调
+ → 收口：生成最终回答</div>
+
+  <h2 id="s3">3. 与工具配合</h2>
+  <p>Agent 通过 <a href="functioncalling.html">Function Calling</a> 决定调哪个工具、传什么参数。Memora 把这条链路做成“8 个节点”的可视化编排：意图路由→记忆→知识→工具→生成。</p>
+
+  <h2 id="s4">4. 防止死循环</h2>
+  <div class="box warn"><span class="bt">关键：</span>必须设“迭代上限”（如最多 5 轮）。到上限强制收回工具让模型收口，否则可能无限调用掏空 token。</div>
+  <pre><code>for(let i=0; i&lt;maxIter; i++){
+  const decision = await callLLMWithTools();
+  if(!decision.tool_calls?.length){ answer=decision.content; break; }
+  // 执行工具、把结果回传模型，进入下一轮
+}</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>没设迭代上限 → 死循环烧钱。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>工具报错直接整条链崩——要把异常转成结构化错误回传模型，让它自我纠正。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>工具太多模型选错——用意图路由先收窄范围（见 Memora 手册）。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

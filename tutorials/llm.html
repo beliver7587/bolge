@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型 LLM · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">大模型 LLM<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. Token 与计费</a>
+  <a href="#s3">3. 三种角色</a>
+  <a href="#s4">4. 幻觉与截止</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>大模型 LLM</h1>
+  <p class="tsub">“超级自动补全” —— 读懂语言规律生成文本，是一切 AI 能力的起点。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>大语言模型（LLM）本质上是一个<strong>“超级自动补全”</strong>：给它前半句，它根据海量文本训练出的统计规律，预测“下一个最可能出现的字/词”，一个一个往外吐，连成回答。它不是搜索引擎（不会现查），而是“凭记忆生成”——所以会记错、会编造。</p>
+
+  <h2 id="s2">2. Token 与计费</h2>
+  <p>模型不吃原始汉字，而是先切成 <strong>token</strong>（中文通常 1~2 字一个 token）。成本 = 输入 token + 输出 token。一次对话成本随上下文增长——这正是要做“精准检索只取 5 段”（<a href="rag.html">RAG</a>）的原因。</p>
+  <pre><code>// 调用（以 OpenAI 风格为例）
+const res = await client.chat.completions.create({
+  model:'gpt-4o-mini',
+  messages:[{role:'user', content:'你好'}]
+});</code></pre>
+
+  <h2 id="s3">3. 三种角色</h2>
+  <table>
+    <tr><th>角色</th><th>谁说</th><th>作用</th></tr>
+    <tr><td>system</td><td>开发者</td><td>人设、规则、底线</td></tr>
+    <tr><td>user</td><td>用户</td><td>真正的问题</td></tr>
+    <tr><td>assistant</td><td>模型</td><td>上一轮回答（多轮延续）</td></tr>
+  </table>
+
+  <h2 id="s4">4. 幻觉与截止</h4>
+  <ul>
+    <li><b>幻觉</b>：一本正经编错误内容（本质是“猜下一个字”）。</li>
+    <li><b>知识截止</b>：只知训练时见过的，新事/公司内部规定一概不知。</li>
+  </ul>
+  <div class="box ok"><span class="bt">解法：</span>用 <a href="rag.html">RAG</a> 外挂知识库现查现用，而非微调。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把密钥写死在前端代码——必须走后端 + 环境变量（见 <a href="provider.html">供应商抽象</a>）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>上下文过长烧钱且变傻——做摘要/检索截断。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>轻信输出当事实——关键场景要核实与引用。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

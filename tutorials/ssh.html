@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSH / 服务器部署 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">SSH / 部署<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 买机与登录</a>
+  <a href="#s3">3. 上传文件</a>
+  <a href="#s4">4. 完整链路</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>SSH / 服务器部署</h1>
+  <p class="tsub">从买云服务器到上线 —— 把代码跑在 24h 开机的云电脑上。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>SSH（Secure Shell）</strong>是你远程控制服务器的命令行通道——部署、看日志、改配置全靠它。所谓“部署上线”，就是把本地写好的代码传到云服务器、启动服务、用 <a href="nginx.html">Nginx</a> 对外暴露。</p>
+
+  <h2 id="s2">2. 买机与登录</h2>
+  <p>选一家云厂商开一台 Ubuntu 的云服务器（本项目用 2 核 2G），拿到公网 IP。登录：</p>
+  <pre><code>ssh ubuntu@服务器IP      # 输入密码；推荐改用密钥登录更安全</code></pre>
+  <div class="box"><span class="bt">名词：</span>IP=门牌号，域名=好记别名，端口=楼内房间号（22=SSH，80=HTTP，443=HTTPS）。</div>
+
+  <h2 id="s3">3. 上传文件</h2>
+  <pre><code>scp -r ./dist ubuntu@IP:/home/ubuntu/app    # 安全拷贝（基于 SSH）</code></pre>
+  <p>也可 <code>git clone</code> 直接拉代码。上传后 <code>npm install</code> 装依赖、<code>pm2</code>/<a href="systemd.html">systemd</a> 启动。</p>
+
+  <h2 id="s4">4. 完整链路</h2>
+  <div class="diagram">本地写代码 → 构建成静态/后端 → scp/git 上传
+ → 服务器装依赖 + 启动 → Nginx 反代 + HTTPS
+ → 浏览器打开域名，真机验证</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>SSH 坏了进不去服务器——改 sshd 配置前先备份、改完开新终端测试（网页游戏项目真实事故：UseDNS 卡死）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>安全组只开放 22/80/443，游戏端口绑 <code>127.0.0.1</code> 别暴露。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>DNS 解析要等几分钟才生效，期间用 IP 访问即可。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

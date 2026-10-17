@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n8n 自动化 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">n8n<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 核心概念</a>
+  <a href="#s3">3. 每日热点实例</a>
+  <a href="#s4">4. 发布模型坑</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>n8n 自动化</h1>
+  <p class="tsub">开源可视化工作流工具 —— Memora 用它每天定时抓新闻推企业微信。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>n8n 是<strong>开源的可视化工作流自动化平台</strong>，类似“程序员版 IFTTT”：拖节点、连线，把“定时触发 → 调接口 → 处理数据 → 发通知”串成自动化流程。Memora 用它做“每日 20:00 抓新闻推企业微信”。</p>
+
+  <h2 id="s2">2. 核心概念</h2>
+  <ul>
+    <li><b>Trigger（触发器）</b>：流程起点，如 Schedule（定时）、Webhook（被调用）。</li>
+    <li><b>Node（节点）</b>：每一步操作，如 HTTP Request、Function、消息发送。</li>
+    <li><b>连接</b>：节点之间的数据流向。</li>
+  </ul>
+
+  <h2 id="s3">3. 每日热点实例</h2>
+  <div class="diagram">Schedule(每天20:00)
+ → HTTP GET 本应用 /api/hotnews/fetch
+ → 组装成 Markdown
+ → HTTP POST 企业微信机器人 webhook</div>
+
+  <h2 id="s4">4. 发布模型坑（真实）</h2>
+  <div class="box danger"><span class="bt">致命坑：</span>n8n v2.8 是“发布模型”——导入的工作流只设 <code>active=1</code> 不算发布，<b>必须 <code>activeVersionId = versionId</code></b> 才会注册定时器。否则日志显示 “0 published”，定时任务死活不跑。修复 SQL：<code>UPDATE workflow_entity SET activeVersionId=versionId WHERE active=1 AND activeVersionId IS NULL;</code></div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>把 n8n UI 裸奔公网——务必绑定 <code>127.0.0.1</code> 再用 <a href="nginx.html">Nginx</a> 子域名 + Basic Auth 暴露。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>版本不一致导致工作流不兼容——导入和导出用同版本。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>用 systemd 托管（见 <a href="systemd.html">systemd</a>），别用临时终端跑。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

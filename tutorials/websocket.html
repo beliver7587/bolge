@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">WebSocket<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. HTTP vs WebSocket</a>
+  <a href="#s3">3. 浏览器里用</a>
+  <a href="#s4">4. 服务端(Node)</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>WebSocket</h1>
+  <p class="tsub">持久双向通信协议 —— 实时游戏与流式输出的底层基础。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>普通 HTTP 是“一问一答、问完就断”；<strong>WebSocket</strong> 是建立一次连接后<strong>长期保持、双方随时互发</strong>的协议，像打通了一根电话线。适合聊天、实时游戏、行情推送、<a href="sse.html">流式输出</a>等“需要持续通信”的场景。</p>
+
+  <h2 id="s2">2. HTTP vs WebSocket</h2>
+  <div class="diagram">HTTP：  浏览器 → 请求 → 服务器
+                浏览器 ← 响应 ← （断开）
+
+WebSocket：浏览器 ⇄ 长连接 ⇄ 服务器（随时双向）</div>
+
+  <h2 id="s3">3. 浏览器里用</h2>
+  <pre><code>const ws = new WebSocket('wss://域名/ws');   // wss = 加密的 ws
+ws.onopen = () =&gt; ws.send('你好');            // 连上就发
+ws.onmessage = (e) =&gt; console.log(e.data);    // 收消息
+ws.onclose = () =&gt; console.log('断开');</code></pre>
+
+  <h2 id="s4">4. 服务端（Node）</h2>
+  <pre><code>import { WebSocketServer } from 'ws';
+const wss = new WebSocketServer({ port: 8095 });
+wss.on('connection', (ws) =&gt; {
+  ws.on('message', (buf) =&gt; {
+    ws.send('收到：' + buf.toString());       // 回显
+  });
+});</code></pre>
+  <div class="box ok"><span class="bt">注意：</span>游戏项目里服务器“只转发不解析”——收到的消息原样转给同房间其他人，运算在客户端（见 <a href="edgeauthority.html">端侧权威</a>）。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>Nginx 反代要显式转发 Upgrade/Connection 头并关闭缓冲，否则握手失败或长连接被掐（见 <a href="nginx.html">Nginx</a>）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>长时间没消息可能被中间设备断连，要做“心跳”（定期发个 ping）。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>断网重连要自己写，别假定连接永远在。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

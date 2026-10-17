@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>富文本编辑 / PDF 导出 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">富文本 / PDF<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 富文本编辑器</a>
+  <a href="#s3">3. 导出 PDF</a>
+  <a href="#s4">4. 简历工坊怎么做</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>富文本编辑 / PDF 导出</h1>
+  <p class="tsub">简历工坊的核心能力：所见即所得地编辑，并一键导出 PDF。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>富文本编辑器</strong>让用户像用 Word 一样排版（加粗、列表、标题），底层存的是带格式的 HTML。<strong>PDF 导出</strong>则把网页/HTML 变成可下载的 PDF 文件。两者结合，就是“在线写简历 → 导出成 PDF 投递”。</p>
+
+  <h2 id="s2">2. 富文本编辑器</h2>
+  <p>常见方案：<code>contenteditable</code> 原生属性（浏览器自带可编辑）、或成熟库如 <code>TipTap</code>（基于 ProseMirror）、<code>Slate</code>。简历工坊用 React 生态的编辑器实现模块拖拽与分栏。</p>
+  <pre><code>// 最简单的可编辑区
+&lt;div contenteditable="true"&gt;在这里直接打字，可选中加粗…&lt;/div&gt;</code></pre>
+
+  <h2 id="s3">3. 导出 PDF</h2>
+  <p>前端常用 <code>html2pdf.js</code>（内部用 html2canvas 截图 + jsPDF 生成）：</p>
+  <pre><code>import html2pdf from 'html2pdf.js';
+function exportPdf(){
+  html2pdf().set({ filename:'我的简历.pdf', jsPDF:{ unit:'mm', format:'a4' } })
+            .from(document.getElementById('resume')).save();
+}</code></pre>
+  <div class="box warn"><span class="bt">注意：</span>html2pdf 是“截图式”，复杂 CSS（如 flex 分页）可能不理想；追求精准可用后端 <code>pdfkit</code> 或浏览器自带 <code>window.print()</code> + 打印样式。</div>
+
+  <h2 id="s4">4. 简历工坊怎么做</h2>
+  <p>思路：① 每个简历模块是可拖拽卡片，用户排序；② 内容存为结构化数据（JSON），同时渲染成 HTML 预览；③ 调大模型（见 <a href="llm.html">LLM</a>）一键润色文案；④ 导出时把预览 DOM 转 PDF。</p>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>PDF 分页截断——给模块加 <code>break-inside: avoid</code>（CSS）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>字体未嵌入，换设备打开样式跑偏——优先用系统通用字体。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>编辑器粘贴 Word 带来脏样式，要过滤白名单标签。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

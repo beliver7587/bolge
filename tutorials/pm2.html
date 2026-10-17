@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM2 进程守护 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">PM2<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么需要</a>
+  <a href="#s3">3. 常用命令</a>
+  <a href="#s4">4. 开机自启</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>PM2 进程守护</h1>
+  <p class="tsub">Node 程序的“保姆” —— 崩溃自启、开机启动、看日志，游戏服务靠它常驻。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>PM2 是 Node.js 的<strong>进程管理器</strong>（也支持 Bun/Python 等）。你关掉终端、程序崩了、服务器重启，它都能让服务“活着”——崩溃自动重启、开机自动启动、随时看日志。</p>
+
+  <h2 id="s2">2. 为什么需要</h2>
+  <div class="box"><span class="bt">痛点：</span>直接 <code>node server.js</code> 跑，关掉终端程序就死；崩了不会自己起。PM2 解决这所有问题，是部署 Node 服务的标配。</div>
+
+  <h2 id="s3">3. 常用命令</h2>
+  <pre><code>npm i -g pm2
+pm2 start server.js --name game      # 启动并命名
+pm2 list                             # 看所有进程状态
+pm2 logs game                        # 看某个进程日志
+pm2 restart game                     # 发版后重启
+pm2 save                             # 存档进程列表（开机恢复用）</code></pre>
+
+  <h2 id="s4">4. 开机自启</h2>
+  <pre><code>pm2 startup      # 按提示执行它生成的命令
+pm2 save         # 之后重启服务器会自动拉起</code></pre>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>忘记 <code>pm2 save</code>，服务器重启后服务没起来。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>用 root 跑服务不安全——生产建议普通用户降权运行。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>日志无限增长占满磁盘——配日志轮转或定期清理。</div>
+  <div class="box"><span class="bt">替代：</span>更“正规”的方案是 <a href="systemd.html">systemd</a> 托管。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

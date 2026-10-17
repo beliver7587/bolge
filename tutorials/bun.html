@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bun + Elysia · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">Bun + Elysia<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么比 Node 快</a>
+  <a href="#s3">3. 第一个服务</a>
+  <a href="#s4">4. Elysia 框架</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>Bun + Elysia</h1>
+  <p class="tsub">更快的 JS 运行时 + 轻量后端框架 —— 网页游戏前端用它构建、后端也用它跑。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p><strong>Bun</strong> 是近年兴起的 JavaScript 运行时，定位是 Node 的“更快替代”：启动快、内置打包/测试、兼容 npm 生态。<strong>Elysia</strong> 是构建在 Bun 之上的极简、高性能后端框架，API 风格类似 Express 但类型更优雅。</p>
+
+  <h2 id="s2">2. 为什么比 Node 快</h2>
+  <table>
+    <tr><th>维度</th><th>Bun</th><th>Node</th></tr>
+    <tr><td>底层引擎</td><td>JavaScriptCore（Safari 同款）</td><td>V8（Chrome 同款）</td></tr>
+    <tr><td>启动</td><td>极快</td><td>较快</td></tr>
+    <tr><td>内置能力</td><td>打包/测试/运行一体</td><td>需额外工具</td></tr>
+  </table>
+
+  <h2 id="s3">3. 第一个服务</h2>
+  <pre><code>// 直接用 Bun 跑，不用装框架
+Bun.serve({
+  port: 3000,
+  fetch(req) {
+    return new Response("Hello from Bun!");
+  }
+});</code></pre>
+
+  <h2 id="s4">4. Elysia 框架</h2>
+  <pre><code>import { Elysia } from 'elysia';
+new Elysia()
+  .get('/hello', () =&gt; ({ msg: '你好' }))
+  .listen(3000);</code></pre>
+  <div class="box ok"><span class="bt">亮点：</span>Elysia 的路由返回值自动序列化成 JSON，且类型推导强，写 API 很省心。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>个别 Node 原生模块（如 isolated-vm）在 Bun 下不兼容——必要时混用 Node（网页游戏项目就是 Bun + Node 务实并存）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>生产用 Bun 跑长驻服务，先确认稳定性；不确定就用 Node。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>Windows 上 Bun 仍在完善，建议 Linux/macOS 开发。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

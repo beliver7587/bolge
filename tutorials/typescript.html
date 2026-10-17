@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TypeScript · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">TypeScript<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 为什么加类型</a>
+  <a href="#s3">3. 基础类型</a>
+  <a href="#s4">4. 接口与类型别名</a>
+  <a href="#s5">5. 泛型入门</a>
+  <a href="#s6">6. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>TypeScript</h1>
+  <p class="tsub">给 JavaScript 加“类型”的超级增强版 —— 三个项目都用它写得更稳。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>TypeScript（简称 TS）是微软出的语言，是 JavaScript 的<strong>超集</strong>：所有 JS 都能跑，但额外允许你给变量、函数参数标上“类型”。写完后用 <code>tsc</code> 编译成普通 JS 再运行。浏览器只认 JS，所以 TS 是“开发期帮手”。</p>
+
+  <h2 id="s2">2. 为什么加类型</h2>
+  <div class="box ok"><span class="bt">核心价值：</span>在写代码时（而不是运行时）就发现错误。比如把字符串传给只接受数字的函数，编辑器立刻标红。项目越大、人越多，类型越能救命。</div>
+  <pre><code>// JavaScript：错了也发现不了
+function add(a, b){ return a + b; }
+add("1", 2);   // "12"，静默出错
+
+// TypeScript：编译就报错
+function add(a: number, b: number): number { return a + b; }
+add("1", 2);   // ❌ 类型不匹配，红波浪线</code></pre>
+
+  <h2 id="s3">3. 基础类型</h2>
+  <pre><code>let age: number = 18;
+let name: string = "王越";
+let ok: boolean = true;
+let list: number[] = [1, 2, 3];
+let data: any = fetchSomething();  // any：放弃类型检查（尽量少用）</code></pre>
+
+  <h2 id="s4">4. 接口与类型别名</h2>
+  <p>用 <code>interface</code> 描述“一个对象长什么样”，团队协作时特别清晰：</p>
+  <pre><code>interface User {
+  id: number;
+  name: string;
+  vip?: boolean;     // ? 表示可选
+}
+function greet(u: User){ return "你好 " + u.name; }</code></pre>
+
+  <h2 id="s5">5. 泛型入门</h2>
+  <p>泛型 = “类型当参数”，写通用函数时不提前定死类型：</p>
+  <pre><code>function first&lt;T&gt;(arr: T[]): T { return arr[0]; }
+first&lt;number&gt;([1,2,3]);   // T 是 number
+first&lt;string&gt;(["a","b"]); // T 是 string</code></pre>
+
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>TS 报错不一定导致运行失败（除非开了严格模式 + 编译失败拦截），但别忽视红波浪线。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>第三方库若没带类型，需要装 <code>@types/xxx</code>，否则它是 <code>any</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>过度使用 <code>any</code> 会失去 TS 的意义，能用具体类型就用具体类型。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

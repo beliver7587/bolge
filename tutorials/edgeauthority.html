@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>端侧权威运算架构 · 小白通关教程</title>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <div class="tbrand">端侧权威运算<small>小白通关教程</small></div>
+  <a href="#s1">1. 这是什么</a>
+  <a href="#s2">2. 三种角色</a>
+  <a href="#s3">3. 为什么省钱</a>
+  <a href="#s4">4. 数据流</a>
+  <a href="#s5">5. 常见坑</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>端侧权威运算架构</h1>
+  <p class="tsub">运算放玩家设备、服务器只中转 —— 一台 2 核机扛上百房间的秘诀。</p>
+
+  <h2 id="s1">1. 这是什么</h2>
+  <p>这是网页游戏平台<strong>最核心的设计思想</strong>：以火柴人为例，一台“房主”设备（开大屏的电脑）<strong>既是客户端又是服务器逻辑端</strong>——它本地算物理/碰撞/战斗、渲染画面；云端服务器<strong>只做消息中转，完全不解析游戏内容</strong>。这就是“端侧权威运算”。</p>
+
+  <h2 id="s2">2. 三种角色</h2>
+  <table>
+    <tr><th>角色</th><th>设备</th><th>职责</th></tr>
+    <tr><td>房主端（Host）</td><td>PC 大屏</td><td>运行引擎、算战斗、渲染、广播状态</td></tr>
+    <tr><td>控制端（Pad）</td><td>手机</td><td>只采输入（摇杆/按钮）并上报</td></tr>
+    <tr><td>中转服务器</td><td>云端</td><td>按房间转发字符串，不解析内容</td></tr>
+  </table>
+
+  <h2 id="s3">3. 为什么省钱</h2>
+  <div class="box ok"><span class="bt">关键洞察：</span>普通网游把“谁打中谁”放服务器算，服务器又贵又易成瓶颈；本项目把运算下放房主设备，服务器只做“微信群转发”，所以<strong>一台 2 核 2G 机器能扛上百房间</strong>。且手机端改不了任何数据（手里没运算逻辑），天然防作弊。</div>
+
+  <h2 id="s4">4. 数据流（手机按跳 → 大屏跳起，&lt;100ms）</h2>
+  <div class="diagram">① 手机按跳 → ② 20Hz 打包输入 → ③ WS 发服务器
+④ 服务器原样转房主 → ⑤ 房主引擎算跳跃 → ⑥ 广播状态
+⑦ 服务器转发 → ⑧ 手机收到更新 UI</div>
+  <div class="box"><span class="bt">延迟低的原因：</span>延迟主要发生在“手机→房主”，同 WiFi 下 &lt;10ms；而“房主→手机”只是看画面，玩家对“看”的延迟不敏感。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>房主掉线=整局散（房主是权威源）——可加“房主转移/托管”缓解。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>房主作弊改内存就“无敌”——这是架构软肋，休闲局可接受，认真防要上轻量校验端。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>房主网络差拖垮全房间——要控制广播带宽（30Hz 状态 + 20Hz 输入上报）。</div>
+</main>
+</div>
+<script>
+(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+</script>
+</body></html>

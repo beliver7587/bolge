@@ -2,86 +2,145 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MySQL · 小白通关教程</title>
+<title>MySQL · 从小白到资深后端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">MySQL<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 连上数据库</a>
-  <a href="#s4">4. 建库建表</a>
-  <a href="#s5">5. 增删改查</a>
-  <a href="#s6">6. 从代码连</a>
-  <a href="#s7">7. 索引与优化</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 下一步</a>
+  <div class="tbrand">MySQL<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. InnoDB 架构</a>
+  <a href="#s4">4. 事务与隔离</a>
+  <a href="#s5">5. 索引原理</a>
+  <a href="#s6">6. 执行计划</a>
+  <a href="#s7">7. 查询优化</a>
+  <a href="#s8">8. 表与类型设计</a>
+  <a href="#s9">9. 锁与并发</a>
+  <a href="#s10">10. 连接池</a>
+  <a href="#s11">11. 高可用扩展</a>
+  <a href="#s12">12. 备份恢复</a>
+  <a href="#s13">13. 常见坑</a>
+  <a href="#s14">14. 调试诊断</a>
+  <a href="#s15">15. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>MySQL</h1>
-  <p class="tsub">最流行的开源关系型数据库 —— 用表存结构化数据，支持 SQL 查询。简历工坊就用它存数据。学完你能设计表并操作数据库。</p>
+  <h1>MySQL：从小白到资深后端</h1>
+  <p class="tsub">MySQL 是最流行的开源<strong>关系型数据库</strong>（RDBMS），业务主数据的归宿。本教程讲透<strong>InnoDB 架构、事务隔离与 MVCC、索引 B+树原理、执行计划、锁与并发、分库分表与调优</strong>——这是资深后端必须啃下的硬骨头。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>MySQL</strong> 是关系型数据库：数据按“库 → 表 → 行”组织，用 <strong>SQL</strong> 语言增删改查。它保证事务、一致性，适合存订单、用户、文章等结构化数据。</p>
-  <div class="box"><span class="bt">对比：</span><a href="redis.html">Redis</a> 是内存键值库（快、适合缓存）；MySQL 是落盘的关系库（持久、适合业务主数据）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>关系型数据库用“表”组织结构化数据，靠 <strong>SQL</strong> 增删改查，并承诺 ACID。相比 <a href="redis.html">Redis</a>（内存键值、快但易失）或文档库，MySQL 适合<strong>需要一致性与持久化的业务主数据</strong>（订单、账户、用户）。</p>
+  <div class="box"><span class="bt">一句话：</span>MySQL = 落盘的关系数据 + 事务一致性；Redis 做缓存加速，两者互补而非替代。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>最省事：装 <strong>Docker</strong> 一键起，或用本地安装包（Windows 用 MySQL Installer，Mac 用 <code>brew install mysql</code>）。Docker 方式：</p>
-  <pre><code>docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 mysql:8</code></pre>
-  <p>客户端工具推荐 <strong>Navicat / DBeaver / TablePlus</strong>，图形化操作更直观。</p>
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code>docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 mysql:8
+mysql -h 127.0.0.1 -P 3306 -u root -p     # 连上进入 mysql&gt; 提示符</code></pre>
+  <p>客户端用 DBeaver/Navicat/TablePlus 图形化；生产用 8.x（默认 InnoDB、utf8mb4）。</p>
 
-  <h2 id="s3">3. 连上数据库</h2>
-  <pre><code>mysql -h 127.0.0.1 -P 3306 -u root -p
-# 输入密码后进入 mysql&gt; 提示符</code></pre>
+  <h2 id="s3">3. InnoDB 架构</h2>
+  <ul>
+    <li><b>缓冲池（Buffer Pool）</b>：把磁盘页缓存到内存，读写先走内存，是性能核心。</li>
+    <li><b>WAL（写前日志）</b>：修改先写 <code>redo log</code>（保证崩溃可恢复），再异步刷盘——这是“快且安全”的关键。</li>
+    <li><b>undo log</b>：记录变更前状态，支撑事务回滚与 MVCC 快照读。</li>
+  </ul>
 
-  <h2 id="s4">4. 建库建表</h2>
-  <pre><code>CREATE DATABASE demo CHARACTER SET utf8mb4;
-USE demo;
-CREATE TABLE user (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(50) NOT NULL,
-  age INT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);</code></pre>
-  <div class="box ok"><span class="bt">要点：</span>用 <code>utf8mb4</code> 支持 emoji；<code>NOT NULL</code> 约束必填；<code>AUTO_INCREMENT</code> 自增主键。</div>
+  <h2 id="s4">4. 事务与隔离</h2>
+  <p><strong>ACID</strong>：原子性、一致性、隔离性、持久性。隔离级别解决三类并发问题：</p>
+  <table>
+    <tr><th>级别</th><th>脏读</th><th>不可重复读</th><th>幻读</th></tr>
+    <tr><td>读未提交</td><td>可能</td><td>可能</td><td>可能</td></tr>
+    <tr><td>读已提交 RC</td><td>否</td><td>可能</td><td>可能</td></tr>
+    <tr><td>可重复读 RR（默认）</td><td>否</td><td>否</td><td>基本否</td></tr>
+    <tr><td>串行化</td><td>否</td><td>否</td><td>否</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">MVCC：</span>通过 undo log + 版本链 + 一致性视图，让“读不阻塞写、写不阻塞读”——RR 下普通 SELECT 是快照读，不加锁。</div>
 
-  <h2 id="s5">5. 增删改查</h2>
-  <pre><code>INSERT INTO user(name, age) VALUES ('小王', 18);
-SELECT * FROM user WHERE age &gt; 16;
-UPDATE user SET age = 19 WHERE name = '小王';
-DELETE FROM user WHERE id = 1;</code></pre>
+  <h2 id="s5">5. 索引原理</h2>
+  <p>InnoDB 用 <strong>B+树</strong> 索引：有序、矮胖、叶子串成链表，范围查询高效。</p>
+  <ul>
+    <li><b>聚簇索引</b>：主键即数据本身（叶子存整行）；<b>二级索引</b>叶子存主键值 → 查非索引列要<strong>回表</strong>。</li>
+    <li><b>覆盖索引</b>：索引已含所需列，免回表，最快。</li>
+    <li><b>最左前缀</b>：联合索引 (a,b,c) 只能从 a 起命中；跳 a 则失效。</li>
+  </ul>
+  <pre><code>CREATE INDEX idx_name_age ON user(name, age);  -- 单独按 age 查用不上此索引
+EXPLAIN SELECT name,age FROM user WHERE name='x';  -- 覆盖索引，Extra: Using index</code></pre>
 
-  <h2 id="s6">6. 从代码连</h2>
-  <p>Node 用 <code>mysql2</code>：</p>
+  <h2 id="s6">6. 执行计划</h2>
+  <p>用 <code>EXPLAIN</code> 看 SQL 怎么执行，重点字段：</p>
+  <ul>
+    <li><code>type</code>：<code>const &gt; ref &gt; range &gt; index &gt; ALL</code>（ALL 是全表扫描，要警惕）。</li>
+    <li><code>key</code>：实际用到的索引；<code>rows</code>：估算扫描行数；<code>Extra</code>：是否 Using filesort/Using temporary（排序/临时表慢）。</li>
+  </ul>
+
+  <h2 id="s7">7. 查询优化</h2>
+  <ul>
+    <li>只查所需列，杜绝 <code>SELECT *</code>（利于覆盖索引、减 IO）。</li>
+    <li><b>索引失效</b>：列上套函数、隐式类型转换、<code>LIKE '%x'</code> 前模糊、<code>OR</code> 含非索引列。</li>
+    <li><b>深分页</b>：<code>LIMIT 1000000,10</code> 慢 → 用“游标/延迟游标”（<code>WHERE id &gt; last_id LIMIT 10</code>）。</li>
+    <li>JOIN 用小表驱动大表，关联列要有索引。</li>
+  </ul>
+
+  <h2 id="s8">8. 表与类型设计</h2>
+  <ul>
+    <li>三大范式减少冗余，但过度范式会多表 JOIN——按查询取舍做适度反范式。</li>
+    <li>类型选最贴合的（<code>TINYINT</code> 别用 <code>BIGINT</code>）；时间用 <code>DATETIME</code>/<code>TIMESTAMP</code>。</li>
+    <li>字符集一律 <code>utf8mb4</code>（真 UTF-8，支持 emoji）。</li>
+  </ul>
+
+  <h2 id="s9">9. 锁与并发</h2>
+  <ul>
+    <li>InnoDB 默认<strong>行锁</strong>，但靠索引命中；无索引的更新会升级为表锁。</li>
+    <li><b>间隙锁（Gap Lock）</b>：RR 下锁范围防幻读，也可能导致锁等待。</li>
+    <li><b>死锁</b>：两事务互相等锁；InnoDB 会检测并回滚代价小的一方——业务要设计固定加锁顺序。</li>
+  </ul>
+
+  <h2 id="s10">10. 连接池</h2>
   <pre><code>import mysql from 'mysql2/promise';
-const pool = mysql.createPool({ host:'localhost', user:'root', password:'123456', database:'demo' });
-const [rows] = await pool.query('SELECT * FROM user');
-console.log(rows);</code></pre>
+const pool = mysql.createPool({ host:'localhost', user:'root', password:'xxx', database:'demo', connectionLimit: 10 });
+const [rows] = await pool.query('SELECT * FROM user WHERE id = ?', [1]);  // 参数化防注入</code></pre>
+  <div class="box warn"><span class="bt">防注入：</span>永远用参数化 <code>?</code> 占位，绝不字符串拼接 SQL。</div>
 
-  <h2 id="s7">7. 索引与优化</h2>
-  <p>给常查询的列加索引提速：</p>
-  <pre><code>CREATE INDEX idx_name ON user(name);</code></pre>
-  <div class="box warn"><span class="bt">注意：</span>索引加速查询但拖慢写入；<code>SELECT *</code>、在列上做函数运算会导致索引失效。</div>
+  <h2 id="s11">11. 高可用与扩展</h2>
+  <ul>
+    <li><b>主从复制</b>：主库写、从库读，做读写分离与备份。</li>
+    <li><b>分库分表</b>：单表过千万/容量瓶颈时，按业务键（用户ID）水平拆分；用 ShardingSphere 等中间件。</li>
+    <li>热点大表考虑冷热分离、归档。</li>
+  </ul>
 
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>字符集用 <code>utf8</code>（非真正 UTF-8）导致 emoji 报错，务必 <code>utf8mb4</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>SQL 拼接导致注入；用参数化查询 <code>?</code> 占位。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>没有主键/索引，数据量大时查询极慢。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>忘记 <code>COMMIT</code>（关闭自动提交时）事务不生效。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>远程连不上多为防火墙/绑定地址，检查 <code>bind-address</code> 与放行 3306。</div>
+  <h2 id="s12">12. 备份与恢复</h2>
+  <ul>
+    <li>逻辑备份 <code>mysqldump</code>；物理/增量靠 <code>binlog</code>（可定点恢复）。</li>
+    <li>定期演练恢复，别等出事才发现备份不可用。</li>
+  </ul>
 
-  <h2 id="s9">9. 下一步</h2>
-  <ol>
-    <li>设计一张自己的业务表并 CRUD。</li>
-    <li>配合 <a href="springboot.html">Spring Boot</a> + <a href="mybatisplus.html">MyBatis-Plus</a> 操作。</li>
-    <li>学 <a href="redis.html">Redis</a> 做缓存。</li>
-    <li>看简历工坊，MySQL 表设计范例。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能装 MySQL、建库建表、用 SQL 增删改查、从代码连接——关系型数据库你已上手。</div>
+  <h2 id="s13">13. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>用 <code>utf8</code>（非真 UTF-8）存 emoji 报错 → 必须 utf8mb4。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>SQL 拼接 → 注入；用参数化。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>无主键/索引 → 全表扫描极慢。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>隐式类型转换（字符串列传数字）致索引失效。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>大事务长时间持锁 → 阻塞、主从延迟。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>深分页 LIMIT 大偏移 → 慢。</div>
+
+  <h2 id="s14">14. 调试诊断</h2>
+  <ul>
+    <li>开慢查询日志 <code>slow_query_log</code>，定位慢 SQL。</li>
+    <li><code>EXPLAIN</code> + <code>SHOW PROCESSLIST</code> 看阻塞；<code>pt-query-digest</code> 聚合分析。</li>
+    <li><code>SHOW ENGINE INNODB STATUS</code> 看锁与死锁。</li>
+  </ul>
+
+  <h2 id="s15">15. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能建表、写 CRUD SQL</td></tr>
+    <tr><td>初级</td><td>会加索引、参数化、连代码</td></tr>
+    <tr><td>中级</td><td>懂事务隔离/MVCC、EXPLAIN 优化、锁</td></tr>
+    <tr><td>资深</td><td>架构设计、分库分表、调优与排障</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 建表并设计联合索引 ② 用 EXPLAIN 对比有/无索引 ③ 制造一次死锁并复现 ④ 用延迟游标改造深分页 ⑤ 配主从复制。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 InnoDB 内核与索引本质、能用执行计划把慢 SQL 治好、能设计可扩展的库表——这是资深后端的核心硬功。</div>
 </main>
 </div>
 <script>

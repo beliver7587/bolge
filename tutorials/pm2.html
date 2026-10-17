@@ -2,73 +2,99 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PM2 · 小白通关教程</title>
+<title>PM2 · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">PM2<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 启动进程</a>
-  <a href="#s4">4. 常用命令</a>
-  <a href="#s5">5. 集群模式</a>
-  <a href="#s6">6. 开机自启</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">PM2<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 进程管理</a>
+  <a href="#s3">3. 集群模式</a>
+  <a href="#s4">4. 日志与轮转</a>
+  <a href="#s5">5. 零停机与部署</a>
+  <a href="#s6">6. 环境变量</a>
+  <a href="#s7">7. 开机自启</a>
+  <a href="#s8">8. 与 systemd 取舍</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>PM2</h1>
-  <p class="tsub">Node.js 进程管理器 —— 让后端服务后台常驻、崩溃自动重启、多进程利用多核。学完你能把 Node 服务稳稳跑在服务器上。</p>
+  <h1>PM2：从小白到资深</h1>
+  <p class="tsub"><strong>PM2</strong> 是 Node.js 的进程管理器——后台常驻、崩溃自启、多进程利用多核、看日志。本教程讲透<strong>进程/集群管理、日志轮转、零停机重启、env 管理、开机自启，以及与 systemd 的取舍</strong>——让 Node 服务在生产稳稳长跑。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>PM2</strong> 是 Node 的进程守护工具。直接 <code>node server.js</code> 关掉终端就停了；用 PM2 启动后，它在后台跑，挂了自动拉起，还能看日志、做负载。</p>
-  <div class="box"><span class="bt">一句话：</span>PM2 就像给 Node 服务配了个“保姆”，宕机自动复活、开机自动启动。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>直接 <code>node server.js</code> 关终端就停、崩了没人拉、单进程吃不满多核。PM2 用守护进程包住你的应用，统一管生命周期。</p>
+  <div class="box"><span class="bt">对比：</span><a href="systemd.html">systemd</a> 是系统级、语言无关；PM2 专为 Node 设计、命令更友好、自带集群与日志面板。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <pre><code>sudo npm install -g pm2
-pm2 -v</code></pre>
+  <h2 id="s2">2. 进程管理</h2>
+  <pre><code">npm i -g pm2
+pm2 start server.js --name my-api
+pm2 start server.js -i 1 --watch        # 开发期文件变更自动重启
+pm2 list            # 所有进程
+pm2 logs my-api     # 看日志（带时间戳）
+pm2 restart my-api / stop / delete</code></pre>
+  <div class="box ok"><span class="bt">ecosystem 文件：</span>用 <code>ecosystem.config.js</code> 声明多应用、env、args，版本化管理进程定义。</div>
 
-  <h2 id="s3">3. 启动进程</h2>
-  <pre><code>pm2 start server.js --name my-api
-# 或带环境变量
-pm2 start server.js --name my-api --env production</code></pre>
+  <h2 id="s3">3. 集群模式</h2>
+  <p>Node 单进程只用一核；集群模式 fork 多实例由 PM2 做负载均衡，吃满多核（无需改代码，共享端口）：</p>
+  <pre><code">pm2 start server.js -i max      # 按 CPU 核数起进程
+pm2 scale my-api 4              # 动态扩到 4 个实例</code></pre>
+  <div class="box warn"><span class="bt">注意：</span>有状态/单例资源（如内存缓存、文件锁）在集群下需外部化（Redis/数据库），否则多实例不一致。</div>
 
-  <h2 id="s4">4. 常用命令</h2>
+  <h2 id="s4">4. 日志与轮转</h2>
+  <ul>
+    <li>日志默认落 <code>~/.pm2/logs</code>，会无限增长撑满磁盘——必须装轮转：</li>
+  </ul>
+  <pre><code">pm2 install pm2-logrotate       # 按大小/时间切割、保留 N 份</code></pre>
+
+  <h2 id="s5">5. 零停机与部署</h2>
+  <pre><code">pm2 reload my-api     # 逐个重启实例，保持服务可用（零停机）
+pm2 deploy ecosystem.config.js production   # 内置 SSH 拉代码+重启的部署流程</code></pre>
+  <div class="box ok"><span class="bt">restart vs reload：</span>restart 会瞬间全停再起（短暂不可用）；reload 滚动替换，生产用 reload。</div>
+
+  <h2 id="s6">6. 环境变量</h2>
+  <pre><code">// ecosystem.config.js
+module.exports = { apps: [{ name:'my-api', script:'server.js',
+  env: { NODE_ENV:'development' },
+  env_production: { NODE_ENV:'production', PORT:3010 } }] };
+pm2 start ecosystem.config.js --env production</code></pre>
+  <div class="box warn"><span class="bt">密钥：</span>JWT_SECRET 等走环境变量/Systemd EnvironmentFile，绝不硬编码（见 <a href="jwt.html">JWT</a>）。</div>
+
+  <h2 id="s7">7. 开机自启</h2>
+  <pre><code">pm2 save          # 保存当前进程列表
+pm2 startup       # 生成开机脚本（按提示执行；底层常写 systemd unit）</code></pre>
+  <div class="box warn"><span class="bt">顺序：</span>先 <code>save</code> 再 <code>startup</code>；否则重启后列表为空。</div>
+
+  <h2 id="s8">8. 与 systemd 取舍</h2>
   <table>
-    <tr><th>命令</th><th>作用</th></tr>
-    <tr><td><code>pm2 list</code></td><td>看所有进程</td></tr>
-    <tr><td><code>pm2 logs my-api</code></td><td>看日志</td></tr>
-    <tr><td><code>pm2 restart my-api</code></td><td>重启</td></tr>
-    <tr><td><code>pm2 stop / delete</code></td><td>停止 / 删除</td></tr>
-    <tr><td><code>pm2 monit</code></td><td>实时监控面板</td></tr>
+    <tr><th></th><th>PM2</th><th>systemd</th></tr>
+    <tr><td>语言</td><td>Node 专属</td><td>语言无关</td></tr>
+    <tr><td>集群</td><td>内置 -i</td><td>需多 unit</td></tr>
+    <tr><td>日志</td><td>自带面板</td><td>journalctl</td></tr>
+    <tr><td>适用</td><td>纯 Node 快速部署</td><td>系统级/混合栈</td></tr>
   </table>
 
-  <h2 id="s5">5. 集群模式</h2>
-  <p>用多进程吃满多核 CPU：</p>
-  <pre><code>pm2 start server.js -i max     # max = 按 CPU 核数起进程</code></pre>
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>忘 <code>pm2 save</code> → 重启后进程没起来。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>日志无限增长占满磁盘 → 装 logrotate。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>端口被旧进程占 → 先 <code>delete</code> 再起。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>全局 pm2 在 sudo 下找不到 → 用 <code>npm root -g</code> 路径或软链。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>集群下内存态不一致 → 状态外置。</div>
 
-  <h2 id="s6">6. 开机自启</h2>
-  <pre><code>pm2 save                     # 保存当前进程列表
-pm2 startup                  # 生成开机启动脚本（按提示执行）</code></pre>
-
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>忘了 <code>pm2 save</code>，服务器重启后进程没起来；save + startup 一起做。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>日志无限增长占满磁盘；配置日志轮转 <code>pm2 install pm2-logrotate</code>。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>端口被旧进程占着，新启动失败；<code>pm2 delete</code> 旧的再起。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>全局装的 pm2 在 sudo 下找不到；用 <code>npm root -g</code> 确认路径或加软链。</div>
-
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>用 PM2 起你的 Node 服务并设开机自启。</li>
-    <li>配合 <a href="nginx.html">Nginx</a> 反代 + <a href="https.html">HTTPS</a>。</li>
-    <li>看 <a href="systemd.html">systemd</a> 作为另一种守护方式。</li>
-    <li>看简历工坊部署。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能用 PM2 后台守护、集群扩容、开机自启——Node 服务稳定运行你已掌握。</div>
+  <h2 id="s10">10. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能 start/stop/list，后台跑服务</td></tr>
+    <tr><td>初级</td><td>集群 -i、日志轮转、env 管理</td></tr>
+    <tr><td>中级</td><td>零停机 reload、ecosystem 部署</td></tr>
+    <tr><td>资深</td><td>与 systemd/容器取舍、可观测集成</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 ecosystem 定义应用 ② 集群 -i max 起服务 ③ 装 logrotate ④ reload 零停机 ⑤ save+startup 开机自启 ⑥ 把密钥移进 env_production。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解进程生命周期管理与零停机发布，能把 Node 服务在生产稳定长跑并多核扩容——这是资深后端部署 Node 的标配。</div>
 </main>
 </div>
 <script>

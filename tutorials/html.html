@@ -2,80 +2,154 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTML · 小白通关教程</title>
+<title>HTML · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">HTML<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个网页</a>
-  <a href="#s4">4. 常用标签</a>
+  <div class="tbrand">HTML<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 文档结构与元数据</a>
+  <a href="#s3">3. 语义化标签</a>
+  <a href="#s4">4. 文本与媒体</a>
   <a href="#s5">5. 表单</a>
-  <a href="#s6">6. 语义化</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <a href="#s6">6. 表格</a>
+  <a href="#s7">7. 链接与导航</a>
+  <a href="#s8">8. 可访问性 a11y</a>
+  <a href="#s9">9. SEO 基础</a>
+  <a href="#s10">10. 现代 HTML5 API</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试与校验</a>
+  <a href="#s13">13. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>HTML</h1>
-  <p class="tsub">网页的结构语言 —— 用标签搭出页面骨架（标题、段落、按钮、表单）。所有前端的根基。学完你能写出能跑的静态网页。</p>
+  <h1>HTML：从小白到资深前端</h1>
+  <p class="tsub">HTML 是网页的<strong>结构语言</strong>，是一切前端的根。<a href="css.html">CSS</a> 管样子、<a href="react.html">JS</a> 管行为，但“内容是什么”由 HTML 决定。本教程从“会写标签”讲到“语义化、可访问性、SEO、现代 API”——这是资深前端对结构与质量的理解。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>HTML</strong>（超文本标记语言）用一对对标签描述页面结构：<code>&lt;h1&gt;</code> 是标题、<code>&lt;p&gt;</code> 是段落、<code>&lt;a&gt;</code> 是链接。浏览器读取它渲染成网页。</p>
-  <div class="box"><span class="bt">三者关系：</span>HTML 是骨架，<a href="css.html">CSS</a> 是皮肤（样式），<a href="react.html">JS</a>/<a href="vue3.html">Vue</a> 是肌肉（行为）。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>没有 HTML，浏览器不知道哪段是标题、哪段是导航、哪段是按钮。HTML 用<strong>标签</strong>描述内容的“含义（语义）”，而不是“长什么样”。</p>
+  <div class="box"><span class="bt">一句话：</span>HTML 给内容打上语义，浏览器、搜索引擎、屏幕阅读器、CSS/JS 才能正确理解并正确处理它。</div>
+  <div class="box ok"><span class="bt">资深视角：</span>“结构正确”比“样式漂亮”更基础。语义错的页面，SEO 差、读屏软件瞎、可维护性烂——这三类问题根源常在 HTML。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>不需要安装任何东西！新建一个 <code>index.html</code>，用记事本或 VS Code 写，双击即可用浏览器打开。</p>
-
-  <h2 id="s3">3. 第一个网页</h2>
-  <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="zh-CN"&gt;
-  &lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;我的第一个网页&lt;/title&gt;&lt;/head&gt;
-  &lt;body&gt;
-    &lt;h1&gt;你好，世界&lt;/h1&gt;
-    &lt;p&gt;这是一段文字。&lt;/p&gt;
-  &lt;/body&gt;
+  <h2 id="s2">2. 文档结构与元数据</h2>
+  <pre><code">&lt;!DOCTYPE html&gt;                       &lt;!-- 声明 HTML5 --&gt;
+&lt;html lang="zh-CN"&gt;                      &lt;!-- lang 利于 SEO 与读屏 --&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;                 &lt;!-- 字符编码，必须最前 --&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt; &lt;!-- 移动端适配 --&gt;
+  &lt;title&gt;页面标题&lt;/title&gt;                 &lt;!-- 搜索引擎结果里展示 --&gt;
+  &lt;meta name="description" content="一句话描述"&gt; &lt;!-- SEO 摘要 --&gt;
+&lt;/head&gt;
+&lt;body&gt; ... &lt;/body&gt;
 &lt;/html&gt;</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>忘写 <code>lang</code>、<code>viewport</code> 或把 <code>charset</code> 放后面，会导致乱码或移动端缩放异常。</div>
 
-  <h2 id="s4">4. 常用标签</h2>
-  <table>
-    <tr><th>标签</th><th>作用</th></tr>
-    <tr><td><code>h1~h6</code></td><td>标题层级</td></tr>
-    <tr><td><code>div / span</code></td><td>容器（块级/行内）</td></tr>
-    <tr><td><code>img</code></td><td>图片 <code>src</code></td></tr>
-    <tr><td><code>a</code></td><td>链接 <code>href</code></td></tr>
-    <tr><td><code>ul/ol/li</code></td><td>列表</td></tr>
-    <tr><td><code>button</code></td><td>按钮</td></tr>
-  </table>
+  <h2 id="s3">3. 语义化标签</h2>
+  <p>用“有含义”的标签替代一堆 <code>&lt;div&gt;</code>：</p>
+  <pre><code">&lt;header&gt;顶部&lt;/header&gt;
+&lt;nav&gt;导航&lt;/nav&gt;
+&lt;main&gt;
+  &lt;article&gt;一篇独立内容&lt;/article&gt;
+  &lt;section&gt;主题区块&lt;/section&gt;
+&lt;/main&gt;
+&lt;aside&gt;侧边&lt;/aside&gt;
+&lt;footer&gt;底部&lt;/footer&gt;</code></pre>
+  <ul>
+    <li><b>好处</b>：SEO 能识别结构、屏幕阅读器有“地标导航”、CSS/JS 选择更稳、代码自解释。</li>
+    <li><b>何时用 div</b>：纯粹为了样式分组、无语义含义时，才用 <code>&lt;div&gt;</code>。</li>
+  </ul>
+
+  <h2 id="s4">4. 文本与媒体</h2>
+  <ul>
+    <li>标题 <code>h1~h6</code> 体现层级（每页一个 <code>h1</code>）。</li>
+    <li>列表 <code>ul/ol/li</code>、强调 <code>strong/em</code>（别用 <code>b/i</code>，那是纯样式）。</li>
+    <li>图片 <code>&lt;img alt="描述"&gt;</code>：<code>alt</code> 是给读屏和加载失败看的，必填。</li>
+    <li>响应式图 <code>&lt;picture&gt;</code> + <code>srcset</code>：按屏幕密度/宽度出不同图。</li>
+    <li>视频 <code>&lt;video controls&gt;</code>、用 <code>&lt;figure&gt;&lt;figcaption&gt;</code> 配图注。</li>
+  </ul>
 
   <h2 id="s5">5. 表单</h2>
-  <pre><code>&lt;form action="/submit" method="post"&gt;
-  &lt;input name="user" placeholder="用户名"&gt;
-  &lt;input type="password" name="pwd"&gt;
-  &lt;button type="submit"&gt;登录&lt;/button&gt;
+  <p>表单是用户“把数据交给服务器”的入口，语义与无障碍尤其重要。</p>
+  <pre><code">&lt;form action="/submit" method="post"&gt;
+  &lt;label for="email"&gt;邮箱&lt;/label&gt;
+  &lt;input id="email" name="email" type="email" required
+         autocomplete="email" placeholder="you@example.com"&gt;
+  &lt;button type="submit"&gt;提交&lt;/button&gt;
 &lt;/form&gt;</code></pre>
+  <ul>
+    <li><code>label for</code> 与 <code>input id</code> 关联，点击文字也能聚焦、读屏能播报名。</li>
+    <li>原生校验属性 <code>required</code>/<code>type=email</code>/<code>min/max/pattern</code>，不写 JS 也能拦。</li>
+    <li><code>autocomplete</code> 提升体验与转化。</li>
+  </ul>
+  <div class="box ok"><span class="bt">资深：</span>表单语义正确 = 可访问 + 移动端友好 + 校验省事。后端仍要再用 zod/服务端校验（前端校验只是便利，不可信）。</div>
 
-  <h2 id="s6">6. 语义化</h2>
-  <p>用 <code>header / nav / main / article / footer</code> 代替满屏 <code>div</code>，利于 SEO 与可读性。</p>
+  <h2 id="s6">6. 表格</h2>
+  <pre><code">&lt;table&gt;
+  &lt;thead&gt;&lt;tr&gt;&lt;th scope="col"&gt;名称&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+  &lt;tbody&gt;&lt;tr&gt;&lt;td&gt;项目A&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+  <p><code>scope="col/row"</code> 让读屏知道表头对应关系；表格只用于“表格数据”，<strong>勿用于布局</strong>（布局用 CSS Grid/Flex）。</p>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>标签不闭合，布局错乱；养成成对书写习惯。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>中文乱码；务必 <code>&lt;meta charset="UTF-8"&gt;</code>。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>用 <code>&lt;table&gt;</code> 做布局（已淘汰）；布局请用 CSS Flex/Grid。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>img 路径写错 404；注意相对路径起点。</div>
+  <h2 id="s7">7. 链接与导航</h2>
+  <ul>
+    <li><code>&lt;a href="https://x.com" target="_blank" rel="noopener noreferrer"&gt;</code>：开新窗要 <code>rel</code> 防 <code>window.opener</code> 钓鱼。</li>
+    <li>导航用 <code>&lt;nav&gt;&lt;ul&gt;&lt;li&gt;&lt;a&gt;</code>，可读屏“跳到导航”。</li>
+    <li><code>href="#id"</code> 做页内锚点。</li>
+  </ul>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>写一个含标题、图片、表单的个人介绍页。</li>
-    <li>学 <a href="css.html">CSS</a> 美化它。</li>
-    <li>学 JavaScript 加点交互。</li>
-    <li>看 <a href="react.html">React</a>/<a href="vue3.html">Vue</a> 进阶。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能写结构清晰的 HTML 页面——前端第一步你已迈出。</div>
+  <h2 id="s8">8. 可访问性 a11y</h2>
+  <ul>
+    <li>所有可交互元素用原生 <code>&lt;button&gt;/&lt;a&gt;</code>，别用 <code>div</code> 假按钮（无键盘、无读屏）。</li>
+    <li>图片 <code>alt</code>、表单 <code>label</code>、用 <code>aria-*</code> 补充复杂组件语义。</li>
+    <li>颜色对比度达标、支持键盘操作、焦点可见。</li>
+    <li>地标标签（header/nav/main/footer）帮读屏用户快速跳转。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑：</span>用 <code>&lt;div onclick&gt;</code> 当按钮——键盘 Tab 不到、回车不触发、读屏不识别。这是高频可访问性事故。</div>
+
+  <h2 id="s9">9. SEO 基础</h2>
+  <ul>
+    <li>语义标签让爬虫理解结构；<code>title</code>/<code>description</code> 影响展示。</li>
+    <li>开放图谱 <code>og:*</code> 控制分享卡片；<code>canonical</code> 避免重复页。</li>
+    <li>结构化数据（JSON-LD）帮搜索引擎出富结果。</li>
+    <li>配合 <a href="nextjs.html">Next.js</a> 做 SSR/SSG，内容才对爬虫可见。</li>
+  </ul>
+
+  <h2 id="s10">10. 现代 HTML5 API</h2>
+  <ul>
+    <li><code>&lt;dialog&gt;</code>：原生模态框，自带焦点管理与 Esc 关闭。</li>
+    <li><code>&lt;details&gt;/&lt;summary&gt;</code>：原生折叠，无需 JS。</li>
+    <li><code>&lt;template&gt;</code>：存放不渲染的模板，JS 克隆用。</li>
+    <li><b>Web Components</b>：<code>customElements</code> + Shadow DOM，做框架无关的组件（了解即可，日常多用框架）。</li>
+  </ul>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>满屏 <code>&lt;div&gt;</code> 无语义，SEO/a11y 全废。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>图片没 <code>alt</code>，读屏读“图片”、加载失败无提示。</div>
+  <div class="box warn"><span class="bt">坑 3：</span><code>&lt;div onclick&gt;</code> 当按钮，键盘不可达。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>表单 <code>&lt;input&gt;</code> 无 <code>label</code> 关联，用户不知道填什么。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>用表格做页面布局，语义错乱、响应式难做。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>只信前端校验，后端没校验 → 脏数据/安全漏洞。</div>
+
+  <h2 id="s12">12. 调试与校验</h2>
+  <ul>
+    <li>浏览器 DevTools Elements 面板看真实 DOM 结构。</li>
+    <li>W3C HTML 校验器查语法错误。</li>
+    <li>Lighthouse 跑可访问性/SEO 评分。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会写标题/段落/图片/链接</td></tr>
+    <tr><td>初级</td><td>会表单、表格、基本布局结构</td></tr>
+    <tr><td>中级</td><td>语义化、可访问性、SEO 意识</td></tr>
+    <tr><td>资深</td><td>用结构保障质量（a11y/SEO/可维护）、懂现代 API 取舍</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 把一个 <code>div</code> 堆砌的页面重构成语义化结构 ② 写一份带 label/校验的注册表单 ③ 用 Lighthouse 给现有页打 a11y 分并修到 90+ ④ 用 <code>&lt;picture&gt;</code> 做响应式图。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解“结构即质量”——语义、可访问、可被检索，这是资深前端对 HTML 的基本功。</div>
 </main>
 </div>
 <script>

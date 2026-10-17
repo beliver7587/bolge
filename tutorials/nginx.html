@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nginx 反向代理 · 小白通关教程</title>
+<title>Nginx · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,52 +11,92 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Nginx<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 正向 vs 反向</a>
-  <a href="#s3">3. 子路径反代</a>
-  <a href="#s4">4. WebSocket 透传</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个站点</a>
+  <a href="#s4">4. 反向代理</a>
+  <a href="#s5">5. 负载均衡</a>
+  <a href="#s6">6. WebSocket/静态</a>
+  <a href="#s7">7. 常用坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Nginx 反向代理</h1>
-  <p class="tsub">网站的“前台” —— 统一收口、HTTPS 终止、WebSocket 透传，三个项目都用它。</p>
+  <h1>Nginx</h1>
+  <p class="tsub">高性能 Web 服务器 / 反向代理 —— 把请求转发给后端、托管静态文件、做负载均衡与 HTTPS 入口。简历工坊部署离不开它。学完你能把网站部署上线。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>Nginx 是高性能的 Web 服务器，最常用来做<strong>反向代理</strong>：所有用户只访问 443 端口，Nginx 这个“前台”按 URL 路径把请求分给内部不同服务。三个项目都靠它统一对外。</p>
+  <p><strong>Nginx</strong> 是高并发 Web 服务器，常作为“前端入口”：对外暴露 80/443，对内把请求转发给 Node/Spring 等后端（反向代理），也能直接托管静态文件。</p>
+  <div class="box"><span class="bt">一句话：</span>用户只访问 Nginx，Nginx 决定把请求给哪个后端、或返回哪个静态文件。</div>
 
-  <h2 id="s2">2. 正向 vs 反向</h2>
-  <table>
-    <tr><th></th><th>正向代理</th><th>反向代理（本项目用）</th></tr>
-    <tr><td>立场</td><td>帮“客户端”上网（梯子）</td><td>帮“服务器”收口（前台）</td></tr>
-    <tr><td>谁配置</td><td>客户端</td><td>服务端</td></tr>
-  </table>
+  <h2 id="s2">2. 环境准备</h2>
+  <pre><code"># Ubuntu
+sudo apt update &amp;&amp; sudo apt install nginx
+sudo systemctl start nginx
+# 浏览器访问服务器 IP，看到欢迎页即成功</code></pre>
 
-  <h2 id="s3">3. 子路径反代</h2>
-  <pre><code># 把 /td/ 转发给内部 8095 端口的游戏服务
-location /td/ {
-  proxy_pass http://127.0.0.1:8095/;   # 末尾斜杠：去掉 /td 前缀再转发
+  <h2 id="s3">3. 第一个站点</h2>
+  <p>配置在 <code>/etc/nginx/sites-available/</code>，软链到 <code>sites-enabled/</code>：</p>
+  <pre><code">server {
+  listen 80;
+  server_name example.com;
+  root /var/www/html;
+  index index.html;
+  location / { try_files $uri $uri/ =404; }
+}</code></pre>
+
+  <h2 id="s4">4. 反向代理</h2>
+  <p>把 <code>/api</code> 转发给本地 3000 的后端：</p>
+  <pre><code">location /api/ {
+  proxy_pass http://127.0.0.1:3000/;
   proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
 }</code></pre>
-  <div class="box ok"><span class="bt">关键：</span><code>proxy_pass</code> 末尾的斜杠表示“剥掉前缀”，漏写会让后端收到带前缀的路径而 404。</div>
+  <div class="box ok"><span class="bt">作用：</span>用户访问 <code>http://域名/api/xxx</code> 实际打到你本机的 Node 服务。</div>
 
-  <h2 id="s4">4. WebSocket 透传</h2>
-  <pre><code>location /socket.io/ {
-  proxy_pass http://127.0.0.1:3000;
+  <h2 id="s5">5. 负载均衡</h2>
+  <pre><code">upstream backend {
+  server 127.0.0.1:3000;
+  server 127.0.0.1:3001;
+}
+location /api/ { proxy_pass http://backend/; }</code></pre>
+
+  <h2 id="s6">6. WebSocket / 静态</h2>
+  <pre><code"># WebSocket 必须加 Upgrade（否则 400）
+location /ws/ {
+  proxy_pass http://127.0.0.1:8080/;
   proxy_http_version 1.1;
-  proxy_set_header Upgrade $http_upgrade;     # ★ 必须
-  proxy_set_header Connection $connection_upgrade;
-  proxy_read_timeout 86400s;                  # 长连接别被掐
-  proxy_buffering off;                        # 实时消息不缓冲
-}</code></pre>
-  <div class="box danger"><span class="bt">两个真实坑：</span>漏掉 Upgrade 头 → 握手失败；<code>proxy_read_timeout</code> 用默认 60s → 玩家挂机就掉线。</div>
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
+# SSE 关闭缓冲，避免推送延迟
+location /stream { proxy_buffering off; proxy_pass http://127.0.0.1:3000; }</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>改完配置不校验：先 <code>nginx -t</code> 再 <code>systemctl reload nginx</code>，否则配错全站瘫。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>SSE 流式要 <code>proxy_buffering off</code>（见 <a href="sse.html">SSE</a>）。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>后端端口直接暴露公网——只绑 <code>127.0.0.1</code>，外网只走 Nginx。</div>
+  <h2 id="s7">7. 常用坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span><code>nginx -t</code> 不校验就 reload，配置错导致 502；改完先 <code>sudo nginx -t</code> 测试。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>WebSocket/SSE 没配 Upgrade/关闭缓冲，长连接异常。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>反向代理没带 <code>Host</code>/<code>X-Real-IP</code>，后端拿不到真实域名与 IP。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>配置改了没 <code>reload</code>：<code>sudo nginx -s reload</code> 才生效。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>防火墙没放行 80/443，外部访问不了。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>把你的后端用 Nginx 反代上线。</li>
+    <li>学 <a href="https.html">HTTPS</a> 加证书。</li>
+    <li>学 <a href="pm2.html">PM2</a> / <a href="systemd.html">systemd</a> 守护进程。</li>
+    <li>看简历工坊部署文档。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 Nginx、配站点、做反向代理与负载均衡——网站上线入口你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

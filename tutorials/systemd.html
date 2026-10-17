@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>systemd 服务 · 小白通关教程</title>
+<title>systemd · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,53 +11,76 @@
 <nav class="tside" id="tside">
   <div class="tbrand">systemd<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 为什么用</a>
-  <a href="#s3">3. 写一个 unit</a>
-  <a href="#s4">4. 常用命令</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 写 unit 文件</a>
+  <a href="#s4">4. 启停与开机</a>
+  <a href="#s5">5. 看日志</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>systemd 服务</h1>
-  <p class="tsub">Linux 的进程总管 —— 写个 .service 让后端开机自启、崩溃重启。</p>
+  <h1>systemd</h1>
+  <p class="tsub">Linux 的系统与服务管理器 —— 让后端进程开机自启、崩溃重启、统一管日志。比 <a href="pm2.html">PM2</a> 更底层、更通用。学完你能用系统自带方式守护服务。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>systemd 是绝大多数 Linux（含 Ubuntu）的<strong>初始化与服务管理系统</strong>。你写一个 <code>.service</code> 配置文件，就能让某个程序成为“系统服务”：开机自动启动、崩溃自动重启、统一看日志。比 <a href="pm2.html">PM2</a> 更底层、更“正规”。</p>
+  <p><strong>systemd</strong> 是现代 Linux 的初始化系统，负责启动和管理服务（叫 unit）。你写的后端可以注册成一个 service，由系统接管生命周期。</p>
+  <div class="box"><span class="bt">对比：</span><a href="pm2.html">PM2</a> 是 Node 专属；systemd 是系统级、语言无关，更适合生产长期驻留服务。</div>
 
-  <h2 id="s2">2. 为什么用</h2>
-  <div class="box"><span class="bt">对比：</span>PM2 是 Node 生态的守护；systemd 是系统级，语言无关，且和 journalctl 日志、开机启动深度整合。</div>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>主流 Linux（Ubuntu/CentOS/Debian）默认自带 systemd，无需安装。</p>
 
-  <h2 id="s3">3. 写一个 unit</h2>
-  <pre><code># /etc/systemd/system/memora.service
-[Unit]
-Description=Memora AI Customer Service
+  <h2 id="s3">3. 写 unit 文件</h2>
+  <p>新建 <code>/etc/systemd/system/my-api.service</code>：</p>
+  <pre><code">[Unit]
+Description=My API Service
 After=network.target
 
 [Service]
-Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/ai-customer-service
-ExecStart=/usr/bin/node server.js
-Restart=on-failure        # 崩了自动重启
-RestartSec=5
+WorkingDirectory=/home/ubuntu/app
+ExecStart=/usr/bin/node /home/ubuntu/app/server.js
+Restart=on-failure        # 崩溃自动重启
+Environment=NODE_ENV=production
 
 [Install]
 WantedBy=multi-user.target</code></pre>
 
-  <h2 id="s4">4. 常用命令</h2>
-  <pre><code>sudo systemctl daemon-reload      # 改了配置先重载
-sudo systemctl enable memora      # 开机自启
-sudo systemctl start memora       # 启动
-sudo systemctl status memora      # 看状态
-journalctl -u memora -f           # 看日志</code></pre>
+  <h2 id="s4">4. 启停与开机</h2>
+  <pre><code">sudo systemctl daemon-reload         # 改了配置先重载
+sudo systemctl start my-api
+sudo systemctl enable my-api         # 开机自启
+sudo systemctl status my-api</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>工作目录/用户写错，服务起不来——先用 <code>status</code> 看报错。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>写错 <code>ExecStart</code> 路径，或没给执行权限。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>用 root 跑服务有安全风险——尽量指定普通用户（如 ubuntu）。</div>
+  <h2 id="s5">5. 看日志</h2>
+  <pre><code">journalctl -u my-api -f               # 实时看该服务日志</code></pre>
+
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>改了 service 文件没 <code>daemon-reload</code>，不生效。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>User/路径/权限不对，服务起不来；确认 WorkingDirectory 与 ExecStart 路径可访问。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>环境变量没在 unit 里设，应用读不到；用 <code>Environment=</code> 或 <code>EnvironmentFile=</code>。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>Restart 设了 always 但程序启动即退出，systemd 会疯狂重启；用 <code>on-failure</code> 或排查启动错误。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>端口被占用或没放行防火墙，服务起了但访问不了。</div>
+
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>把你的后端注册成 systemd 服务并 enable。</li>
+    <li>配合 <a href="nginx.html">Nginx</a> 反代 + <a href="https.html">HTTPS</a>。</li>
+    <li>对比 <a href="pm2.html">PM2</a> 选择守护方案。</li>
+    <li>看简历工坊部署。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能写 service 文件、启停/开机自启、查日志——用系统级方式守护服务你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

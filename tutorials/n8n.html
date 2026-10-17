@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>n8n 自动化 · 小白通关教程</title>
+<title>n8n · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,42 +11,73 @@
 <nav class="tside" id="tside">
   <div class="tbrand">n8n<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 核心概念</a>
-  <a href="#s3">3. 每日热点实例</a>
-  <a href="#s4">4. 发布模型坑</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 第一个工作流</a>
+  <a href="#s4">4. 节点与连线</a>
+  <a href="#s5">5. 接 Webhook/API</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>n8n 自动化</h1>
-  <p class="tsub">开源可视化工作流工具 —— Memora 用它每天定时抓新闻推企业微信。</p>
+  <h1>n8n</h1>
+  <p class="tsub">开源的工作流自动化平台 —— 用拖拽节点把“触发→处理→动作”串起来，免写代码做自动化（类似 Zapier/Make）。学完你能搭一个自动化工单/通知流。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>n8n 是<strong>开源的可视化工作流自动化平台</strong>，类似“程序员版 IFTTT”：拖节点、连线，把“定时触发 → 调接口 → 处理数据 → 发通知”串成自动化流程。Memora 用它做“每日 20:00 抓新闻推企业微信”。</p>
+  <p><strong>n8n</strong> 是可视化自动化工具：每个“节点”是一个动作（如定时、HTTP 请求、发邮件、调用 <a href="llm.html">LLM</a>），把节点连线就是一条自动化流水线。</p>
+  <div class="box"><span class="bt">一句话：</span>不写代码，拖几个方块连起来，就能让“收到表单 → 存数据库 → 发 Slack 通知”自动跑。</div>
+  <div class="box ok"><span class="bt">适合：</span>内部自动化、数据同步、AI 工作流编排（可内嵌大模型节点）。</div>
 
-  <h2 id="s2">2. 核心概念</h2>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>最省事用 Docker：</p>
+  <pre><code">docker run -d --name n8n -p 5678:5678 -e N8N_SECURE_COOKIE=false n8nio/n8n</code></pre>
+  <p>浏览器打开 <code>http://服务器IP:5678</code> 即可。</p>
+
+  <h2 id="s3">3. 第一个工作流</h2>
+  <ol>
+    <li>新建 Workflow。</li>
+    <li>加一个 <strong>Trigger</strong> 节点（如 Manual Trigger 手动触发，或 Schedule 定时）。</li>
+    <li>加一个 <strong>Function</strong> 节点处理数据，或 <strong>HTTP Request</strong> 调接口。</li>
+    <li>连线后点 Execute 运行。</li>
+  </ol>
+
+  <h2 id="s4">4. 节点与连线</h2>
+  <p>数据在节点间以 JSON 流转：上一个节点的输出，是下一个节点的输入。可在节点里用表达式 <code>{{ $json.field }}</code> 取上一步的字段。</p>
+  <pre><code">// Function 节点示例
+return [{ json: { msg: '你好 ' + $json.name } }];</code></pre>
+
+  <h2 id="s5">5. 接 Webhook / API</h2>
   <ul>
-    <li><b>Trigger（触发器）</b>：流程起点，如 Schedule（定时）、Webhook（被调用）。</li>
-    <li><b>Node（节点）</b>：每一步操作，如 HTTP Request、Function、消息发送。</li>
-    <li><b>连接</b>：节点之间的数据流向。</li>
+    <li><b>Webhook</b> 节点：暴露一个 URL，外部 POST 进来即触发。</li>
+    <li><b>HTTP Request</b> 节点：调用任意 REST API（如 <a href="express.html">Express</a> 写的后端）。</li>
+    <li><b>AI 节点</b>：内置 OpenAI/国产模型节点，可做“收到文本→大模型处理→存库”。</li>
   </ul>
 
-  <h2 id="s3">3. 每日热点实例</h2>
-  <div class="diagram">Schedule(每天20:00)
- → HTTP GET 本应用 /api/hotnews/fetch
- → 组装成 Markdown
- → HTTP POST 企业微信机器人 webhook</div>
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>节点数据格式不匹配（期望数组却给对象）；在 Function 节点用 <code>return [{json:{...}}]</code> 规范输出。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>Webhook 没配域名/HTTPS 在公网访问不便；配合 <a href="nginx.html">Nginx</a> 反代。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>循环节点产生海量执行，把内存吃满；注意循环与批量设置。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>敏感凭据别硬编码在节点里，用 n8n 的 Credentials 管理。</div>
 
-  <h2 id="s4">4. 发布模型坑（真实）</h2>
-  <div class="box danger"><span class="bt">致命坑：</span>n8n v2.8 是“发布模型”——导入的工作流只设 <code>active=1</code> 不算发布，<b>必须 <code>activeVersionId = versionId</code></b> 才会注册定时器。否则日志显示 “0 published”，定时任务死活不跑。修复 SQL：<code>UPDATE workflow_entity SET activeVersionId=versionId WHERE active=1 AND activeVersionId IS NULL;</code></div>
-
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>把 n8n UI 裸奔公网——务必绑定 <code>127.0.0.1</code> 再用 <a href="nginx.html">Nginx</a> 子域名 + Basic Auth 暴露。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>版本不一致导致工作流不兼容——导入和导出用同版本。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>用 systemd 托管（见 <a href="systemd.html">systemd</a>），别用临时终端跑。</div>
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>做一个“定时拉接口→存表→发通知”的工作流。</li>
+    <li>配合 <a href="nginx.html">Nginx</a> / <a href="https.html">HTTPS</a> 对外暴露 Webhook。</li>
+    <li>学 <a href="agent.html">Agent</a> 在 n8n 里编排 AI。</li>
+    <li>看简历工坊自动化相关。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能安装 n8n、拖节点连线、用 Webhook/HTTP/AI 节点搭工作流——自动化你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

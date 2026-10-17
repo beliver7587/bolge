@@ -11,52 +11,88 @@
 <nav class="tside" id="tside">
   <div class="tbrand">MySQL<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 表与 SQL</a>
-  <a href="#s3">3. 建表实战</a>
-  <a href="#s4">4. 索引与事务</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 连上数据库</a>
+  <a href="#s4">4. 建库建表</a>
+  <a href="#s5">5. 增删改查</a>
+  <a href="#s6">6. 从代码连</a>
+  <a href="#s7">7. 索引与优化</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>MySQL</h1>
-  <p class="tsub">最流行的开源关系型数据库 —— 简历工坊的结构化数据全存这里。</p>
+  <p class="tsub">最流行的开源关系型数据库 —— 用表存结构化数据，支持 SQL 查询。简历工坊就用它存数据。学完你能设计表并操作数据库。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>MySQL 是<strong>关系型数据库</strong>：数据按“表（行和列）”组织，表之间可以建立关联。它用 SQL 语言增删改查，成熟稳定、社区庞大，是绝大多数网站后台的默认选择。</p>
+  <p><strong>MySQL</strong> 是关系型数据库：数据按“库 → 表 → 行”组织，用 <strong>SQL</strong> 语言增删改查。它保证事务、一致性，适合存订单、用户、文章等结构化数据。</p>
+  <div class="box"><span class="bt">对比：</span><a href="redis.html">Redis</a> 是内存键值库（快、适合缓存）；MySQL 是落盘的关系库（持久、适合业务主数据）。</div>
 
-  <h2 id="s2">2. 表与 SQL</h2>
-  <p>表就像 Excel：列是字段（姓名、年龄），行是一条记录。常用 SQL：</p>
-  <pre><code>SELECT * FROM user WHERE id = 1;          -- 查
-INSERT INTO user(name) VALUES('王越');     -- 增
-UPDATE user SET name='越' WHERE id=1;      -- 改
-DELETE FROM user WHERE id=1;               -- 删</code></pre>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>最省事：装 <strong>Docker</strong> 一键起，或用本地安装包（Windows 用 MySQL Installer，Mac 用 <code>brew install mysql</code>）。Docker 方式：</p>
+  <pre><code>docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 mysql:8</code></pre>
+  <p>客户端工具推荐 <strong>Navicat / DBeaver / TablePlus</strong>，图形化操作更直观。</p>
 
-  <h2 id="s3">3. 建表实战</h2>
-  <pre><code>CREATE TABLE resume (
-  id        BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id   BIGINT NOT NULL,
-  title     VARCHAR(120),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_user (user_id)                  -- 给常用查询字段加索引
+  <h2 id="s3">3. 连上数据库</h2>
+  <pre><code>mysql -h 127.0.0.1 -P 3306 -u root -p
+# 输入密码后进入 mysql&gt; 提示符</code></pre>
+
+  <h2 id="s4">4. 建库建表</h2>
+  <pre><code>CREATE DATABASE demo CHARACTER SET utf8mb4;
+USE demo;
+CREATE TABLE user (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  age INT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );</code></pre>
+  <div class="box ok"><span class="bt">要点：</span>用 <code>utf8mb4</code> 支持 emoji；<code>NOT NULL</code> 约束必填；<code>AUTO_INCREMENT</code> 自增主键。</div>
 
-  <h2 id="s4">4. 索引与事务</h2>
-  <ul>
-    <li><b>索引</b>：像书的目录，加速查询；但会拖慢写入，别乱加。</li>
-    <li><b>事务</b>：把多个操作绑成“要么全成、要么全退”的一笔，保证数据一致（转账必备）。</li>
-  </ul>
-  <pre><code>START TRANSACTION;
-UPDATE account SET balance=balance-100 WHERE id=1;
-UPDATE account SET balance=balance+100 WHERE id=2;
-COMMIT;   -- 或 ROLLBACK 回退</code></pre>
+  <h2 id="s5">5. 增删改查</h2>
+  <pre><code>INSERT INTO user(name, age) VALUES ('小王', 18);
+SELECT * FROM user WHERE age &gt; 16;
+UPDATE user SET age = 19 WHERE name = '小王';
+DELETE FROM user WHERE id = 1;</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>用字符串拼接 SQL 会 SQL 注入——务必用参数化（见 <a href="mybatisplus.html">MyBatis-Plus</a> 的安全写法）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>没有主键或索引，数据一大查询就慢。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>字符集用 <code>utf8mb4</code> 而非旧 <code>utf8</code>，否则存不了 emoji/生僻字。</div>
+  <h2 id="s6">6. 从代码连</h2>
+  <p>Node 用 <code>mysql2</code>：</p>
+  <pre><code>import mysql from 'mysql2/promise';
+const pool = mysql.createPool({ host:'localhost', user:'root', password:'123456', database:'demo' });
+const [rows] = await pool.query('SELECT * FROM user');
+console.log(rows);</code></pre>
+
+  <h2 id="s7">7. 索引与优化</h2>
+  <p>给常查询的列加索引提速：</p>
+  <pre><code>CREATE INDEX idx_name ON user(name);</code></pre>
+  <div class="box warn"><span class="bt">注意：</span>索引加速查询但拖慢写入；<code>SELECT *</code>、在列上做函数运算会导致索引失效。</div>
+
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>字符集用 <code>utf8</code>（非真正 UTF-8）导致 emoji 报错，务必 <code>utf8mb4</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>SQL 拼接导致注入；用参数化查询 <code>?</code> 占位。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>没有主键/索引，数据量大时查询极慢。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>忘记 <code>COMMIT</code>（关闭自动提交时）事务不生效。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>远程连不上多为防火墙/绑定地址，检查 <code>bind-address</code> 与放行 3306。</div>
+
+  <h2 id="s9">9. 下一步</h2>
+  <ol>
+    <li>设计一张自己的业务表并 CRUD。</li>
+    <li>配合 <a href="springboot.html">Spring Boot</a> + <a href="mybatisplus.html">MyBatis-Plus</a> 操作。</li>
+    <li>学 <a href="redis.html">Redis</a> 做缓存。</li>
+    <li>看简历工坊，MySQL 表设计范例。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 MySQL、建库建表、用 SQL 增删改查、从代码连接——关系型数据库你已上手。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

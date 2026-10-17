@@ -11,48 +11,85 @@
 <nav class="tside" id="tside">
   <div class="tbrand">better-sqlite3<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 同步 vs 异步</a>
-  <a href="#s3">3. 基本用法</a>
-  <a href="#s4">4. 事务</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 环境准备</a>
+  <a href="#s3">3. 打开数据库</a>
+  <a href="#s4">4. 建表</a>
+  <a href="#s5">5. 增删改查</a>
+  <a href="#s6">6. 预编译语句</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>better-sqlite3</h1>
-  <p class="tsub">Node 的嵌入式 SQLite 库 —— Memora 用单机文件存用户与记忆。</p>
+  <p class="tsub">Node.js 上最快、最简单的嵌入式 SQLite 库 —— 同步 API、零配置、单文件数据库。做小工具/原型/本地存储首选。学完你能零运维地持久化数据。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>SQLite</strong> 是“单文件数据库”，不用启服务，一个 <code>.db</code> 文件就是整个库。<strong>better-sqlite3</strong> 是 Node 上最快的 SQLite 驱动，而且 API 是<strong>同步</strong>的，写起来直观，没有回调/Promise 缠绕。</p>
+  <p><strong>better-sqlite3</strong> 是对 SQLite 的 Node 封装，最大特点是<strong>同步 API</strong>：调用直接拿到结果，不用 await，代码直观。</p>
+  <div class="box"><span class="bt">对比：</span><a href="mysql.html">MySQL</a> 要起服务、配账号；SQLite 是个文件，开箱即用。适合单机/小流量。</div>
+  <div class="box ok"><span class="bt">适合：</span>桌面应用、CLI 工具、个人项目、Demo、边缘/Serverless 本地存储。</div>
 
-  <h2 id="s2">2. 同步 vs 异步</h2>
-  <div class="box"><span class="bt">对比：</span>多数 Node 库是异步（await）；better-sqlite3 故意用同步——因为本地文件 IO 很快，同步反而更简单且性能更好（Memora 实测足够）。</div>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>需本地有编译环境（Windows 装 <code>windows-build-tools</code> 或已装 VS Build Tools）。通常直接：</p>
+  <pre><code>npm install better-sqlite3</code></pre>
+  <div class="box warn"><span class="bt">提示：</span>它是原生模块，安装时会编译；CI 上用预编译包或 <code>@electron-forge</code> 等现成二进制。</div>
 
-  <h2 id="s3">3. 基本用法</h2>
+  <h2 id="s3">3. 打开数据库</h2>
   <pre><code>import Database from 'better-sqlite3';
-const db = new Database('memora.db');   // 没有就自动创建
+const db = new Database('app.db');     // 文件不存在会自动创建
+// 生产建议开启 WAL 提升并发
+db.pragma('journal_mode = WAL');</code></pre>
 
-db.exec(`CREATE TABLE IF NOT EXISTS user(
-  id INTEGER PRIMARY KEY, name TEXT)`);
-const ins = db.prepare('INSERT INTO user(name) VALUES(?)');
-ins.run('王越');
+  <h2 id="s4">4. 建表</h2>
+  <pre><code>db.exec(`
+  CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    age INTEGER
+  )
+`);</code></pre>
 
-const row = db.prepare('SELECT * FROM user WHERE id=?').get(1);
-console.log(row);</code></pre>
+  <h2 id="s5">5. 增删改查</h2>
+  <pre><code>db.prepare('INSERT INTO user(name, age) VALUES (?, ?)').run('小王', 18);
+const all = db.prepare('SELECT * FROM user').all();
+const one = db.prepare('SELECT * FROM user WHERE id = ?').get(1);
+db.prepare('UPDATE user SET age = ? WHERE id = ?').run(19, 1);
+db.prepare('DELETE FROM user WHERE id = ?').run(1);</code></pre>
 
-  <h2 id="s4">4. 事务</h2>
-  <pre><code>const tx = db.transaction((items) =&gt; {
-  for (const it of items) ins.run(it);
+  <h2 id="s6">6. 预编译语句</h2>
+  <p>用 <code>prepare</code> 预编译一次、多次执行，既快又防注入：</p>
+  <pre><code>const insert = db.prepare('INSERT INTO user(name) VALUES (?)');
+const insertMany = db.transaction((names) =&gt; {
+  for (const n of names) insert.run(n);   // 事务批量，原子且快
 });
-tx([{name:'a'},{name:'b'}]);   // 要么全写，要么全不写</code></pre>
-  <div class="box ok"><span class="bt">Memora 用法：</span>记忆去重/冲突消解就是在事务里批量比对+写入，保证一致性。</div>
+insertMany(['a', 'b', 'c']);</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>它是原生模块，安装时要本地编译——Node 22 可能失败，锁 <b>Node 20</b> 并用 <code>npm rebuild</code>（Memora 真实踩坑）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>同步阻塞：单次查询很慢（如大批量）会卡住事件循环，大数据量请换 <a href="mysql.html">MySQL</a>/Postgres。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>并发写要小心，单连接串行；高并发场景不适合。</div>
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>它是同步的，高并发写会阻塞事件循环；大流量请用 <a href="mysql.html">MySQL</a>/<a href="redis.html">Redis</a> 或限制写入。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>字符串拼接 SQL 导致注入；务必用 <code>?</code> 占位参数。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>多进程同时写同一文件会锁；用 WAL 模式缓解，或单写者。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>路径用相对路径时，工作目录不同会导致生成多个 db 文件；用绝对路径。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>原生模块在部署时若平台不同需重新编译（如本地 Mac 部署到 Linux）。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>用 SQLite 给小工具做持久化。</li>
+    <li>对比 <a href="mysql.html">MySQL</a> 何时该上大型数据库。</li>
+    <li>学 <a href="nodejs.html">Node.js</a> 基础。</li>
+    <li>看简单 CLI/原型项目，SQLite 常用于此。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能装 better-sqlite3、建表、用预编译语句做 CRUD——轻量持久化你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

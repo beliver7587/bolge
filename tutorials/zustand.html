@@ -2,92 +2,119 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zustand · 小白通关教程</title>
+<title>Zustand · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Zustand<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 创建 store</a>
-  <a href="#s4">4. 在组件里用</a>
-  <a href="#s5">5. 改状态的几种写法</a>
-  <a href="#s6">6. 跨组件共享</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">Zustand<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 核心 API</a>
+  <a href="#s4">4. 选择器与性能</a>
+  <a href="#s5">5. 与 React 集成</a>
+  <a href="#s6">6. 中间件生态</a>
+  <a href="#s7">7. 与 Redux 对比</a>
+  <a href="#s8">8. 状态设计</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 调试</a>
+  <a href="#s11">11. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Zustand</h1>
-  <p class="tsub">极简的 React 状态管理库 —— 不用 Provider 包裹、不用写 reducers，一个函数搞定全局状态。学完你能优雅地跨组件共享数据。</p>
+  <h1>Zustand：从小白到资深前端</h1>
+  <p class="tsub">Zustand 是极简的 React 状态管理库（也可用于 <a href="vue3.html">Vue</a> 等）。它用“一个 hook 拿到 store”的极简 API，解决了 <a href="react.html">Context</a> 的重渲染痛点与 Redux 的样板冗余。本教程讲透<strong>精准订阅、中间件、状态结构设计</strong>——这是资深前端选状态方案的依据。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p>当状态需要在<strong>多个不相邻组件</strong>之间共享（比如登录用户、主题、购物车），React 的 <code>useState</code> 就不够用了。传统 Redux 太啰嗦，<strong>Zustand</strong> 用极简 API 解决：</p>
-  <div class="box"><span class="bt">一句话：</span>Zustand 就是一个“全局变量 + 订阅”，任何组件都能读、都能改，且改了相关组件自动刷新。</div>
-  <div class="box ok"><span class="bt">优点：</span>无 Provider 嵌套、API 极小（<code>create</code> 一个函数）、TS 友好、可脱离 React 使用。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>全局状态若用 Context：任何一个值变了，<strong>所有消费者都重渲染</strong>（难以精细控制）。若用 Redux：action/reducer/dispatch 样板多。Zustand 取中间：一个 <code>create</code> 建 store，组件用选择器<strong>只订阅自己关心的字段</strong>，粒度可控、几乎零样板。</p>
+  <div class="box"><span class="bt">一句话：</span>Zustand = 全局可变的“迷你仓库”，但组件能<strong>按字段精准订阅</strong>，避免无谓重渲染，且可在组件外（如事件回调、定时器）直接读写。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>已有 <a href="react.html">React</a> 项目（Vite/Next 均可）。安装：</p>
-  <pre><code>npm install zustand</code></pre>
+  <h2 id="s2">2. 工程化起步</h2>
+  <pre><code">pnpm add zustand</code></pre>
+  <p>无配置、无 Provider 包裹。直接用。</p>
 
-  <h2 id="s3">3. 创建 store</h2>
-  <p>新建 <code>store.js</code>：</p>
-  <pre><code>import { create } from 'zustand';
+  <h2 id="s3">3. 核心 API</h2>
+  <pre><code">'use client';
+import { create } from 'zustand';
 
-export const useUserStore = create((set) =&gt; ({
-  name: '游客',
-  isLogin: false,
-  login: (name) =&gt; set({ name, isLogin: true }),
-  logout: () =&gt; set({ name: '游客', isLogin: false })
-}));</code></pre>
-  <div class="box"><span class="bt">要点：</span><code>create</code> 里返回一个对象，包含“状态”和“修改状态的函数”；函数内部用 <code>set</code> 来更新。</div>
-
-  <h2 id="s4">4. 在组件里用</h2>
-  <pre><code>import { useUserStore } from './store';
-
-function Header() {
-  const name = useUserStore((s) =&gt; s.name);
-  const isLogin = useUserStore((s) =&gt; s.isLogin);
-  return &lt;div&gt;{isLogin ? name : '请登录'}&lt;/div&gt;;
-}</code></pre>
-  <div class="box ok"><span class="bt">关键写法：</span><code>useUserStore((s) =&gt; s.name)</code> 只订阅 <code>name</code> 这一项——只有 name 变时这个组件才重渲染，性能好。</div>
-
-  <h2 id="s5">5. 改状态的几种写法</h2>
-  <pre><code>// 直接 set 新对象
-useUserStore.getState().login('小王');   // 非组件里也能调用
-
-// 组件内调用 action
-const login = useUserStore((s) =&gt; s.login);
-login('小王');
-
-// 基于旧值更新
-set((state) =&gt; ({ count: state.count + 1 }));</code></pre>
-
-  <h2 id="s6">6. 跨组件共享（实战）</h2>
-  <p>A 组件登录后，B、C 组件立刻读到新用户——无需把 state 一层层传 props：</p>
-  <pre><code>function LoginBtn() {
-  const login = useUserStore((s) =&gt; s.login);
-  return &lt;button onClick={() =&gt; login('小红')}&gt;登录&lt;/button&gt;;
+interface CounterState {
+  count: number;
+  inc: () =&gt; void;
 }
-// Header 里已 useUserStore 读 name，点登录后自动变成“小红”</code></pre>
+const useCounter = create&lt;CounterState&gt;((set, get) =&gt; ({
+  count: 0,
+  inc: () =&gt; set({ count: get().count + 1 }),  // set 合并，get 读当前
+}));</code></pre>
+  <ul>
+    <li><code>set(partial | fn)</code>：合并更新；用函数式 <code>set(s =&gt; ({...}))</code> 拿最新值。</li>
+    <li><code>get()</code>：在 action 里读其他状态，避免闭包旧值。</li>
+  </ul>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>订阅了整个 store（<code>const s = useUserStore()</code>），任何字段变都重渲染。应只选需要的字段。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>在 <code>set</code> 里直接改原对象（<code>state.name='x'</code>）不生效，必须返回新对象 <code>set({name:'x'})</code>。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>Next.js 的 SSR 中 store 是模块级单例，多个请求会共享状态；需要按请求隔离时用 <code>createStore</code> + Context。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>非组件环境（如工具函数）用 <code>useUserStore.getState()</code> 取值，而不是当成普通对象。</div>
+  <h2 id="s4">4. 选择器与性能</h2>
+  <p>关键优势：组件只订阅它选的字段，该字段不变就不重渲染。</p>
+  <pre><code">const count = useCounter(s =&gt; s.count);     // 只订阅 count
+const inc = useCounter(s =&gt; s.inc);         // 函数引用稳定，不触发渲染</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>不要在选择器里返回<strong>新对象/新数组</strong>（如 <code>s =&gt; ({a,b})</code>），每次都新引用 → 无限重渲染。多字段分别订阅，或用 <code>useShallow</code> 浅比较。</div>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>把项目里的“全局数据”（用户、主题）迁到 Zustand。</li>
-    <li>配合 <a href="react.html">React</a> 做中型应用。</li>
-    <li>复杂异步用 Zustand 的 <code>async</code> action 或中间件 <code>immer</code>。</li>
-    <li>看 Memora 源码，状态管理大量使用 Zustand。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能创建 store、在组件里读写、跨组件共享状态——React 应用的数据层你已掌握。</div>
+  <h2 id="s5">5. 与 React 集成</h2>
+  <ul>
+    <li><b>组件内</b>：<code>const x = useStore(s =&gt; s.x)</code>。</li>
+    <li><b>组件外读写</b>：<code>useCounter.getState().inc()</code> / <code>.setState()</code>，可在定时器、事件监听里直接用，不需 hook 上下文。</li>
+    <li><b>持久化</b>：<code>persist</code> 中间件自动存 localStorage（见第 6 节）。</li>
+  </ul>
+
+  <h2 id="s6">6. 中间件生态</h2>
+  <pre><code">import { persist, devtools, immer } from 'zustand/middleware';
+const useStore = create(persist(
+  devtools((set) =&gt; ({ ... }), { name: 'app' }),
+  { name: 'app-storage' }          // 自动持久化到 localStorage
+));</code></pre>
+  <ul>
+    <li><code>persist</code>：状态自动存/取（适合主题、登录态 token 等）。</li>
+    <li><code>immer</code>：用“可变写法”改嵌套状态（内部转不可变）。</li>
+    <li><code>devtools</code>：接入 Redux DevTools 看状态时间线。</li>
+  </ul>
+
+  <h2 id="s7">7. 与 Redux 对比</h2>
+  <table>
+    <tr><th></th><th>Zustand</th><th>Redux Toolkit</th></tr>
+    <tr><td>样板</td><td>极少</td><td>中等（slice/action）</td></tr>
+    <tr><td>精准订阅</td><td>原生支持</td><td>需 selector + 注意</td></tr>
+    <tr><td>适用</td><td>中小型/灵活项目</td><td>大团队、强规范、时间旅行调试</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">选型：</span>大多数应用 Zustand 足够且更轻；需要严格流程、可回溯、多人强约束时上 Redux Toolkit。</div>
+
+  <h2 id="s8">8. 状态设计</h2>
+  <ul>
+    <li><b>按域分 store</b>：<code>useUser</code>、<code>useCart</code> 分开，而非一个巨型 store。</li>
+    <li><b>服务端数据别进 store</b>：来自接口的数据交给 TanStack Query（同 <a href="react.html">React</a> 思路），store 只放“客户端 UI 状态”（主题、抽屉开关、草稿）。</li>
+    <li><b>不要囤积</b>：能用局部 <code>useState</code> 解决的别提全局。</li>
+  </ul>
+
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>直接改 state 对象不调 <code>set</code>——Zustand 靠引用变化通知，就地改不生效（用 immer 或先拷贝）。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>选择器返回新对象/数组导致无限渲染——分别订阅或用 <code>useShallow</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>滥用全局，所有状态塞一个 store，失去分域与精准更新优势。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>持久化存了不该存的数据（如大列表），localStorage 爆了。</div>
+
+  <h2 id="s10">10. 调试</h2>
+  <ul>
+    <li><code>devtools</code> 中间件接 Redux DevTools，看每次状态变更与时间线。</li>
+    <li>控制台直接 <code>useStore.getState()</code> 检视当前状态。</li>
+  </ul>
+
+  <h2 id="s11">11. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>会 create store、在组件读状态</td></tr>
+    <tr><td>初级</td><td>会选择器订阅、persist 持久化</td></tr>
+    <tr><td>中级</td><td>懂精准订阅性能、中间件组合</td></tr>
+    <tr><td>资深</td><td>合理划分 store、明确“客户端 vs 服务端状态”边界、选型有据</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 用 Zustand 做跨页购物车（含 persist）② 用 useShallow 订阅多个字段 ③ 在组件外用 getState 改写一个事件回调 ④ 对比同一需求在 Context/Redux 下的代码量。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>懂“何时用 Zustand、怎么精准订阅、状态该放哪”——这是资深前端状态管理的基本功。</div>
 </main>
 </div>
 <script>

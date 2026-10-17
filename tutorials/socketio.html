@@ -11,55 +11,105 @@
 <nav class="tside" id="tside">
   <div class="tbrand">Socket.IO<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 与裸 WebSocket 区别</a>
+  <a href="#s2">2. 环境准备</a>
   <a href="#s3">3. 服务端</a>
-  <a href="#s4">4. 客户端 + 房间</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s4">4. 客户端</a>
+  <a href="#s5">5. 收发消息</a>
+  <a href="#s6">6. 房间与广播</a>
+  <a href="#s7">7. 实战：聊天</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Socket.IO</h1>
-  <p class="tsub">封装 WebSocket 的实时通信库 —— 火柴人派对用它做房间内消息中转。</p>
+  <p class="tsub">基于 WebSocket 的实时双向通信库 —— 自动重连、降级、房间广播，做聊天/联机游戏首选。网页游戏平台用它做实时对战。学完你能做实时应用。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>Socket.IO 是在 <a href="websocket.html">WebSocket</a> 之上封装的实时通信库，让你用“事件”而非原始消息来通信：发一个带名字的事件，对方监听同名事件即可。它还自动处理重连、降级（不支持 WS 时用长轮询兜底）。</p>
+  <p><strong>Socket.IO</strong> 封装了 WebSocket，并补充了浏览器兼容、自动重连、断线降级（退化到轮询）、房间/命名空间、广播等能力。</p>
+  <div class="box"><span class="bt">对比：</span><a href="websocket.html">WebSocket</a> 是底层协议；Socket.IO 是“更好用的封装”，开箱即用。</div>
+  <div class="box ok"><span class="bt">适合：</span>聊天室、实时通知、多人协作、联机游戏。</div>
 
-  <h2 id="s2">2. 与裸 WebSocket 区别</h2>
-  <table>
-    <tr><th></th><th>WebSocket</th><th>Socket.IO</th></tr>
-    <tr><td>通信单位</td><td>文本/二进制帧</td><td>命名事件（带数据）</td></tr>
-    <tr><td>重连/降级</td><td>自己写</td><td>内置</td></tr>
-    <tr><td>房间/广播</td><td>自己实现</td><td>内置 <code>io.to(room)</code></td></tr>
-  </table>
+  <h2 id="s2">2. 环境准备</h2>
+  <p>服务端基于 <a href="nodejs.html">Node.js</a> + <a href="express.html">Express</a>。安装：</p>
+  <pre><code>npm install socket.io
+# 客户端在浏览器里用（也可 npm i socket.io-client）</code></pre>
 
   <h2 id="s3">3. 服务端</h2>
-  <pre><code>import { Server } from 'socket.io';
-const io = new Server(3000, { cors:{ origin:'*' } });
+  <pre><code>import express from 'express';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
 
 io.on('connection', (socket) =&gt; {
-  console.log('有新连接');
-  socket.on('chat', (msg) =&gt; {          // 监听名为 chat 的事件
-    io.emit('chat', msg);                // 广播给所有人
-  });
+  console.log('有客户端连上：', socket.id);
+  socket.on('disconnect', () =&gt; console.log('断开'));
+});
+
+httpServer.listen(3000);</code></pre>
+
+  <h2 id="s4">4. 客户端</h2>
+  <p>HTML 里直接引 CDN：</p>
+  <pre><code>&lt;script src="https://cdn.socket.io/4.7.5/socket.io.min.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const socket = io('http://localhost:3000');  // 连接到服务端
+&lt;/script&gt;</code></pre>
+
+  <h2 id="s5">5. 收发消息</h2>
+  <pre><code>// 客户端发，服务端收
+socket.emit('chat', '你好');
+// 服务端收
+socket.on('chat', (msg) =&gt; console.log(msg));</code></pre>
+
+  <h2 id="s6">6. 房间与广播</h2>
+  <pre><code>socket.join('room1');                    // 加入房间
+io.to('room1').emit('msg', '只对 room1 发');  // 房间广播
+socket.broadcast.emit('msg', '给其他所有人发'); // 排除自己
+io.emit('msg', '给所有人发');               // 全服广播</code></pre>
+
+  <h2 id="s7">7. 实战：聊天</h2>
+  <p>服务端：</p>
+  <pre><code>io.on('connection', (socket) =&gt; {
+  socket.on('chat', (txt) =&gt; io.emit('chat', txt));   // 收到转发给所有人
+});</code></pre>
+  <p>客户端：</p>
+  <pre><code>const input = document.getElementById('msg');
+document.getElementById('send').onclick = () =&gt; {
+  socket.emit('chat', input.value); input.value = '';
+};
+socket.on('chat', (txt) =&gt; {
+  const li = document.createElement('li'); li.textContent = txt;
+  document.getElementById('list').appendChild(li);
 });</code></pre>
 
-  <h2 id="s4">4. 客户端 + 房间</h2>
-  <pre><code>import { io } from 'socket.io-client';
-const socket = io('https://域名');
-socket.emit('chat', '你好');             // 发
-socket.on('chat', (m) =&gt; console.log(m));// 收
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>前端连不上：跨域。服务端 <code>new Server(httpServer, { cors: { origin: '*' } })</code>。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>用了 WebSocket 客户端却接 Socket.IO 服务端，协议不兼容；要配对使用。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>生产环境需把 Socket.IO 路径也经 <a href="nginx.html">Nginx</a> 反代（支持 Upgrade），否则长连接断开。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>广播写错作用域，消息发重复或漏发；理清 <code>socket</code>/<code>io</code>/<code>broadcast</code>/<code>to</code>。</div>
 
-// 房间：把多人圈在一起
-socket.emit('join', 'room123');
-io.to('room123').emit('chat', '仅房间里的人收到');</code></pre>
-
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>客户端和服务端版本要匹配，否则连不上。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>经过 <a href="nginx.html">Nginx</a> 时要配 WebSocket 透传（Upgrade 头），否则握手失败。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>移动端切后台可能断连，要处理 <code>disconnect</code> 与重连逻辑。</div>
+  <h2 id="s9">9. 下一步</h2>
+  <ol>
+    <li>做一个两人实时聊天页。</li>
+    <li>学 <a href="websocket.html">WebSocket</a> 理解底层。</li>
+    <li>配合 <a href="redis.html">Redis</a> 做多进程消息分发。</li>
+    <li>看网页游戏平台，Socket.IO 实时对战范例。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能建 Socket.IO 服务、写客户端、收发消息、用房间广播——实时通信你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

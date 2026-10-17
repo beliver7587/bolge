@@ -31,19 +31,19 @@
   <p>本地（Mac/Linux 自带；Windows 用 PowerShell 或装 Git Bash / OpenSSH）。服务器一般是 Linux 并开了 22 端口。</p>
 
   <h2 id="s3">3. 密钥登录</h2>
-  <pre><code">ssh-keygen -t ed25519 -C "my@email.com"
+  <pre><code>ssh-keygen -t ed25519 -C "my@email.com"
 # 一路回车，生成 ~/.ssh/id_ed25519（私钥）和 .pub（公钥）</code></pre>
   <p>把公钥放到服务器：</p>
-  <pre><code">ssh-copy-id user@服务器IP
+  <pre><code>ssh-copy-id user@服务器IP
 # 或手动：把 id_ed25519.pub 内容追加到服务器的 ~/.ssh/authorized_keys</code></pre>
 
   <h2 id="s4">4. 连接服务器</h2>
-  <pre><code">ssh user@服务器IP
+  <pre><code>ssh user@服务器IP
 # 之后输入的是服务器上的命令，如：
 #   sudo systemctl status nginx</code></pre>
 
   <h2 id="s5">5. 传文件</h2>
-  <pre><code"># 本地 → 服务器
+  <pre><code># 本地 → 服务器
 scp ./app.js user@IP:/home/user/
 # 服务器 → 本地
 scp user@IP:/var/log/nginx/access.log ./</code></pre>

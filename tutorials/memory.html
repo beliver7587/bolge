@@ -39,17 +39,17 @@
 
   <h2 id="s3">3. 工作记忆</h2>
   <p>就是当前发给模型的 <code>messages</code> 数组。过长就截断或摘要，避免超窗口。</p>
-  <pre><code">// 超过 N 轮就摘要压缩
+  <pre><code>// 超过 N 轮就摘要压缩
 if (messages.length &gt; 20) messages = await summarize(messages);</code></pre>
 
   <h2 id="s4">4. 情景记忆</h2>
   <p>每轮对话落库，需要时按时间/关键词取回最近若干轮：</p>
-  <pre><code">await db.insert('turn', { user: q, ai: a, ts: Date.now() });
+  <pre><code>await db.insert('turn', { user: q, ai: a, ts: Date.now() });
 const recent = await db.query('SELECT * FROM turn ORDER BY ts DESC LIMIT 10');</code></pre>
 
   <h2 id="s5">5. 语义记忆</h2>
   <p>把“用户偏好、关键事实”提炼成句子，生成向量存库；对话时检索相关事实拼进提示，让 AI 长期“记得你”：</p>
-  <pre><code">facts = extractFacts(history);            // 抽取“用户喜欢简洁回答”等
+  <pre><code>facts = extractFacts(history);            // 抽取“用户喜欢简洁回答”等
 for (f of facts) vecDB.add(embed(f), f);
 // 对话时
 const rel = vecDB.search(embed(question), 5);   // 召回相关长期事实</code></pre>

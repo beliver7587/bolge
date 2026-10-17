@@ -32,7 +32,7 @@
 
   <h2 id="s3">3. 写 unit 文件</h2>
   <p>新建 <code>/etc/systemd/system/my-api.service</code>：</p>
-  <pre><code">[Unit]
+  <pre><code>[Unit]
 Description=My API Service
 After=network.target
 
@@ -47,13 +47,13 @@ Environment=NODE_ENV=production
 WantedBy=multi-user.target</code></pre>
 
   <h2 id="s4">4. 启停与开机</h2>
-  <pre><code">sudo systemctl daemon-reload         # 改了配置先重载
+  <pre><code>sudo systemctl daemon-reload         # 改了配置先重载
 sudo systemctl start my-api
 sudo systemctl enable my-api         # 开机自启
 sudo systemctl status my-api</code></pre>
 
   <h2 id="s5">5. 看日志</h2>
-  <pre><code">journalctl -u my-api -f               # 实时看该服务日志</code></pre>
+  <pre><code>journalctl -u my-api -f               # 实时看该服务日志</code></pre>
 
   <h2 id="s6">6. 常见坑</h2>
   <div class="box warn"><span class="bt">坑 1：</span>改了 service 文件没 <code>daemon-reload</code>，不生效。</div>

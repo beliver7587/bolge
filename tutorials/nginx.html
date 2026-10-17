@@ -29,14 +29,14 @@
   <div class="box"><span class="bt">一句话：</span>用户只访问 Nginx，Nginx 决定把请求给哪个后端、或返回哪个静态文件。</div>
 
   <h2 id="s2">2. 环境准备</h2>
-  <pre><code"># Ubuntu
+  <pre><code># Ubuntu
 sudo apt update &amp;&amp; sudo apt install nginx
 sudo systemctl start nginx
 # 浏览器访问服务器 IP，看到欢迎页即成功</code></pre>
 
   <h2 id="s3">3. 第一个站点</h2>
   <p>配置在 <code>/etc/nginx/sites-available/</code>，软链到 <code>sites-enabled/</code>：</p>
-  <pre><code">server {
+  <pre><code>server {
   listen 80;
   server_name example.com;
   root /var/www/html;
@@ -46,7 +46,7 @@ sudo systemctl start nginx
 
   <h2 id="s4">4. 反向代理</h2>
   <p>把 <code>/api</code> 转发给本地 3000 的后端：</p>
-  <pre><code">location /api/ {
+  <pre><code>location /api/ {
   proxy_pass http://127.0.0.1:3000/;
   proxy_set_header Host $host;
   proxy_set_header X-Real-IP $remote_addr;
@@ -54,14 +54,14 @@ sudo systemctl start nginx
   <div class="box ok"><span class="bt">作用：</span>用户访问 <code>http://域名/api/xxx</code> 实际打到你本机的 Node 服务。</div>
 
   <h2 id="s5">5. 负载均衡</h2>
-  <pre><code">upstream backend {
+  <pre><code>upstream backend {
   server 127.0.0.1:3000;
   server 127.0.0.1:3001;
 }
 location /api/ { proxy_pass http://backend/; }</code></pre>
 
   <h2 id="s6">6. WebSocket / 静态</h2>
-  <pre><code"># WebSocket 必须加 Upgrade（否则 400）
+  <pre><code># WebSocket 必须加 Upgrade（否则 400）
 location /ws/ {
   proxy_pass http://127.0.0.1:8080/;
   proxy_http_version 1.1;

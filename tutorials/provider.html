@@ -36,14 +36,14 @@
   </ul>
 
   <h2 id="s3">3. 定义接口</h2>
-  <pre><code">// llm/provider.js
+  <pre><code>// llm/provider.js
 export interface LLMProvider {
   chat(messages: {role:string; content:string}[]): Promise&lt;string&gt;;
   stream(messages: any[]): AsyncIterable&lt;string&gt;;
 }</code></pre>
 
   <h2 id="s4">4. 实现两家</h2>
-  <pre><code">// openaiProvider.js
+  <pre><code>// openaiProvider.js
 import OpenAI from 'openai';
 export class OpenAIProvider implements LLMProvider {
   constructor(key) { this.c = new OpenAI({ apiKey: key }); }
@@ -55,7 +55,7 @@ export class OpenAIProvider implements LLMProvider {
 // 再写一个 DeepSeekProvider，同样实现 LLMProvider（内部换 baseURL/模型名）</code></pre>
 
   <h2 id="s5">5. 工厂切换</h2>
-  <pre><code">function createLLM() {
+  <pre><code>function createLLM() {
   const name = process.env.LLM_PROVIDER || 'openai';
   if (name === 'openai') return new OpenAIProvider(process.env.OPENAI_API_KEY);
   if (name === 'deepseek') return new DeepSeekProvider(process.env.DEEPSEEK_KEY);

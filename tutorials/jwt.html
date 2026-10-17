@@ -2,53 +2,90 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JWT / bcrypt 认证 · 小白通关教程</title>
+<title>JWT · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">JWT / bcrypt<small>小白通关教程</small></div>
+  <div class="tbrand">JWT<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 登录流程</a>
-  <a href="#s3">3. bcrypt 存密码</a>
-  <a href="#s4">4. JWT 结构</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 令牌结构</a>
+  <a href="#s3">3. 签发令牌</a>
+  <a href="#s4">4. 校验令牌</a>
+  <a href="#s5">5. 前端携带</a>
+  <a href="#s6">6. 刷新令牌</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>JWT / bcrypt 认证</h1>
-  <p class="tsub">无状态登录的令牌标准 + 密码哈希 —— 两个项目的鉴权底座。</p>
+  <h1>JWT</h1>
+  <p class="tsub">JSON Web Token —— 无状态的登录凭证，前后端分离必备。学完你能实现“登录后带令牌访问受保护接口”。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p><strong>JWT（JSON Web Token）</strong>是一种“登录凭证”标准：用户登录成功后，服务器发一段签名过的字符串，之后每次请求带上它，服务器验签即可知道“你是谁”，无需查库。<strong>bcrypt</strong> 是把密码“加盐哈希”存储的算法，即使数据库泄露也还原不出原密码。</p>
+  <p><strong>JWT</strong> 是一种令牌格式：服务端登录成功后签发一个字符串，客户端之后每次请求带上它，服务端验签即可知道“是谁、有没有权”，无需查库存会话。</p>
+  <div class="box"><span class="bt">对比：</span>传统 Session 把登录状态存服务端；JWT 把状态编码进令牌本身，服务端无状态、易横向扩展。</div>
 
-  <h2 id="s2">2. 登录流程</h2>
-  <div class="diagram">① 用户提交账号密码
- → ② 服务端用 bcrypt 比对密码哈希
- → ③ 比对成功，签发 JWT 返回
- → ④ 前端存 Token，之后请求带上
- → ⑤ 服务端验签，放行</div>
+  <h2 id="s2">2. 令牌结构</h2>
+  <p>JWT 是 <code>header.payload.signature</code> 三段 base64：</p>
+  <ul>
+    <li><b>header</b>：算法（如 HS256）。</li>
+    <li><b>payload</b>：存放数据（userId、过期时间 exp 等），<strong>任何人可解码看到，别放密码</strong>。</li>
+    <li><b>signature</b>：用密钥对前两段签名，防篡改。</li>
+  </ul>
 
-  <h2 id="s3">3. bcrypt 存密码</h2>
-  <pre><code>import bcrypt from 'bcryptjs';
-const hash = await bcrypt.hash('明文密码', 12);   // 12 轮加盐，永不存明文
-const ok = await bcrypt.compare('输入密码', hash); // 比对</code></pre>
+  <h2 id="s3">3. 签发令牌</h2>
+  <p>Node 用 <code>jsonwebtoken</code>：</p>
+  <pre><code>import jwt from 'jsonwebtoken';
+const token = jwt.sign(
+  { userId: 1, name: '小王' },
+  process.env.JWT_SECRET,     // 服务端密钥，绝不外泄
+  { expiresIn: '2h' }
+);</code></pre>
 
-  <h2 id="s4">4. JWT 结构</h2>
-  <p>JWT 由 <code>头部.载荷.签名</code> 三段 base64 组成，载荷里放 <code>userId</code>、过期时间等。Memora 还加了 <b>令牌版本号 tv</b>：改密码时 <code>tv+1</code>，所有旧令牌立即失效。</p>
-  <pre><code>const token = jwt.sign({ userId:1, tv:3 }, SECRET, { expiresIn:'12h' });
-// 验证：显式指定算法防 alg=none 攻击
-jwt.verify(token, SECRET, { algorithms:['HS256'] });</code></pre>
+  <h2 id="s4">4. 校验令牌</h2>
+  <pre><code>function auth(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);   // 验签+过期
+    next();
+  } catch { res.status(401).json({ msg: '未登录' }); }
+}</code></pre>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>用默认弱密钥——Memora 若检测到弱密钥会自动生成随机密钥防伪造。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>Token 存 localStorage 易被 XSS 偷——放 httpOnly Cookie 更安全。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>登录失败响应不同导致账号枚举——用恒定时间比较、统一文案。</div>
+  <h2 id="s5">5. 前端携带</h2>
+  <pre><code>fetch('/api/me', { headers: { Authorization: 'Bearer ' + token } });</code></pre>
+
+  <h2 id="s6">6. 刷新令牌</h2>
+  <p>访问令牌短命（如 2h），另发一个长效 refresh token 存 HttpOnly Cookie；访问令牌过期时用 refresh 换新的，提升安全性。</p>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>密钥写死在代码或泄露，任何人可伪造令牌；用环境变量且足够随机。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>payload 里放敏感信息（密码），base64 一解码就暴露。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>不设过期或过期太长，令牌被盗用风险高；短过期 + refresh。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>前端把 token 存 localStorage 易被 XSS 偷；敏感场景用 HttpOnly Cookie。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>JWT 无法主动吊销（除非维护黑名单）；重大风险时只能等过期或换密钥。</div>
+
+  <h2 id="s8">8. 下一步</h2>
+  <ol>
+    <li>给后端加一个登录签发 + 中间件校验。</li>
+    <li>配合 <a href="express.html">Express</a> 写受保护接口。</li>
+    <li>学 <a href="nginx.html">Nginx</a> 部署与 <a href="https.html">HTTPS</a> 加密。</li>
+    <li>看简历工坊，鉴权实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能签发/校验 JWT、做登录鉴权与刷新——前后端分离的身份认证你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

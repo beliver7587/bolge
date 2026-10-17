@@ -29,11 +29,11 @@
   <div class="box"><span class="bt">一句话：</span>PM2 就像给 Node 服务配了个“保姆”，宕机自动复活、开机自动启动。</div>
 
   <h2 id="s2">2. 环境准备</h2>
-  <pre><code">sudo npm install -g pm2
+  <pre><code>sudo npm install -g pm2
 pm2 -v</code></pre>
 
   <h2 id="s3">3. 启动进程</h2>
-  <pre><code">pm2 start server.js --name my-api
+  <pre><code>pm2 start server.js --name my-api
 # 或带环境变量
 pm2 start server.js --name my-api --env production</code></pre>
 
@@ -49,10 +49,10 @@ pm2 start server.js --name my-api --env production</code></pre>
 
   <h2 id="s5">5. 集群模式</h2>
   <p>用多进程吃满多核 CPU：</p>
-  <pre><code">pm2 start server.js -i max     # max = 按 CPU 核数起进程</code></pre>
+  <pre><code>pm2 start server.js -i max     # max = 按 CPU 核数起进程</code></pre>
 
   <h2 id="s6">6. 开机自启</h2>
-  <pre><code">pm2 save                     # 保存当前进程列表
+  <pre><code>pm2 save                     # 保存当前进程列表
 pm2 startup                  # 生成开机启动脚本（按提示执行）</code></pre>
 
   <h2 id="s7">7. 常见坑</h2>

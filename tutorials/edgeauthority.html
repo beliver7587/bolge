@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>端侧权威运算架构 · 小白通关教程</title>
+<title>端侧权威运算 · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
@@ -11,43 +11,72 @@
 <nav class="tside" id="tside">
   <div class="tbrand">端侧权威运算<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 三种角色</a>
-  <a href="#s3">3. 为什么省钱</a>
-  <a href="#s4">4. 数据流</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 为什么需要</a>
+  <a href="#s3">3. 基本模式</a>
+  <a href="#s4">4. 与服务器对账</a>
+  <a href="#s5">5. 实战：联机判定</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>端侧权威运算架构</h1>
-  <p class="tsub">运算放玩家设备、服务器只中转 —— 一台 2 核机扛上百房间的秘诀。</p>
+  <h1>端侧权威运算</h1>
+  <p class="tsub">把“谁说了算”放在客户端/边缘侧的架构思想 —— 让玩家的设备本地算物理/碰撞，服务器只做校验与同步，降低延迟、提升手感。联机游戏常用。学完你能理解游戏网络架构。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>这是网页游戏平台<strong>最核心的设计思想</strong>：以火柴人为例，一台“房主”设备（开大屏的电脑）<strong>既是客户端又是服务器逻辑端</strong>——它本地算物理/碰撞/战斗、渲染画面；云端服务器<strong>只做消息中转，完全不解析游戏内容</strong>。这就是“端侧权威运算”。</p>
+  <p><strong>端侧权威（Client/Edge Authority）</strong> 指游戏的关键运算（移动、<a href="aabb.html">碰撞</a>、物理）由客户端（玩家设备）或边缘节点直接计算，而不是全交服务器。</p>
+  <div class="box"><span class="bt">对比：</span><b>服务器权威</b>：所有逻辑在服务器算，客户端只发输入；最防作弊但延迟高、手感钝。<b>端侧权威</b>：本地即算即现，顺滑但需防作弊。</div>
 
-  <h2 id="s2">2. 三种角色</h2>
-  <table>
-    <tr><th>角色</th><th>设备</th><th>职责</th></tr>
-    <tr><td>房主端（Host）</td><td>PC 大屏</td><td>运行引擎、算战斗、渲染、广播状态</td></tr>
-    <tr><td>控制端（Pad）</td><td>手机</td><td>只采输入（摇杆/按钮）并上报</td></tr>
-    <tr><td>中转服务器</td><td>云端</td><td>按房间转发字符串，不解析内容</td></tr>
-  </table>
+  <h2 id="s2">2. 为什么需要</h2>
+  <ul>
+    <li><b>低延迟手感</b>：本地立即响应，不用等服务器往返（RTT）。</li>
+    <li><b>省服务器算力</b>：大量客户端各自算，服务器只校验。</li>
+    <li><b>弱网友好</b>：先本地跑，网络差也不卡。</li>
+  </ul>
 
-  <h2 id="s3">3. 为什么省钱</h2>
-  <div class="box ok"><span class="bt">关键洞察：</span>普通网游把“谁打中谁”放服务器算，服务器又贵又易成瓶颈；本项目把运算下放房主设备，服务器只做“微信群转发”，所以<strong>一台 2 核 2G 机器能扛上百房间</strong>。且手机端改不了任何数据（手里没运算逻辑），天然防作弊。</div>
+  <h2 id="s3">3. 基本模式</h2>
+  <div class="diagram">玩家输入 → 客户端立即本地模拟（移动/碰撞）
+   │
+   ├─ 本地直接渲染（顺滑）
+   │
+   └─ 把“输入 + 结果摘要”发给服务器 → 服务器校验/对账 → 有争议以服务器为准广播</div>
 
-  <h2 id="s4">4. 数据流（手机按跳 → 大屏跳起，&lt;100ms）</h2>
-  <div class="diagram">① 手机按跳 → ② 20Hz 打包输入 → ③ WS 发服务器
-④ 服务器原样转房主 → ⑤ 房主引擎算跳跃 → ⑥ 广播状态
-⑦ 服务器转发 → ⑧ 手机收到更新 UI</div>
-  <div class="box"><span class="bt">延迟低的原因：</span>延迟主要发生在“手机→房主”，同 WiFi 下 &lt;10ms；而“房主→手机”只是看画面，玩家对“看”的延迟不敏感。</div>
+  <h2 id="s4">4. 与服务器对账</h2>
+  <p>端侧权威不能“完全信客户端”（会作弊），所以要：</p>
+  <ul>
+    <li>服务器定期用确定性算法重算，发现偏差就纠正/踢人。</li>
+    <li>关键结果（如击杀、得分）由服务器最终裁定。</li>
+    <li>用固定步长（deterministic tick）保证两端算出来一致。</li>
+  </ul>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>房主掉线=整局散（房主是权威源）——可加“房主转移/托管”缓解。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>房主作弊改内存就“无敌”——这是架构软肋，休闲局可接受，认真防要上轻量校验端。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>房主网络差拖垮全房间——要控制广播带宽（30Hz 状态 + 20Hz 输入上报）。</div>
+  <h2 id="s5">5. 实战：联机判定</h2>
+  <p>玩家本地用 <a href="aabb.html">AABB</a> 算出“我打中了敌人”，把事件上报；服务器用相同规则复核，确认命中才扣血并广播。这样既顺滑又难作弊。</p>
+
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>完全信任客户端，外挂横行；必须有服务器对账。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>浮点/帧率不一致导致两端结果不同；用固定步长与整数/定点运算。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>只端侧不算最终状态，断网后状态分歧；服务器持有“真值”并定期同步。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>本地预测与服务器纠正打架，画面“回弹”；用平滑插值缓解释放。</div>
+
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>用 <a href="aabb.html">AABB</a> + 本地预测做一个单机判定。</li>
+    <li>学 <a href="socketio.html">Socket.IO</a> / <a href="websocket.html">WebSocket</a> 做联机同步。</li>
+    <li>了解服务器权威与反作弊。</li>
+    <li>看网页游戏平台，端侧权威实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能区分端侧/服务器权威、用本地预测+服务器对账做联机——游戏网络架构你已入门。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

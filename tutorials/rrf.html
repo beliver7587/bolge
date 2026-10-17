@@ -37,7 +37,7 @@ k 为常数（常取 60），rank_L(d) 是文档 d 在列表 L 中的名次（�
 最终按 RRF 总分降序输出</div>
 
   <h2 id="s4">4. 代码实现</h2>
-  <pre><code">function rrf(lists, k = 60) {
+  <pre><code>function rrf(lists, k = 60) {
   const score = new Map();
   for (const list of lists) {            // 每个 list 是 [{id}, {id}, ...] 名次从1开始
     list.forEach((item, i) =&gt; {
@@ -52,7 +52,7 @@ const merged = rrf([bm25Hits, vectorHits]);</code></pre>
 
   <h2 id="s5">5. 实战用法</h2>
   <p>在 <a href="rag.html">RAG</a> 中：</p>
-  <pre><code">const bm25 = bm25Search(q, 20);       // 关键词检索 Top20
+  <pre><code>const bm25 = bm25Search(q, 20);       // 关键词检索 Top20
 const vec  = vectorSearch(q, 20);     // 语义检索 Top20
 const fused = rrf([bm25, vec], 60);    // 融合
 const top = fused.slice(0, 5);         // 取前 5 送大模型</code></pre>

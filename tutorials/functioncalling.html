@@ -43,7 +43,7 @@
 模型：结合结果给出最终自然语言答案</div>
 
   <h2 id="s3">3. 定义工具</h2>
-  <pre><code">const tools = [{
+  <pre><code>const tools = [{
   type: 'function',
   function: {
     name: 'getWeather',
@@ -57,7 +57,7 @@
 }];</code></pre>
 
   <h2 id="s4">4. 调用与执行</h2>
-  <pre><code">const res = await client.chat.completions.create({
+  <pre><code>const res = await client.chat.completions.create({
   model: 'gpt-4o-mini',
   messages,
   tools,                 // 把工具清单交给模型

@@ -31,11 +31,11 @@
 
   <h2 id="s2">2. 环境准备</h2>
   <p>装 SDK（以 OpenAI 兼容为例）并准备 API Key：</p>
-  <pre><code">npm install openai
+  <pre><code>npm install openai
 export OPENAI_API_KEY=sk-xxxx   # 在环境变量里，别硬编码进代码</code></pre>
 
   <h2 id="s3">3. 第一次调用</h2>
-  <pre><code">import OpenAI from 'openai';
+  <pre><code>import OpenAI from 'openai';
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const r = await client.chat.completions.create({
   model: 'gpt-4o-mini',
@@ -50,7 +50,7 @@ console.log(r.choices[0].message.content);</code></pre>
     <tr><td><code>user</code></td><td>用户说的话</td></tr>
     <tr><td><code>assistant</code></td><td>模型的回复（多轮对话要回传）</td></tr>
   </table>
-  <pre><code">messages = [
+  <pre><code>messages = [
   { role:'system', content:'你是严谨的中文助手' },
   { role:'user', content:'你好' },
   { role:'assistant', content:'你好，有什么可以帮你？' },
@@ -66,7 +66,7 @@ console.log(r.choices[0].message.content);</code></pre>
   </ul>
 
   <h2 id="s6">6. 流式输出</h2>
-  <pre><code">const stream = await client.chat.completions.create({ model, messages, stream: true });
+  <pre><code>const stream = await client.chat.completions.create({ model, messages, stream: true });
 for await (const chunk of stream) {
   process.stdout.write(chunk.choices[0]?.delta?.content || '');
 }</code></pre>

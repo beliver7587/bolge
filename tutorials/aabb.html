@@ -2,56 +2,80 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>游戏物理 / AABB 碰撞 · 小白通关教程</title>
+<title>AABB 碰撞 · 小白通关教程</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">游戏物理 / AABB<small>小白通关教程</small></div>
+  <div class="tbrand">AABB 碰撞<small>小白通关教程</small></div>
   <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. AABB 碰撞</a>
-  <a href="#s3">3. 分段重力</a>
-  <a href="#s4">4. 手感优化</a>
-  <a href="#s5">5. 常见坑</a>
+  <a href="#s2">2. 核心公式</a>
+  <a href="#s3">3. 代码实现</a>
+  <a href="#s4">4. 实战：矩形碰矩形</a>
+  <a href="#s5">5. 进阶：扫掠</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>游戏物理 / AABB 碰撞</h1>
-  <p class="tsub">2D 游戏最简碰撞算法与手感优化 —— 平台格斗跟手的关键。</p>
+  <h1>AABB 碰撞检测</h1>
+  <p class="tsub">轴对齐包围盒 —— 用两个矩形是否重叠来判断“撞没撞上”，是 2D 游戏最基础的碰撞算法。网页游戏平台用它做命中判定。学完你能实现游戏碰撞。</p>
 
   <h2 id="s1">1. 这是什么</h2>
-  <p>游戏引擎要算“物理（重力/速度）+ 碰撞（撞没撞上）+ 胜负”。2D 游戏最普遍用 <strong>AABB（轴对齐包围盒）</strong>做碰撞：把物体当矩形，判断矩形是否重叠。这是成本最低、最稳的碰撞算法，火柴人派对的引擎就用它。</p>
+  <p><strong>AABB（Axis-Aligned Bounding Box）</strong> 是把物体用“不旋转的矩形”包起来，只要判断两组矩形在 X、Y 轴是否都重叠，就知道是否相撞。</p>
+  <div class="box"><span class="bt">一句话：</span>不管你画的是小人还是飞船，先套个正矩形框，框框碰了就当撞了。</div>
+  <div class="box ok"><span class="bt">优点：</span>O(1)、极快、实现简单；缺点：不能处理旋转/斜的物体（可用 OBB 或多边形分解）。</div>
 
-  <h2 id="s2">2. AABB 碰撞</h2>
-  <p>两个矩形 (x,y 左上角, w,h 宽高) 重叠的判定：</p>
-  <pre><code>aabb(ax,ay,aw,ah, bx,by,bw,bh){
-  return ax &lt; bx+bw &amp;&amp; ax+aw &gt; bx &amp;&amp; ay &lt; by+bh &amp;&amp; ay+ah &gt; by;
+  <h2 id="s2">2. 核心公式</h2>
+  <div class="diagram">两矩形 A、B（用 x,y 左上角 + w,h 表示）相撞 ⇔
+  A.x &lt; B.x + B.w  AND  A.x + A.w &gt; B.x
+  AND
+  A.y &lt; B.y + B.h  AND  A.y + A.h &gt; B.y
+四个条件同时成立才重叠</div>
+
+  <h2 id="s3">3. 代码实现</h2>
+  <pre><code>function aabb(a, b) {
+  return a.x &lt; b.x + b.w &amp;&amp;
+         a.x + a.w &gt; b.x &amp;&amp;
+         a.y &lt; b.y + b.h &amp;&amp;
+         a.y + a.h &gt; b.y;
 }</code></pre>
-  <div class="box ok"><span class="bt">解读：</span>四个条件同时满足（A 的左右都跨过 B、上下都跨过 B）才重叠——这就是“撞上了”。</div>
 
-  <h2 id="s3">3. 分段重力</h2>
-  <p>为让跳跃“上去轻、下来重”更跟手，用两段重力：</p>
-  <pre><code>const G_UP = 1800;   // 上升阶段重力（轻）
-const G_DOWN = 3200; // 下落阶段重力（重）
-const MAX_JUMPS = 2; // 二段跳</code></pre>
+  <h2 id="s4">4. 实战：矩形碰矩形</h2>
+  <pre><code>const player = { x: 50, y: 50, w: 30, h: 30 };
+const enemy  = { x: 70, y: 60, w: 30, h: 30 };
+if (aabb(player, enemy)) console.log('撞上了！');</code></pre>
 
-  <h2 id="s4">4. 手感优化</h4>
-  <ul>
-    <li><b>土狼时间（Coyote Time）</b>：离开平台边缘一小会儿仍允许跳。</li>
-    <li><b>跳跃缓冲（Jump Buffer）</b>：落地前提前按跳，落地瞬间自动起跳。</li>
-    <li><b>加速度 + 摩擦力</b>：不是一按就满速，而是平滑加减速。</li>
-  </ul>
+  <h2 id="s5">5. 进阶：扫掠检测</h2>
+  <p>物体很快时，一帧可能“穿过”对方（隧穿）。用扫掠 AABB 检测一段位移内是否相交，避免高速穿透漏判。</p>
 
-  <h2 id="s5">5. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>碰撞只判一帧会“穿透”快速物体——高速物体要做连续/扫掠检测。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>手感差往往是“重力/速度参数”没调，而非算法问题。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>坐标用浮点，渲染取整避免抖动。</div>
-  <div class="box"><span class="bt">延伸：</span>整体架构看 <a href="edgeauthority.html">端侧权威运算</a>。</div>
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>坐标用中心点还是左上角要统一；混用导致判定偏移。本文用左上角。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>高速物体穿越（隧穿）；用扫掠或多子步检测。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>物体旋转后 AABB 变大且不准；旋转物体用 OBB 或多边形碰撞。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>大量物体两两检测 O(n²) 卡顿；用空间划分（网格/四叉树）或 <a href="edgeauthority.html">端侧权威</a> 简化。</div>
+
+  <h2 id="s7">7. 下一步</h2>
+  <ol>
+    <li>用 AABB 给小游戏加“吃金币”判定。</li>
+    <li>学 <a href="pixijs.html">PixiJS</a> / <a href="canvas2d.html">Canvas</a> 画物体。</li>
+    <li>学 <a href="edgeauthority.html">端侧权威运算</a> 处理联机判定。</li>
+    <li>看网页游戏平台，碰撞实现。</li>
+  </ol>
+  <div class="box ok"><span class="bt">毕业：</span>能实现 AABB 碰撞检测与高速穿透处理——2D 游戏命中判定你已掌握。</div>
 </main>
 </div>
 <script>
-(function(){var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});var links=[].slice.call(document.querySelectorAll('.tside a'));var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}window.addEventListener('scroll',onScroll,{passive:true});onScroll();})();
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body></html>

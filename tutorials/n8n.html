@@ -30,7 +30,7 @@
 
   <h2 id="s2">2. 环境准备</h2>
   <p>最省事用 Docker：</p>
-  <pre><code">docker run -d --name n8n -p 5678:5678 -e N8N_SECURE_COOKIE=false n8nio/n8n</code></pre>
+  <pre><code>docker run -d --name n8n -p 5678:5678 -e N8N_SECURE_COOKIE=false n8nio/n8n</code></pre>
   <p>浏览器打开 <code>http://服务器IP:5678</code> 即可。</p>
 
   <h2 id="s3">3. 第一个工作流</h2>
@@ -43,7 +43,7 @@
 
   <h2 id="s4">4. 节点与连线</h2>
   <p>数据在节点间以 JSON 流转：上一个节点的输出，是下一个节点的输入。可在节点里用表达式 <code>{{ $json.field }}</code> 取上一步的字段。</p>
-  <pre><code">// Function 节点示例
+  <pre><code>// Function 节点示例
 return [{ json: { msg: '你好 ' + $json.name } }];</code></pre>
 
   <h2 id="s5">5. 接 Webhook / API</h2>

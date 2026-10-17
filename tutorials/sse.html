@@ -30,7 +30,7 @@
 
   <h2 id="s2">2. 服务端</h2>
   <p>用 <a href="express.html">Express</a>：</p>
-  <pre><code">app.get('/stream', (req, res) =&gt; {
+  <pre><code>app.get('/stream', (req, res) =&gt; {
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   let i = 0;
   const timer = setInterval(() =&gt; {
@@ -40,7 +40,7 @@
 });</code></pre>
 
   <h2 id="s3">3. 浏览器端</h2>
-  <pre><code">const es = new EventSource('/stream');
+  <pre><code>const es = new EventSource('/stream');
 es.onmessage = (e) =&gt; console.log('收到：', e.data);
 es.onerror = () =&gt; { es.close(); };</code></pre>
 

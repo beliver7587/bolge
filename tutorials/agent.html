@@ -46,7 +46,7 @@
 
   <h2 id="s4">4. 工具调用</h2>
   <p>把工具描述给模型，模型返回“要调哪个函数、参数是什么”，你执行后再把结果喂回模型：</p>
-  <pre><code">tools = [{
+  <pre><code>tools = [{
   name: 'getWeather',
   description: '查询某城市天气',
   parameters: { type:'object', properties:{ city:{type:'string'} } }
@@ -54,7 +54,7 @@
 // 模型返回 tool_calls → 你执行 getWeather('北京') → 把结果作为 tool 消息回传</code></pre>
 
   <h2 id="s5">5. 实战示例</h2>
-  <pre><code">let messages = [{ role:'user', content:'北京今天适合出门吗？' }];
+  <pre><code>let messages = [{ role:'user', content:'北京今天适合出门吗？' }];
 while (true) {
   const res = await llm.chat({ messages, tools });
   const toolCalls = res.tool_calls;

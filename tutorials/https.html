@@ -35,13 +35,13 @@
 
   <h2 id="s3">3. 申请证书</h2>
   <p>用 <strong>Certbot</strong>（Let's Encrypt 免费证书）：</p>
-  <pre><code">sudo apt install certbot python3-certbot-nginx
+  <pre><code>sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d example.com -d www.example.com</code></pre>
   <p>按提示输入邮箱、同意条款，Certbot 会自动申请证书并改写 Nginx 配置启用 HTTPS。</p>
 
   <h2 id="s4">4. 配置 Nginx</h2>
   <p>Certbot 自动生成类似：</p>
-  <pre><code">server {
+  <pre><code>server {
   listen 443 ssl;
   server_name example.com;
   ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
@@ -52,7 +52,7 @@ server { listen 80; server_name example.com; return 301 https://$host$request_ur
 
   <h2 id="s5">5. 自动续期</h2>
   <p>证书 90 天有效，Certbot 装了定时任务自动续。手动测试：</p>
-  <pre><code">sudo certbot renew --dry-run</code></pre>
+  <pre><code>sudo certbot renew --dry-run</code></pre>
 
   <h2 id="s6">6. 常见坑</h2>
   <div class="box warn"><span class="bt">坑 1：</span>域名没正确解析到服务器，Certbot 验证失败；先确认 A 记录生效。</div>

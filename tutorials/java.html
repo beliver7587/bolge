@@ -2,82 +2,142 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Java · 小白通关教程</title>
+<title>Java · 从小白到资深工程师</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Java<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个程序</a>
-  <a href="#s4">4. 面向对象</a>
-  <a href="#s5">5. 集合</a>
-  <a href="#s6">6. 异常处理</a>
-  <a href="#s7">7. 常见坑</a>
-  <a href="#s8">8. 下一步</a>
+  <div class="tbrand">Java<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. JVM 与内存</a>
+  <a href="#s4">4. 面向对象深入</a>
+  <a href="#s5">5. 集合原理</a>
+  <a href="#s6">6. 泛型</a>
+  <a href="#s7">7. 并发编程</a>
+  <a href="#s8">8. 函数式与 Stream</a>
+  <a href="#s9">9. I/O 与 NIO</a>
+  <a href="#s10">10. 异常处理</a>
+  <a href="#s11">11. 性能与调优</a>
+  <a href="#s12">12. 常见坑</a>
+  <a href="#s13">13. 调试诊断</a>
+  <a href="#s14">14. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Java</h1>
-  <p class="tsub">一次编写、到处运行的面向对象语言 —— JVM 跨平台，企业后端与安卓的主力。学完你能用 Java 写程序与后端。</p>
+  <h1>Java：从小白到资深工程师</h1>
+  <p class="tsub">Java 是依靠 <strong>JVM 跨平台</strong> 的强类型面向对象语言，是银行、电商、安卓与企业后端的主力。本教程从“能写能跑”讲到<strong>JVM 内存模型、GC、并发编程、集合原理、Stream、JVM 调优与诊断</strong>——这是资深 Java 工程师的内功。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Java</strong> 是静态类型、面向对象的语言，靠 JVM（Java 虚拟机）实现“一次编译，到处运行”。它语法严谨、生态庞大，是银行/电商/安卓的默认选择。</p>
-  <div class="box"><span class="bt">对比：</span><a href="python.html">Python</a> 动态、简洁；Java 强类型、严谨、适合大型协作项目。</div>
-  <div class="box ok"><span class="bt">生态：</span><a href="javaspring.html">Spring</a> 家族是企业后端事实标准。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p><strong>WORA（一次编写，到处运行）</strong>靠 JVM：Java 编译成字节码，由各平台 JVM 解释/即时编译执行。相比 <a href="clang.html">C</a> 要为每个平台重编译、手动管内存，Java 自带内存管理（GC）与跨平台；相比 <a href="python.html">Python</a>，它强类型、性能好、适合大型协作系统。</p>
+  <div class="box"><span class="bt">一句话：</span>Java = 严谨的类型系统 + JVM 跨平台 + 自动内存管理 + 海量企业生态（尤其 <a href="javaspring.html">Spring</a>）。</div>
+  <div class="box ok"><span class="bt">适合：</span>企业后端、分布式系统、安卓、大数据（Hadoop/Spark）。<br><span class="box warn">不适合：</span>系统底层、极致启动速度的 CLI（看 <a href="bun.html">Bun</a>）。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>装 JDK（建议 17+），配好 <code>JAVA_HOME</code>。验证：</p>
-  <pre><code>java -version
-javac -version</code></pre>
-
-  <h2 id="s3">3. 第一个程序</h2>
+  <h2 id="s2">2. 工程化起步</h2>
+  <ul>
+    <li>装 JDK 17+（LTS）；设 <code>JAVA_HOME</code>，验证 <code>java -version</code>。</li>
+    <li>构建用 <strong>Maven</strong>（<code>pom.xml</code>）或 <strong>Gradle</strong>；IDE 用 IntelliJ IDEA。</li>
+    <li>标准布局：<code>src/main/java</code>（源码）、<code>src/test/java</code>（测试）、<code>resources</code>。</li>
+  </ul>
   <pre><code>public class Hello {
   public static void main(String[] args) {
-    System.out.println("Hello Java");
+    System.out.println("Hello Java");   // javac 编译 → java 运行
   }
 }</code></pre>
-  <p>保存为 <code>Hello.java</code>，编译运行：<code>javac Hello.java &amp;&amp; java Hello</code></p>
 
-  <h2 id="s4">4. 面向对象</h2>
-  <pre><code>class Person {
-  String name;
-  Person(String n) { name = n; }
-  void say() { System.out.println("我是" + name); }
-}</code></pre>
-  <div class="box ok"><span class="bt">要点：</span>类/对象、封装、继承、多态是 Java 核心；一切围绕对象组织。</div>
+  <h2 id="s3">3. JVM 与内存</h2>
+  <p>JVM 运行时数据区：</p>
+  <ul>
+    <li><b>堆（Heap）</b>：对象实例，GC 主战场；分新生代（Eden/Survivor）与老年代。</li>
+    <li><b>虚拟机栈</b>：每线程一个，存栈帧（局部变量、调用）；栈溢出 <code>StackOverflowError</code>。</li>
+    <li><b>元空间（Metaspace）</b>：类元数据（替代老 PermGen）。</li>
+    <li><b>程序计数器 / 本地方法栈</b>。</li>
+  </ul>
+  <div class="box ok"><span class="bt">资深：</span>懂“对象在堆、引用在栈、GC 只清堆”，才能定位内存泄漏与 OOM。</div>
 
-  <h2 id="s5">5. 集合</h2>
-  <p>用 <code>List</code>、<code>Map</code>、<code>Set</code> 管理一组数据：</p>
-  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;();
-list.add("a");
-Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
-map.put("age", 18);</code></pre>
+  <h2 id="s4">4. 面向对象深入</h2>
+  <ul>
+    <li>封装/继承/多态是基础；<strong>组合优于继承</strong>（继承耦合紧、易碎）。</li>
+    <li><b>接口 vs 抽象类</b>：接口是“能力契约”（可多实现），抽象类是可复用基类（单继承）。</li>
+    <li>多态靠“父类引用指向子类对象 + 方法重写”，配合 Spring 的依赖注入实现解耦。</li>
+  </ul>
 
-  <h2 id="s6">6. 异常处理</h2>
-  <pre><code>try {
-  int x = 1 / 0;
-} catch (Exception e) {
-  System.out.println("出错：" + e.getMessage());
-}</code></pre>
+  <h2 id="s5">5. 集合原理</h2>
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;();   // 数组实现，随机访问 O(1)，扩容 1.5 倍
+Map&lt;String, Integer&gt; m = new HashMap&lt;&gt;(); // 数组+链表/红黑树，哈希冲突转树</code></pre>
+  <ul>
+    <li><code>HashMap</code> 非线程安全——并发用 <code>ConcurrentHashMap</code>（分段/CAS + 红黑树）。</li>
+    <li><code>ArrayList</code> 遍历中删除会 <code>ConcurrentModificationException</code> → 用迭代器或 <code>removeIf</code>。</li>
+  </ul>
 
-  <h2 id="s7">7. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>类名与文件名必须一致（public 类）；否则编译失败。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>空指针 <code>NullPointerException</code>；调用前判空或用 Optional。</div>
-  <div class="box warn"><span class="bt">坑 3：</span><code>==</code> 比较对象比的是引用而非内容；字符串用 <code>equals</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>忘记释放资源（流/连接）；用 try-with-resources。</div>
+  <h2 id="s6">6. 泛型</h2>
+  <p>泛型是<strong>编译期类型安全</strong>，运行时被“擦除”（类型信息不在字节码保留）。</p>
+  <div class="box warn"><span class="bt">PECS 原则：</span>Producer（生产者）用 <code>extends</code>、Consumer（消费者）用 <code>super</code>，让泛型方法既安全又灵活（如 <code>Collections.copy</code>）。</div>
 
-  <h2 id="s8">8. 下一步</h2>
-  <ol>
-    <li>写个面向对象的小程序。</li>
-    <li>学 <a href="javaspring.html">Java Spring</a> 做后端。</li>
-    <li>学 <a href="mysql.html">MySQL</a> 存数据。</li>
-    <li>看简历工坊，Java 技术栈。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能装 JDK、写并运行 Java 程序、理解 OOP——Java 入门你已完成。</div>
+  <h2 id="s7">7. 并发编程</h2>
+  <pre><code>ExecutorService pool = Executors.newFixedThreadPool(8);
+pool.submit(() -&gt; doWork());          // 别手动 new Thread，用线程池
+// 共享变量：synchronized / ReentrantLock 保证互斥；volatile 保证可见性</code></pre>
+  <ul>
+    <li><b>可见性</b>：线程改了变量别的线程未必立刻看到 → <code>volatile</code> 或锁。</li>
+    <li><b>原子性</b>：<code>i++</code> 非原子 → 用 <code>AtomicInteger</code>。</li>
+    <li><b>线程池</b>：控制并发度、复用线程；避免无界队列堆积或 <code>newCachedThreadPool</code> 撑爆线程。</li>
+    <li>高并发工具：<code>CountDownLatch</code>/<code>CyclicBarrier</code>/<code>CompletableFuture</code>（异步编排）。</li>
+  </ul>
+
+  <h2 id="s8">8. 函数式与 Stream</h2>
+  <pre><code>list.stream().filter(s -&gt; s.length() &gt; 3).map(String::toUpperCase).collect(Collectors.toList());</code></pre>
+  <ul>
+    <li>Lambda + Stream 让集合处理声明式、可读；但<strong>并行流 <code>parallelStream</code></strong> 有共享 ForkJoinPool 风险，IO 密集别用。</li>
+    <li>Stream 是“惰性求值 + 终止操作触发”，别在流里改外部状态。</li>
+  </ul>
+
+  <h2 id="s9">9. I/O 与 NIO</h2>
+  <ul>
+    <li>传统 BIO 阻塞；<strong>NIO</strong> 用 Channel/Buffer/Selector 做多路复用，是高并发网络（Netty）的底座。</li>
+    <li>文件系统用 <code>java.nio.file</code>；大文件用缓冲流。</li>
+  </ul>
+
+  <h2 id="s10">10. 异常处理</h2>
+  <ul>
+    <li><b>Checked</b>（必须处理，如 IOException）vs <b>Unchecked</b>（RuntimeException，如 NPE）。</li>
+    <li><code>try-with-resources</code> 自动关资源（流/连接），杜绝泄漏。</li>
+    <li>异常别吞掉、别用异常做流程控制。</li>
+  </ul>
+
+  <h2 id="s11">11. 性能与调优</h2>
+  <ul>
+    <li><b>GC 算法</b>：G1（默认，平衡）、ZGC/Shenandoah（超低停顿，大堆友好）。</li>
+    <li>常用参数：<code>-Xms/-Xmx</code>（堆上下限）、<code>-XX:+UseG1GC</code>。</li>
+    <li>调优思路：先定位瓶颈（CPU/内存/IO/锁），再针对性调；用 GC 日志 + 火焰图。</li>
+  </ul>
+
+  <h2 id="s12">12. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>NullPointerException → 用 Optional、判空或 @NotNull。</div>
+  <div class="box warn"><span class="bt">坑 2：</span><code>==</code> 比对象比的是引用 → 字符串/对象用 <code>equals</code>。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>HashMap 并发改 → 用 ConcurrentHashMap。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>自动装箱 <code>Integer</code> 频繁拆装箱影响性能/缓存陷阱（-128~127 才缓存）。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>字符串大量拼接用 <code>+</code> 在循环里 → 用 <code>StringBuilder</code>。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>共享可变状态未同步 → 诡异并发 bug。</div>
+
+  <h2 id="s13">13. 调试诊断</h2>
+  <ul>
+    <li><code>jstack</code> 看线程栈、<code>jmap</code> 看堆、<code>jvisualvm</code> 可视监控。</li>
+    <li><strong>Arthas</strong> 在线诊断（方法耗时、热改、看类加载）；火焰图定位 CPU 热点。</li>
+  </ul>
+
+  <h2 id="s14">14. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能写类、集合、跑程序</td></tr>
+    <tr><td>初级</td><td>会用 Spring、异常处理、基础并发</td></tr>
+    <tr><td>中级</td><td>懂 JVM/GC、并发工具、集合原理</td></tr>
+    <tr><td>资深</td><td>JVM 调优、性能诊断、高并发架构</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 写一个多线程卖票并用 synchronized 保证安全 ② 用 HashMap 触发并发异常再换 ConcurrentHashMap ③ 用 Stream 做分组统计 ④ 用 jstack 抓一次死锁。⑤ 读 GC 日志画出对象晋升老年代路径。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 JVM 内存与 GC、能写正确并发代码、能诊断性能问题——这是资深 Java 工程师与“会写 CRUD”的分水岭。</div>
 </main>
 </div>
 <script>

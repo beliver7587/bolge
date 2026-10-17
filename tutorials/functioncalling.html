@@ -1,95 +1,138 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport=" content="width=device-width, initial-scale=1.0">
-<title>Function Calling · 小白通关教程</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
+<title>Function Calling · 从小白到资深</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">Function Calling<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 核心流程</a>
-  <a href="#s3">3. 定义工具</a>
-  <a href="#s4">4. 调用与执行</a>
-  <a href="#s5">5. 实战</a>
-  <a href="#s6">6. 常见坑</a>
-  <a href="#s7">7. 下一步</a>
+  <div class="tbrand">Function Calling<small>从小白到资深</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化封装</a>
+  <a href="#s3">3. 工具定义</a>
+  <a href="#s4">4. 协议与往返</a>
+  <a href="#s5">5. 并行与选择</a>
+  <a href="#s6">6. 校验与容错</a>
+  <a href="#s7">7. 流式工具调用</a>
+  <a href="#s8">8. 工具设计</a>
+  <a href="#s9">9. 安全</a>
+  <a href="#s10">10. 生产要点</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 调试</a>
+  <a href="#s13">13. 成长路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Function Calling</h1>
-  <p class="tsub">让大模型“点名要调用哪个函数、传什么参数” —— 把 AI 接到真实世界（查库、发消息、算账）。Agent 的手脚就是它。学完你能让 AI 真正执行动作。</p>
+  <h1>Function Calling：从小白到资深</h1>
+  <p class="tsub"><strong>Function Calling</strong> 让大模型“开单据”——返回它想调用的函数名与参数，由你的代码<strong>真正执行</strong>再回传。它是 <a href="agent.html">Agent</a> 的手脚、把 AI 接到真实世界（查库/发消息/算账）的桥梁。本教程讲透<strong>工具 Schema、协议往返、并行调用与 tool_choice、参数校验容错、流式工具调用、工具设计与安全</strong>。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Function Calling</strong> 是大模型的一项能力：你告诉它有哪些函数可用（名称、用途、参数格式），它根据用户意图返回“该调哪个、参数是什么”，由你来执行并回传结果。</p>
-  <div class="box"><span class="bt">一句话：</span>模型不直接执行，而是“开单据”（要调 A 函数、参数 x），你按单据办事再把结果告诉它。</div>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>模型本身“只会说话、不能动手”。Function Calling 把“意图”翻译成结构化调用（函数名 + JSON 参数），由你执行副作用，再把结果喂回模型生成答案。</p>
+  <div class="box"><span class="bt">一句话：</span>模型不开支票（不真执行），只是“开出要调哪个函数、传什么参数”的单据；你按单办事、回报结果。</div>
 
-  <h2 id="s2">2. 核心流程</h2>
-  <div class="diagram">你：系统提示 + 工具清单 + 用户问题
-   │
-   ▼
-模型：返回 tool_calls（要调的函数与参数）  ← 而非直接回答
-   │
-   ▼
-你：在代码里执行该函数 → 得到结果
-   │
-   ▼
-你：把结果作为 tool 角色消息回传模型
-   │
-   ▼
-模型：结合结果给出最终自然语言答案</div>
-
-  <h2 id="s3">3. 定义工具</h2>
-  <pre><code>const tools = [{
-  type: 'function',
-  function: {
-    name: 'getWeather',
-    description: '查询指定城市的当前天气',
-    parameters: {
-      type: 'object',
-      properties: { city: { type: 'string', description: '城市名' } },
-      required: ['city']
+  <h2 id="s2">2. 工程化封装</h2>
+  <p>OpenAI / 智谱 / Claude 协议高度相似（tools + tool_calls + tool 角色消息）。生产应<strong>封装一层适配器</strong>，屏蔽各供应商差异，业务只面向统一接口。</p>
+  <pre><code>// 统一抽象：调用 → 可能返回 tool_calls → 执行 → 回传
+async function callWithTools(messages, tools, exec) {
+  let r = await llm.chat({ messages, tools, tool_choice: 'auto' });
+  while (r.tool_calls) {
+    messages.push(r);                         // 关键：原样存回模型的 tool_calls 消息
+    for (const tc of r.tool_calls) {
+      const args = await safeParse(tc.function.arguments);
+      const out = await exec(tc.function.name, args);   // 你执行真实动作
+      messages.push({ role:'tool', tool_call_id: tc.id, content: out });
     }
+    r = await llm.chat({ messages, tools });   // 回传后再问一次
   }
-}];</code></pre>
-
-  <h2 id="s4">4. 调用与执行</h2>
-  <pre><code>const res = await client.chat.completions.create({
-  model: 'gpt-4o-mini',
-  messages,
-  tools,                 // 把工具清单交给模型
-  tool_choice: 'auto'
-});
-const tc = res.choices[0].message.tool_calls?.[0];
-if (tc) {
-  const args = JSON.parse(tc.function.arguments);
-  const result = await getWeather(args.city);   // 你执行
-  messages.push(res.choices[0].message);        // 先存模型的 tool_calls 消息
-  messages.push({ role:'tool', tool_call_id: tc.id, content: result });
-  const final = await client.chat.completions.create({ model, messages });  // 再问一次得答案
+  return r.content;
 }</code></pre>
 
-  <h2 id="s5">5. 实战</h2>
-  <p>用户说“北京天气怎么样”→ 模型返回 <code>getWeather({city:'北京'})</code> → 你查到“晴 25℃” → 回传 → 模型答“北京今天晴，25 度，适合出门”。整套就是 <a href="agent.html">Agent</a> 的基本动作。</p>
+  <h2 id="s3">3. 工具定义</h2>
+  <p>工具 = JSON Schema 描述的能力清单。模型靠 <code>description</code> 决定“何时用、怎么传参”。</p>
+  <pre><code>const tools = [{
+  type:'function',
+  function:{
+    name:'getWeather',
+    description:'查询指定城市的当前天气（返回温度与天气状况）',
+    parameters:{ type:'object', properties:{ city:{type:'string', description:'中文城市名'} }, required:['city'] }
+  }
+}];</code></pre>
+  <div class="box ok"><span class="bt">资深：</span>description 要像“写给同事的说明书”——写清用途、参数含义、返回什么，模型才能选对、传对。</div>
 
-  <h2 id="s6">6. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>参数 JSON 解析失败；用 try/catch，并让模型重新生成。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>忘记把模型的 tool_calls 消息原样存回 messages，导致后续请求缺上下文报错。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>工具 description 写不清，模型乱调；描述要像“给同事看的说明书”。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>工具执行慢/超时拖垮对话；加超时与降级。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>忽视权限与 <a href="promptinject.html">提示注入防护</a>，模型可能被诱导调用危险工具。</div>
+  <h2 id="s4">4. 协议与往返</h2>
+  <ul>
+    <li>模型返回 <code>message.tool_calls</code>（含 id、函数名、参数 JSON 字符串）。</li>
+    <li><b>必须原样把这条 tool_calls 消息存回 messages</b>，再追加 <code>role:'tool'</code> 的结果——缺任一步，下一轮 API 会报错或丢失上下文。</li>
+    <li>一个请求可返回多个 tool_calls（见 §5），每个都要回传对应 tool 消息。</li>
+  </ul>
 
-  <h2 id="s7">7. 下一步</h2>
-  <ol>
-    <li>定义一个工具并跑通“问天气”。</li>
-    <li>学 <a href="agent.html">Agent</a> 把多个工具串联。</li>
-    <li>学 <a href="memory.html">四层记忆</a> 让 Agent 记住上下文。</li>
-    <li>看 Memora，Function Calling 实战。</li>
-  </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能定义工具、解析 tool_calls、执行并回传——把 AI 接到真实世界，你已掌握。</div>
+  <h2 id="s5">5. 并行与选择</h2>
+  <ul>
+    <li><b>并行调用</b>：模型可在一次回复里并发请求多个无依赖工具（如同时查天气和汇率）；执行方可并行，省一轮往返。</li>
+    <li><b>tool_choice</b>：<code>auto</code>（模型自决）/<code>required</code>（必须用工具）/<code>none</code>（禁用）/<code>{name}</code>（强制某工具，做“结构化抽取”很稳）。</li>
+  </ul>
+
+  <h2 id="s6">6. 校验与容错</h2>
+  <ul>
+    <li><b>参数解析</b>：arguments 是 JSON 字符串，可能不完整——<code>JSON.parse</code> 失败要 try/catch，并让模型“重新生成”。</li>
+    <li><b>Schema 校验</b>：用 zod/ajv 校验类型与必填；不符就回传错误，让模型自纠。</li>
+    <li><b>执行兜底</b>：工具异常要捕获，把错误信息（而非崩溃）作为结果回传。</li>
+  </ul>
+
+  <h2 id="s7">7. 流式工具调用</h2>
+  <p>用 <a href="sse.html">SSE</a> 流式时，<code>tool_calls</code> 的 <code>arguments</code> 是<strong>分片增量</strong>到达的，需累积拼接完再 JSON.parse：</p>
+  <pre><code>let acc = { name:'', args:'' };
+for await (const chunk of stream) {
+  const d = chunk.delta.tool_calls?.[0];
+  if (d?.function?.name) acc.name += d.function.name;
+  if (d?.function?.arguments) acc.args += d.function.arguments;   // 累积
+}
+const args = JSON.parse(acc.args);</code></pre>
+
+  <h2 id="s8">8. 工具设计</h2>
+  <ul>
+    <li><b>粒度适中</b>：太小导致多步往返，太大模型难选；一个工具做一件事。</li>
+    <li><b>幂等</b>：可安全重试（网络抖动时关键）。</li>
+    <li><b>返回裁剪</b>：只回必要字段，避免大结果撑爆上下文。</li>
+  </ul>
+
+  <h2 id="s9">9. 安全</h2>
+  <div class="box warn"><span class="bt">注入 + 越权是头号风险：</span>攻击者可在用户/检索内容里诱导模型调用危险工具（发邮件、删库）。对策：最小权限、危险动作人工审批、对工具输入做净化与校验，详见 <a href="promptinject.html">提示注入防护</a>。</div>
+
+  <h2 id="s10">10. 生产要点</h2>
+  <ul>
+    <li><b>超时/降级</b>：工具慢或挂了要超时并兜底，别拖垮整个对话。</li>
+    <li><b>重试</b>：网络/限流（429）按退避重试；参数错误则让模型纠正。</li>
+    <li><b>缓存</b>：相同参数的幂等查询可缓存结果，降成本降延迟。</li>
+  </ul>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1：</span>忘了把模型的 tool_calls 消息原样存回 → 后续 API 报错/丢上下文。</div>
+  <div class="box warn"><span class="bt">坑 2：</span>参数 JSON 解析失败没兜底 → 崩溃。</div>
+  <div class="box warn"><span class="bt">坑 3：</span>Schema 过松（啥都 string、不写 required）→ 模型乱传参。</div>
+  <div class="box warn"><span class="bt">坑 4：</span>工具 description 含糊 → 选错/误用。</div>
+  <div class="box warn"><span class="bt">坑 5：</span>忽略注入与权限 → 被诱导执行危险动作。</div>
+  <div class="box warn"><span class="bt">坑 6：</span>工具返回过大 → 上下文爆炸。</div>
+
+  <h2 id="s12">12. 调试</h2>
+  <ul>
+    <li>打印每次 tool_calls（函数名 + 原始 arguments）与回传结果，确认“选对、传对、执行对”。</li>
+    <li>用 <code>tool_choice:{name}</code> 做结构化抽取时，验证输出是否符合预期格式。</li>
+  </ul>
+
+  <h2 id="s13">13. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th></tr>
+    <tr><td>小白</td><td>能定义工具、解析 tool_calls、执行回传</td></tr>
+    <tr><td>初级</td><td>会多工具、并行、流式工具调用</td></tr>
+    <tr><td>中级</td><td>参数校验容错、工具设计、适配器封装</td></tr>
+    <tr><td>资深</td><td>安全治理、生产可靠性、与 Agent 编排</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习：</span>① 定义 2 个工具跑通往返 ② 用 tool_choice 做结构化抽取 ③ 流式拼接 tool_calls 参数 ④ 加参数校验与重试 ⑤ 给危险工具加人工审批 ⑥ 并行调用两个无依赖工具。</div>
+  <div class="box ok"><span class="bt">你已进阶：</span>理解 Function Calling 的协议细节与安全边界，能把大模型稳稳接到真实系统——这是资深 AI 后端做工具化/Agent 的必备基本功。</div>
 </main>
 </div>
 <script>

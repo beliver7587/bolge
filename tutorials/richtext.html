@@ -5,6 +5,7 @@
 <title>富文本编辑 / PDF · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
+<canvas id="bg"></canvas>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
@@ -128,4 +129,5 @@ html2pdf().set(opt).from(element).save();</code></pre>
   window.addEventListener('scroll',onScroll,{passive:true});onScroll();
 })();
 </script>
+<script src="../assets/js/tech-bg.js"></script>
 </body></html>

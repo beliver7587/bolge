@@ -8,10 +8,13 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+@keyframes starDrift{0%{background-position:0 0}100%{background-position:-600px 0}}
+@keyframes starPulse{0%,100%{opacity:.75}50%{opacity:.95}}
 body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font); line-height:1.8; font-size:15px}
 body::before{
   content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-  background-image:url('../images/stars.svg'); background-size:600px 600px; opacity:.85}
+  background-image:url('../images/stars.svg'); background-size:600px 600px;
+  animation:starDrift 80s linear infinite, starPulse 12s ease-in-out infinite}
 
 .wrap{display:flex; min-height:100vh}
 /* 侧边目录 */

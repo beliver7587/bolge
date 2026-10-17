@@ -177,7 +177,7 @@
         '<h3>' + t.title + '</h3>' +
         '<p>' + t.summary + '</p>' +
         '<div class="tut-tags">' + (t.tags || []).map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>';
-      card.addEventListener('click', function () { loadFrame(t.file, t.title, ''); });
+      card.addEventListener('click', function () { window.location.href = t.file; });
       grid.appendChild(card);
     });
     hubCount.textContent = '共 ' + list.length + ' 篇技术教程' + (q ? '（已筛选 “' + q + '”）' : '');

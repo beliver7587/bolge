@@ -2,256 +2,258 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>React · 小白通关教程</title>
+<title>React · 从小白到资深前端</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
 <div class="tscrim" id="tscrim"></div>
 <div class="wrap">
 <nav class="tside" id="tside">
-  <div class="tbrand">React<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 跑起第一个项目</a>
-  <a href="#s4">4. 核心概念</a>
-  <a href="#s5">5. 事件 / 列表 / 条件</a>
-  <a href="#s6">6. 副作用 useEffect</a>
-  <a href="#s7">7. 表单与受控组件</a>
-  <a href="#s8">8. 样式的 3 种写法</a>
-  <a href="#s9">9. 实战：Todo 清单</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试与生态</a>
-  <a href="#s12">12. 下一步</a>
+  <div class="tbrand">React<small>从小白到资深前端</small></div>
+  <a href="#s1">1. 它解决什么问题</a>
+  <a href="#s2">2. 工程化起步</a>
+  <a href="#s3">3. 心智模型</a>
+  <a href="#s4">4. JSX 与组件本质</a>
+  <a href="#s5">5. Hooks 深入</a>
+  <a href="#s6">6. 渲染与性能</a>
+  <a href="#s7">7. 状态管理选型</a>
+  <a href="#s8">8. 服务端状态</a>
+  <a href="#s9">9. 路由</a>
+  <a href="#s10">10. 表单与校验</a>
+  <a href="#s11">11. 设计模式</a>
+  <a href="#s12">12. 样式方案</a>
+  <a href="#s13">13. 测试体系</a>
+  <a href="#s14">14. SSR 与 Next.js</a>
+  <a href="#s15">15. 安全与 a11y</a>
+  <a href="#s16">16. 大型架构</a>
+  <a href="#s17">17. 资深也踩的坑</a>
+  <a href="#s18">18. 调试与剖析</a>
+  <a href="#s19">19. 成长路线</a>
+  <a href="#s20">20. 资源与下一步</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>React</h1>
-  <p class="tsub">用“组件”拼出界面的前端库 —— 简历工坊、网页游戏、Memora 前端都基于 React 生态。学完本节，你能独立用 React 写一个带状态的小应用。</p>
+  <h1>React：从小白到资深前端</h1>
+  <p class="tsub">本教程不止教你“怎么写组件”，而是带你建立资深前端工程师的心智模型：理解它为什么这样设计、什么时候该用什么模式、性能与安全怎么权衡、怎么把小项目架构成能跑三年的系统。读完你能独立负责中大型前端工程。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>React</strong> 是 Facebook 开源的<strong>前端 JavaScript 库</strong>，用来构建用户界面。它的核心思想一句话总结：</p>
-  <div class="box"><span class="bt">一句话：</span>把页面拆成一个个<strong>可复用的组件</strong>，你只描述“界面长什么样”，数据变了 React 自动把界面更新成对的样子。你不用手动操作 DOM。</div>
-  <h3>为什么要用它？</h3>
+  <h2 id="s1">1. 它解决什么问题</h2>
+  <p>在 React 之前，前端是<strong>命令式</strong>的：拿到 DOM 节点，手动 <code>innerHTML</code>、<code>appendChild</code> 去改。状态一多，界面和数据很容易“对不上”。</p>
+  <div class="box"><span class="bt">一句话：</span>React 把“界面”定义为<strong>状态的函数</strong>：<code>UI = f(state)</code>。你只描述“给定状态应该长什么样”，状态变了 React 负责把界面更新成对的样子。这就是<strong>声明式</strong>。</div>
+  <h3>虚拟 DOM 与 Fiber（原理级，资深必懂）</h3>
   <ul>
-    <li><b>不用手抖 DOM</b>：传统写法是 <code>document.getElementById(...).innerHTML = ...</code>，状态一多就乱。React 让你写 <code>return &lt;h1&gt;{title}&lt;/h1&gt;</code>，数据 title 变了界面自动变。</li>
-    <li><b>组件复用</b>：一个 <code>&lt;Button/&gt;</code> 可以到处用，改一处全站生效。</li>
-    <li><b>生态最大</b>：路由、状态管理、UI 库（Ant Design）、服务端渲染（Next.js）一应俱全。</li>
-    <li><b>需求多</b>：招聘市场上 React 岗位最多，学会它能直接找前端工作。</li>
+    <li><b>虚拟 DOM</b>：React 用 JS 对象描述界面（vnode），状态变更后生成新树，与上一次树做 <b>diff</b>（Reconciliation），只把“变化的部分”打到真实 DOM。它解决的是“批量、最小化 DOM 操作”，而不是“比原生 DOM 快”。</li>
+    <li><b>Fiber 架构</b>（React 16+）：把渲染拆成可中断、可恢复的“纤维”单元，配合优先级调度，避免大组件渲染卡住主线程（这是 Concurrent 特性的地基）。</li>
+    <li><b>合成事件</b>：React 不在每个节点绑事件，而是在根节点用<strong>事件委托</strong>，既统一又省内存，但也带来 <code>e.target</code> 与 <code>nativeEvent</code> 的区别。</li>
   </ul>
-  <div class="box ok"><span class="bt">适合：</span>中后台系统、数据看板、单页应用（SPA）、移动端（React Native）。<br><span class="box warn">不适合：</span>纯静态展示页（直接写 HTML 更简单）、超轻量小工具（引入 React 体积偏大）。</div>
+  <div class="box ok"><span class="bt">资深视角：</span>不要神话“虚拟 DOM 快”。它的价值是<strong>可预测的状态→UI 映射</strong>与<strong>跨平台</strong>（同一套组件可跑 Web/RN/SSR）。性能瓶颈几乎从不在 diff，而在<strong>不必要的重渲染</strong>与<strong>大列表</strong>。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>React 项目需要 Node.js 来跑开发服务器和打包。跟着下面 4 步走：</p>
-  <div class="step"><div class="n">1</div><div class="b"><h4>安装 Node.js（含 npm）</h4><p>去 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> 下载 <b>LTS</b> 版本（如 20.x），一路下一步安装。装完自带 <code>npm</code>（包管理器）。</p></div></div>
-  <div class="step"><div class="n">2</div><div class="b"><h4>验证安装</h4><p>打开终端（Win 用 PowerShell / Mac 用终端），输入：</p>
-  <pre><code>node -v      # 应输出 v20.x 之类
-npm -v       # 应输出 9.x / 10.x 之类</code></pre>
-  <p>能看到版本号就成功了。</p></div></div>
-  <div class="step"><div class="n">3</div><div class="b"><h4>用 Vite 创建项目</h4><p>Vite 是现在最主流的构建工具（快）。在<strong>你想放项目的文件夹</strong>里执行：</p>
-  <pre><code>npm create vite@latest my-react-app -- --template react
-cd my-react-app
-npm install</code></pre>
-  <p>第一句会问你“Ok to proceed?”，回车即可；<code>--template react</code> 表示用 React 模板。第二、三句进入目录并安装依赖（首次会下载几十秒）。</p></div></div>
-  <div class="step"><div class="n">4</div><div class="b"><h4>认识目录</h4>
-  <pre><code>my-react-app/
-├─ index.html        # 页面入口，里面有个 &lt;div id="root"&gt;
-├─ package.json      # 项目信息 + 依赖列表
-├─ vite.config.js    # Vite 配置
-└─ src/
-   ├─ main.jsx       # 把 React 挂到 #root 上
-   ├─ App.jsx        # 最顶层组件（从这里开始写）
-   └─ index.css      # 全局样式</code></pre>
-  </div></div>
+  <h2 id="s2">2. 工程化起步</h2>
+  <p>真实团队不会手写 <code>index.html</code> 引入 CDN，而是用构建工具 + 类型 + 规范三件套。</p>
+  <div class="step"><div class="n">1</div><div class="b"><h4>Node + 包管理器</h4><p>装 <a href="nodejs.html">Node.js</a> LTS。推荐用 <code>pnpm</code>（快、省磁盘、严格依赖隔离）：<code>npm i -g pnpm</code>。</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>脚手架</h4>
+  <pre><code>pnpm create vite@latest app --template react-ts
+cd app &amp;&amp; pnpm i</code></pre>
+  <p><code>react-ts</code> 模板自带 <a href="typescript.html">TypeScript</a>，资深项目几乎必用 TS——类型即文档，能在编译期挡掉大量 bug。</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><h4>规范与质量门</h4>
+  <pre><code>pnpm add -D eslint prettier @typescript-eslint/parser
+pnpm add -D husky lint-staged  # 提交前自动 lint</code></pre>
+  <p>再加 <code>editorconfig</code>、<code>commitlint</code>。资深工程师的交付物不是“能跑”，而是“团队任何人都能安全接手”。</p></div></div>
+  <div class="step"><div class="n">4</div><div class="b"><h4>目录约定</h4>
+  <pre><code>src/
+├─ app/         # 全局 provider、路由入口
+├─ features/    # 按业务域划分（user/、order/）
+├─ components/  # 通用 UI（Button、Modal）
+├─ hooks/       # 自定义 Hook
+├─ lib/         # 请求封装、工具
+└─ types/       # 全局类型</code></pre>
+  <p>按<strong>功能（feature）</strong>而非按文件类型组织，是项目变大后还能维护的关键（详见第 16 节）。</p></div></div>
 
-  <h2 id="s3">3. 跑起第一个项目</h2>
-  <p>在 <code>my-react-app</code> 目录里执行：</p>
-  <pre><code>npm run dev</code></pre>
-  <p>终端会打印一个本地地址，通常是 <code>http://localhost:5173</code>。浏览器打开它，看到 Vite 的欢迎页就成功了。</p>
-  <div class="box ok"><span class="bt">试手：</span>打开 <code>src/App.jsx</code>，把里面的文字改一下，保存，浏览器<strong>会自动刷新</strong>——这就是“热更新”，开发体验拉满。</div>
-  <p>以后常用命令：</p>
+  <h2 id="s3">3. 心智模型</h2>
+  <ul>
+    <li><b>单向数据流</b>：数据从父经 props 往下流；要改数据，调父传下来的回调。避免到处能改同一份状态导致的“幽灵 bug”。</li>
+    <li><b>不可变数据（Immutability）</b>：永远<strong>产生新对象</strong>而非就地修改。<code>setUser(u =&gt; ({...u, age: 19}))</code> 而非 <code>u.age = 19</code>。React 靠“引用变了”判断要不要重渲染，就地改它“看不出来”。</li>
+    <li><b>状态要放在“刚好够高”的地方</b>：能不提升就不提升；兄弟共享才提到共同父级；全局才用 store。</li>
+  </ul>
+  <div class="box warn"><span class="bt">反模式：</span>“把所有状态塞进 Redux/localStorage”是新手到资深的第一个分水岭。状态位置错了，组件就耦合、难测、重写成本高。</div>
+
+  <h2 id="s4">4. JSX 与组件本质</h2>
+  <p>JSX 不是模板，是 <code>React.createElement</code> 的语法糖，编译后就是普通 JS 调用。</p>
+  <pre><code>// 下面这段 JSX
+const e = &lt;h1 className="t"&gt;Hi&lt;/h1&gt;;
+// 编译后等价于
+const e = React.createElement('h1', { className: 't' }, 'Hi');</code></pre>
+  <div class="box ok"><span class="bt">记住：</span>组件本质是“返回 React 元素（或 null）的函数/类”。大写开头是为了区分原生标签。Props 是只读的——想改就回调通知父级。</div>
+  <p><b>组件类型选择</b>：函数组件 + Hooks 已是事实标准；类组件只在维护老代码时见。新项目一律函数组件。</p>
+
+  <h2 id="s5">5. Hooks 深入</h2>
+  <h3>useState：批处理与函数式更新</h3>
+  <pre><code>// 连续两次更新拿旧值 → 只 +1；用函数式更新才正确
+setCount(c =&gt; c + 1);
+setCount(c =&gt; c + 1);
+// 在事件处理里 React 18 自动批处理；在 Promise/setTimeout 里也默认批处理（18+）</code></pre>
+  <h3>useEffect：依赖、清理、竞态</h3>
+  <pre><code>useEffect(() =&gt; {
+  let alive = true;                       // 取消标记，防卸载后 setState
+  fetch(`/api/user/${id}`)
+    .then(r =&gt; r.json())
+    .then(d =&gt; { if (alive) setUser(d); });
+  return () =&gt; { alive = false; };        // 清理：id 变化/卸载时作废旧请求
+}, [id]);                                 // 依赖写实，否则闭包拿旧值</code></pre>
+  <div class="box warn"><span class="bt">竞态：</span>快速切换 id，慢的请求可能后到覆盖快的。上面的 <code>alive</code> 标记或 <a href="provider.html">AbortController</a> 是标准解法。</div>
+  <h3>useMemo / useCallback / useRef</h3>
+  <ul>
+    <li><code>useMemo</code>：缓存“昂贵计算结果”，依赖变才重算。别滥用——它自己也耗内存，简单计算不值得。</li>
+    <li><code>useCallback</code>：缓存函数引用，配合 <code>memo</code> 子组件避免无谓重渲染。</li>
+    <li><code>useRef</code>：存“可变但不触发渲染”的值（定时器 id、上一次值、DOM 节点）。注意改 <code>.current</code> 不会重渲染。</li>
+  </ul>
+  <h3>useReducer / useContext / 自定义 Hook</h3>
+  <p>复杂状态（多字段、互相依赖的更新）用 <code>useReducer</code> 比一堆 <code>useState</code> 清晰。<code>useContext</code> 跨多层传值，但<strong>会让所有消费者重渲染</strong>——高频更新别走 Context。</p>
+  <pre><code>function useToggle(initial = false) {            // 自定义 Hook：复用状态逻辑
+  const [on, setOn] = useState(initial);
+  return [on, () =&gt; setOn(v =&gt; !v)] as const;
+}</code></pre>
+  <div class="box ok"><span class="bt">规则：</span>Hooks 只能在组件或自定义 Hook 顶层调用，不能在条件/循环里——这就是 <b>Rules of Hooks</b>，确保调用顺序稳定。</div>
+
+  <h2 id="s6">6. 渲染与性能</h2>
+  <p>React 性能问题的 90% 是<strong>不该渲染的组件渲染了</strong>。触发渲染的只有两条路：自己 setState、父组件渲染。</p>
+  <ul>
+    <li><b>默认整条子树都重渲染</b>。用 <code>React.memo</code> 包裹子组件，配合稳定的 props（靠 useCallback/useMemo）阻断。</li>
+    <li><b>key 不是“序号”</b>：key 是 React 识别“谁是同一个节点”的身份证。用数组下标当 key，增删会导致状态错乱（输入框串内容）。用稳定业务 id。</li>
+    <li><b>大列表用虚拟滚动</b>：<code>@tanstack/react-virtual</code>，只渲染可视区，万级数据也不卡。</li>
+    <li><b>代码分割</b>：<code>React.lazy + Suspense</code> 把路由级页面拆成独立 chunk，首屏不下载全部代码。</li>
+    <li><b>避免在渲染中创建新对象/函数</b>：传给 <code>memo</code> 子组件的 inline 对象/箭头函数会让 memo 失效。</li>
+  </ul>
+  <div class="box warn"><span class="bt">误区：</span>“加 <code>useMemo</code> 一定更快”是错的。无谓 memo 反而增加比较开销。先用 Profiler 找到真实热点再优化（见第 18 节）。</div>
+
+  <h2 id="s7">7. 状态管理选型</h2>
+  <p>没有“最好”，只有“最适合当前层级”。决策树：</p>
   <table>
-    <tr><th>命令</th><th>作用</th></tr>
-    <tr><td><code>npm run dev</code></td><td>本地开发（带热更新）</td></tr>
-    <tr><td><code>npm run build</code></td><td>打包到 <code>dist/</code>，用于上线部署</td></tr>
-    <tr><td><code>npm run preview</code></td><td>本地预览打包后的结果</td></tr>
+    <tr><th>场景</th><th>选</th><th>理由</th></tr>
+    <tr><td>局部 UI 状态</td><td><code>useState</code></td><td>就近放组件内</td></tr>
+    <tr><td>跨 2~3 层、不常变</td><td><code>Context + useReducer</code></td><td>免依赖，但注意重渲染范围</td></tr>
+    <tr><td>全局、高频、多模块</td><td><a href="zustand.html">Zustand</a> / Jotai</td><td>按 selector 订阅，精准更新；比 Redux 轻</td></tr>
+    <tr><td>强规范、可回溯、复杂团队</td><td>Redux Toolkit</td><td>单向流、devtools 时间旅行、可测试</td></tr>
   </table>
+  <div class="box ok"><span class="bt">资深经验：</span>服务端数据<strong>不算</strong>客户端状态，别存进 Redux/store（见第 8 节）。客户端状态只放“UI 需要的”、<strong>无法从服务端重建</strong>的东西（当前选中项、表单草稿、主题）。</div>
 
-  <h2 id="s4">4. 核心概念</h2>
-  <h3>① 组件（Component）</h3>
-  <p>组件就是一个<strong>返回 JSX 的函数</strong>。文件名以大写开头（<code>App.jsx</code>、<code>Button.jsx</code>），这样 React 才知道它是组件而不是普通标签。</p>
-  <pre><code>// src/App.jsx
-function App() {
-  return &lt;h1&gt;你好，React&lt;/h1&gt;;
-}
-export default App;</code></pre>
-  <h3>② JSX</h3>
-  <p>把 HTML 写进 JS 的语法糖。注意：</p>
+  <h2 id="s8">8. 服务端状态</h2>
+  <p>“用户列表、订单详情”这类来自后端、要缓存/重试/失效的数据，交给 <strong>React Query (TanStack Query) / SWR</strong>，而不是自己写 <code>useEffect + useState</code>。</p>
+  <pre><code>const { data, isLoading, error } = useQuery({
+  queryKey: ['user', id],
+  queryFn: () =&gt; fetch(`/api/user/${id}`).then(r =&gt; r.json()),
+  staleTime: 60_000,
+});</code></pre>
+  <p>它自带：缓存、后台重新验证、请求去重、乐观更新（先改 UI 再等服务端确认）、分页/无限加载、失效重取。资深前端把“数据获取”和“UI 状态”彻底分清。</p>
+  <div class="box ok"><span class="bt">乐观更新：</span>点赞立刻变红，失败再回滚——用 <code>onMutate/onError/onSettled</code>，体验与健壮性兼顾。</div>
+
+  <h2 id="s9">9. 路由</h2>
+  <p>多页面用 <code>react-router-dom</code>（v6+ 是嵌套路由 + <code>useRoutes</code> 配置式）。关键点：</p>
   <ul>
-    <li>JSX 里写 JS 表达式要用 <code>{}</code> 包起来，比如 <code>&lt;p&gt;{1 + 1}&lt;/p&gt;</code> 显示 2。</li>
-    <li>class 要写成 <code>className</code>（因为 class 是 JS 关键字）。</li>
-    <li>标签必须闭合：<code>&lt;img /&gt;</code>、<code>&lt;br /&gt;</code>。</li>
+    <li><b>懒加载路由</b>：<code>const User = lazy(() =&gt; import('./User'))</code> 减小首包。</li>
+    <li><b>鉴权路由</b>：包一层 <code>&lt;RequireAuth&gt;</code>，未登录重定向到 /login，并记住来源 <code>location.state</code>。</li>
+    <li><b>嵌套布局</b>：<code>&lt;Outlet/&gt;</code> 让父布局（侧边栏）稳定，只换内容区，避免整页重挂载。</li>
   </ul>
-  <h3>③ Props（父传子的数据）</h3>
-  <p>Props 像函数的入参，<strong>只读</strong>。父组件传，子组件收：</p>
-  <pre><code>function Welcome({ name }) {        // 解构 props
-  return &lt;h2&gt;你好，{name}&lt;/h2&gt;;
-}
-// 使用：&lt;Welcome name="小王" /&gt;</code></pre>
-  <h3>④ State（组件自己的数据）</h3>
-  <p>State 是可变的内部数据，变了会触发重渲染。用 <code>useState</code>：</p>
-  <pre><code>import { useState } from 'react';
 
-function Counter() {
-  const [count, setCount] = useState(0);   // [值, 改值的函数]
-  return (
-    &lt;div&gt;
-      &lt;p&gt;点击了 {count} 次&lt;/p&gt;
-      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+1&lt;/button&gt;
-    &lt;/div&gt;
-  );
-}</code></pre>
-  <div class="box"><span class="bt">关键：</span>不能直接改 state（<code>count++</code> 无效），必须用 <code>setCount</code> 传“新值”，React 才会重画。</div>
+  <h2 id="s10">10. 表单与校验</h2>
+  <p>受控组件（value + onChange）最直观但每个键击都渲染；高频/复杂表单用 <a href="https://react-hook-form.com" target="_blank" rel="noopener">react-hook-form</a>（非受控 + ref，性能好）配合 <a href="https://zod.dev" target="_blank" rel="noopener">zod</a> 做 schema 校验：</p>
+  <pre><code>const { register, handleSubmit, formState: { errors } } = useForm();
+const onSubmit = (v) =&gt; save(v);
+&lt;input {...register('email', { required: true, pattern: /^\S+@\S+$/ })} /&gt;
+{errors.email &amp;&amp; &lt;span&gt;邮箱格式不对&lt;/span&gt;}</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>把整个表单放一个巨 <code>useState</code> 对象、每次按键全表重渲染——大表单会卡。用 RHF 或 <code>uncontrolled</code>。</div>
 
-  <h2 id="s5">5. 事件 / 列表 / 条件</h2>
-  <h3>事件处理</h3>
-  <p>React 事件用驼峰：<code>onClick</code>、<code>onChange</code>、<code>onSubmit</code>，值是函数。</p>
-  <h3>列表渲染 + key</h3>
-  <p>用 <code>map</code> 把数组变成组件列表，<strong>每个子项必须带唯一 key</strong>（帮 React 识别增删）。</p>
-  <pre><code>const list = ['苹果', '香蕉', '橙子'];
-&lt;ul&gt;
-  {list.map((item, i) =&gt; &lt;li key={i}&gt;{item}&lt;/li&gt;)}
-&lt;/ul&gt;</code></pre>
-  <div class="box warn"><span class="bt">坑：</span>用数组下标 <code>i</code> 当 key 只在“列表不增删”时安全；会增删排序时请用稳定 ID（如 <code>item.id</code>）。</div>
-  <h3>条件渲染</h3>
-  <pre><code>{isLogin ? &lt;UserPanel /&gt; : &lt;LoginForm /&gt;}
-{showTip &amp;&amp; &lt;p&gt;这是提示&lt;/p&gt;}</code></pre>
+  <h2 id="s11">11. 设计模式</h2>
+  <ul>
+    <li><b>容器 / 展示分离（Container/Presentational）</b>：容器管数据（取数、状态），展示只收 props 画 UI，易测、易复用。</li>
+    <li><b>组合优于继承</b>：用 <code>children</code> 或具名插槽（<code>&lt;Card.Header&gt;</code> 复合组件）拼装，而非层层 props 透传。</li>
+    <li><b>Pro props 透传（prop drilling）</b>：超过 3 层还靠 props 往下传，就该用 Context 或把组件“上移”。</li>
+    <li><b>自定义 Hook 抽逻辑</b>：把“数据获取 / 防抖 / 键盘快捷键”等行为抽成 Hook，组件只关心渲染。</li>
+    <li><b>错误边界（Error Boundary）</b>：用 <code>class component</code> 的 <code>componentDidCatch</code> 或 <code>react-error-boundary</code> 包住子树，避免一个组件崩全盘白屏。</li>
+  </ul>
 
-  <h2 id="s6">6. 副作用 useEffect</h2>
-  <p>组件里“不是渲染”的事（请求接口、定时器、监听）叫<strong>副作用</strong>，放进 <code>useEffect</code>。</p>
-  <pre><code>import { useState, useEffect } from 'react';
-
-function UserList() {
-  const [users, setUsers] = useState([]);
-  useEffect(() =&gt; {
-    // 组件挂载后执行一次：拉取数据
-    fetch('/api/users')
-      .then(r =&gt; r.json())
-      .then(setUsers);
-  }, []);   // 第二个参数 [] = 只在挂载时跑一次
-
-  return &lt;ul&gt;{users.map(u =&gt; &lt;li key={u.id}&gt;{u.name}&lt;/li&gt;)}&lt;/ul&gt;;
-}</code></pre>
-  <div class="box warn"><span class="bt">坑：</span>依赖数组 <code>[]</code> 里要写全用到的外部变量，否则闭包拿到旧值。比如依赖 <code>userId</code> 就要写成 <code>[userId]</code>，它会随 userId 变化重新请求。</div>
-
-  <h2 id="s7">7. 表单与受控组件</h2>
-  <p>React 里输入框的值由 state 控制，叫“受控组件”：</p>
-  <pre><code>function NameForm() {
-  const [name, setName] = useState('');
-  return (
-    &lt;form onSubmit={(e) =&gt; { e.preventDefault(); alert('提交：' + name); }}&gt;
-      &lt;input value={name} onChange={(e) =&gt; setName(e.target.value)} /&gt;
-      &lt;button type="submit"&gt;提交&lt;/button&gt;
-    &lt;/form&gt;
-  );
-}</code></pre>
-  <div class="box"><span class="bt">要点：</span><code>onChange</code> 把输入同步到 state；<code>e.preventDefault()</code> 阻止表单默认刷新页面。</div>
-
-  <h2 id="s8">8. 样式的 3 种写法</h2>
+  <h2 id="s12">12. 样式方案</h2>
   <table>
-    <tr><th>方式</th><th>写法</th><th>适合</th></tr>
-    <tr><td>普通 CSS</td><td><code>import './App.css'</code> + className</td><td>传统、可控</td></tr>
-    <tr><td>内联 style</td><td><code style={{color:'red'}}</code></td><td>动态值（如进度条宽度）</td></tr>
-    <tr><td>CSS Modules</td><td><code>import s from './App.module.css'</code></td><td>避免类名冲突</td></tr>
+    <tr><th>方案</th><th>取舍</th></tr>
+    <tr><td>CSS Modules</td><td>作用域隔离、零运行时，适合通用组件</td></tr>
+    <tr><td>Tailwind</td><td>快、约束统一，但 JSX 变长；见 <a href="tailwind.html">Tailwind</a></td></tr>
+    <tr><td>CSS-in-JS（styled）</td><td>动态主题方便，但有运行时开销，SSR 需特殊处理</td></tr>
   </table>
-  <div class="box ok"><span class="bt">新手建议：</span>先用普通 CSS 文件 + className，最直观。想提速可上 <a href="tailwind.html">Tailwind</a> 或 <a href="antd.html">Ant Design</a>。</div>
+  <div class="box ok"><span class="bt">资深做法：</span>用 <b>design tokens</b>（颜色/间距/字号集中定义成 CSS 变量）+ 一套基础组件库（或 <a href="antd.html">Ant Design</a>），保证全站视觉一致、改主题一处生效。</div>
 
-  <h2 id="s9">9. 实战：Todo 清单（完整可运行）</h2>
-  <p>下面这个项目把上面所有知识点串起来：添加、删除、标记完成、统计。把 <code>src/App.jsx</code> 整个替换成下面的代码即可运行。</p>
-  <pre><code>import { useState } from 'react';
-
-function App() {
-  const [text, setText] = useState('');
-  const [todos, setTodos] = useState([]);
-
-  const add = () =&gt; {
-    const t = text.trim();
-    if (!t) return;                       // 空内容不添加
-    setTodos([...todos, { id: Date.now(), text: t, done: false }]);
-    setText('');                          // 清空输入框
-  };
-
-  const toggle = (id) =&gt;
-    setTodos(todos.map(t =&gt; t.id === id ? { ...t, done: !t.done } : t));
-
-  const remove = (id) =&gt; setTodos(todos.filter(t =&gt; t.id !== id));
-
-  const left = todos.filter(t =&gt; !t.done).length;
-
-  return (
-    &lt;div style={{ maxWidth: 420, margin: '40px auto', fontFamily: 'sans-serif' }}&gt;
-      &lt;h1&gt;📝 我的待办&lt;/h1&gt;
-      &lt;div&gt;
-        &lt;input
-          value={text}
-          placeholder="写点什么…"
-          onChange={(e) =&gt; setText(e.target.value)}
-          onKeyDown={(e) =&gt; e.key === 'Enter' &amp;&amp; add()}
-        /&gt;
-        &lt;button onClick={add}&gt;添加&lt;/button&gt;
-      &lt;/div&gt;
-
-      &lt;ul&gt;
-        {todos.map(t =&gt; (
-          &lt;li key={t.id} style={{ margin: '8px 0' }}&gt;
-            &lt;span
-              onClick={() =&gt; toggle(t.id)}
-              style={{
-                cursor: 'pointer',
-                textDecoration: t.done ? 'line-through' : 'none',
-                color: t.done ? '#999' : '#000'
-              }}&gt;
-              {t.text}
-            &lt;/span&gt;
-            &lt;button onClick={() =&gt; remove(t.id)} style={{ marginLeft: 10 }}&gt;删除&lt;/button&gt;
-          &lt;/li&gt;
-        ))}
-      &lt;/ul&gt;
-
-      &lt;p&gt;还剩 {left} 项未完成，共 {todos.length} 项&lt;/p&gt;
-    &lt;/div&gt;
-  );
-}
-export default App;</code></pre>
-  <div class="box ok"><span class="bt">运行：</span>保存后浏览器自动刷新，输入文字回车或点“添加”即可。<strong>你已经用 React 写了一个真实可用的小应用！</strong></div>
-
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>直接改 state 不生效：<code>count++</code> 不行，必须 <code>setCount(count+1)</code>。改对象/数组也要“先拷贝再改”：<code>setUser({...user, age: 18})</code>。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>列表忘了 <code>key</code>：用 <code>map</code> 渲染时每个子项要带唯一 <code>key</code>，否则增删错乱、控制台报警告。</div>
-  <div class="box warn"><span class="bt">坑 3：</span><code>useState</code> 是“异步”的：连续 <code>setCount(count+1)</code> 两次并不会 +2，因为两次用的都是旧 count。正确做法用函数式更新：<code>setCount(c =&gt; c+1)</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span><code>useEffect</code> 死循环：依赖数组里放了每次渲染都变的对象/数组，导致反复执行。把依赖写成基本类型，或把函数用 <code>useCallback</code> 包起来。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>在 <code>useEffect</code> 里发请求没做清理，组件卸载后 setState 报错。加 return 清理函数或用“已取消”标记。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>忘记 <code>import</code>：用了 <code>useState</code> 却没 <code>import { useState } from 'react'</code>，会报“未定义”。</div>
-  <div class="box warn"><span class="bt">坑 7：</span><code>{}</code> 里不能直接写语句（如 <code>if</code>），只能写表达式。要用分支就用三元 <code>? :</code> 或 <code>&amp;&amp;</code>。</div>
-  <div class="box warn"><span class="bt">坑 8：</span>把 <code>onClick={handleClick()}</code> 写成调用（带括号），会“渲染时就执行一次”。应写 <code>onClick={handleClick}</code> 或 <code>onClick={() =&gt; handleClick()}</code>。</div>
-
-  <h2 id="s11">11. 调试与生态</h2>
+  <h2 id="s13">13. 测试体系</h2>
+  <p>资深前端的交付包含测试，分层：</p>
   <ul>
-    <li><b>React DevTools</b>：Chrome 装扩展，能看到组件树和每个组件的 state/props，调试神器。</li>
-    <li><b>报错看栈</b>：React 报错信息现在很友好，点链接能跳到出错组件。</li>
-    <li><b>路由</b>：多页面用 <code>react-router-dom</code>。</li>
-    <li><b>状态管理</b>：组件多了、跨页面共享数据用 <a href="zustand.html">Zustand</a>（轻量）或 Redux。</li>
-    <li><b>UI 库</b>：不想自己写样式就用 <a href="antd.html">Ant Design</a>。</li>
+    <li><b>单元/组件测试</b>：<code>Vitest + @testing-library/react</code>，测“用户输入 → 界面变化”，不测实现细节。</li>
+    <li><b>Mock</b>：用 MSW（Mock Service Worker）拦截请求，组件测试不依赖真后端。</li>
+    <li><b>E2E</b>：<a href="https://playwright.dev" target="_blank" rel="noopener">Playwright</a> 跑真实浏览器走完整流程（登录→下单）。</li>
+  </ul>
+  <pre><code>test('点击 +1 计数加一', () =&gt; {
+  render(&lt;Counter /&gt;);
+  fireEvent.click(screen.getByText('+1'));
+  expect(screen.getByText('计数：1')).toBeInTheDocument();
+});</code></pre>
+  <div class="box warn"><span class="bt">别测什么：</span>别断言“有没有调某个函数”，测“用户能看到/做到什么”。实现重构后测试仍应绿。</div>
+
+  <h2 id="s14">14. SSR 与 Next.js</h2>
+  <p>纯 CSR（客户端渲染）首屏慢、SEO 差。Next.js 提供：</p>
+  <ul>
+    <li><b>SSR</b>（每次请求服务端渲染）/ <b>SSG</b>（构建时生成）/ <b>CSR</b> 混合。</li>
+    <li><b>RSC（React Server Components）</b>：组件在服务端跑、不进 JS 包，直接读数据库，零客户端体积——这是 React 当前最重要的演进方向。</li>
+  </ul>
+  <div class="box warn"><span class="bt">Hydration 陷阱：</span>SSR 输出 HTML 与客户端首渲必须一致，否则水合错位（如日期用 <code>Date.now()</code> 两边不同）。详见 <a href="nextjs.html">Next.js</a>。</div>
+
+  <h2 id="s15">15. 安全与 a11y</h2>
+  <ul>
+    <li><b>XSS</b>：React 默认转义文本，安全；但 <code>dangerouslySetInnerHTML</code> 是后门——除非来自可信来源并 sanitize（用 <code>DOMPurify</code>），否则禁用。</li>
+    <li><b>依赖供应链</b>：<code>pnpm audit</code>、锁文件入库、CI 里跑 SCA，防恶意包。</li>
+    <li><b>可访问性 a11y</b>：语义化标签、<code>aria-*</code>、键盘可达（focus 管理、Esc 关弹窗）、颜色对比度。不是“加分项”，是合规与体验底线。</li>
   </ul>
 
-  <h2 id="s12">12. 下一步</h2>
+  <h2 id="s16">16. 大型架构</h2>
+  <ul>
+    <li><b>按 feature 分包</b>，而非 <code>components/utils</code> 平铺——域边界清晰，重构影响面小。</li>
+    <li><b>Monorepo</b>（pnpm workspace / Turborepo）：把 web、共享组件库、后端 SDK 放一个仓库，跨包复用与原子提交。</li>
+    <li><b>设计系统</b>：把 Button/Input/Modal 抽成独立 package，全产品统一。</li>
+    <li><b>微前端</b>：多团队独立部署才考虑；否则是过度设计。先问“真有这么多独立团队吗”。</li>
+  </ul>
+  <div class="box warn"><span class="bt">资深判断：</span>架构是“为可预见的演化留余地”，不是“现在就上最重的方案”。过早微前端/DDD 是常见过度设计。</div>
+
+  <h2 id="s17">17. 资深也踩的坑</h2>
+  <div class="box warn"><span class="bt">坑 1 陈旧闭包：</span><code>useEffect</code> 里用了外部变量却没进依赖，拿到旧值。解法：写全依赖 + <code>useRef</code> 存最新值，或用 <code>useEffectEvent</code>。</div>
+  <div class="box warn"><span class="bt">坑 2 无限重渲染：</span>在渲染里 <code>setState</code> 新对象、或在 <code>useEffect</code> 依赖里放每次新建的数组 → 死循环。先创建再 set、依赖用原始值。</div>
+  <div class="box warn"><span class="bt">坑 3 状态囤积：</span>把服务端数据塞全局 store，导致缓存/失效失控。交给 React Query。</div>
+  <div class="box warn"><span class="bt">坑 4 key 误用：</span>用 index 当 key 做“可增删列表”，状态错位。用稳定 id。</div>
+  <div class="box warn"><span class="bt">坑 5 内存泄漏：</span>组件卸载后 fetch 才返回再 setState 报错；事件监听/定时器没在 cleanup 移除。务必 cleanup。</div>
+  <div class="box warn"><span class="bt">坑 6 memo 失效：</span>给 memo 子组件传 inline 新对象/函数，每次都是新引用，等于没 memo。</div>
+
+  <h2 id="s18">18. 调试与剖析</h2>
+  <ul>
+    <li><b>React DevTools</b>：看组件树、props/state、高亮重渲染。</li>
+    <li><b>Profiler</b>：记录一次交互的提交耗时，找出“谁渲染太久”。</li>
+    <li><b>React Scan</b> / <code>why-did-you-render</code>：直接标出“不该渲染却渲染”的组件。</li>
+    <li><b>网络/Performance 面板</b>：定位长任务、卡顿帧、请求瀑布。</li>
+  </ul>
+
+  <h2 id="s19">19. 成长路线</h2>
+  <table>
+    <tr><th>阶段</th><th>能力标志</th><th>该补什么</th></tr>
+    <tr><td>小白</td><td>能写组件、跑通 CRUD 页面</td><td>JS/TS 基础、Hooks 用法</td></tr>
+    <tr><td>初级</td><td>独立做整页、接接口、修 bug</td><td>表单/路由/状态管理选型</td></tr>
+    <tr><td>中级</td><td>性能达标、有测试、代码可维护</td><td>Profiler、测试、设计模式</td></tr>
+    <tr><td>资深</td><td>定架构、带质量门、权衡取舍</td><td>SSR、设计系统、监控、安全</td></tr>
+    <tr><td>专家/Staff</td><td>跨端方案、技术选型影响业务</td><td>框架原理、跨团队规范</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">练习清单：</span>① 用 RHF+zod 做带校验表单 ② 用 React Query 做带缓存的列表 ③ 用 Profiler 把一个慢页面优化到 16ms 内 ④ 给现有组件写 RTL 测试 ⑤ 读一遍 React 官方文档“Thinking in React”。</div>
+
+  <h2 id="s20">20. 资源与下一步</h2>
   <ol>
-    <li>把上面的 Todo 加个“编辑”功能练手。</li>
-    <li>学 <a href="vite.html">Vite</a> 的更多配置（代理、环境变量）。</li>
-    <li>学 <a href="typescript.html">TypeScript</a>，给组件加类型，减少 bug。</li>
-    <li>学 <a href="nextjs.html">Next.js</a>：自带路由 + 服务端渲染，更适合做完整网站。</li>
-    <li>看三个项目源码（简历工坊 / 网页游戏 / Memora），里面有大量真实组件可模仿。</li>
+    <li>官方文档 <a href="https://react.dev" target="_blank" rel="noopener">react.dev</a>（已重写成“按心智模型”讲解）。</li>
+    <li>学 <a href="typescript.html">TypeScript</a> 给全项目加类型。</li>
+    <li>学 <a href="vite.html">Vite</a> 深入配置、<a href="nextjs.html">Next.js</a> 做 SSR 全站。</li>
+    <li>学 <a href="zustand.html">Zustand</a>、TanStack Query、Playwright 补齐状态/数据/测试三件套。</li>
+    <li>读源码：<code>react-query</code>、<code>zustand</code> 都很小，是理解“Hooks + 设计”的好样本。</li>
   </ol>
-  <div class="box ok"><span class="bt">你已经毕业：</span>能搭环境、写组件、管状态、发请求、做表单、踩完常见坑——这就是一名 React 新手该有的能力。继续做 2~3 个小项目，就能上简历。</div>
+  <div class="box ok"><span class="bt">你已经不是小白：</span>理解原理、会做性能与架构取舍、有测试与安全意识——这就是资深前端的起点。剩下的靠真实项目里“踩坑→复盘”积累。</div>
 </main>
 </div>
 <script>

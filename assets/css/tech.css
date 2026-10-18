@@ -72,6 +72,18 @@ tr:nth-child(even) td{background:#0c1422}
 
 .toc-note{font-size:12px; color:var(--muted); margin-top:10px}
 
+/* 名词点击弹窗 */
+.gloss{cursor:help; border-bottom:1px dashed var(--blue); color:var(--blue)}
+.gloss:hover{color:#fff}
+.gloss-pop{position:absolute; z-index:200; max-width:330px; background:var(--panel2);
+  border:1px solid var(--line2); border-radius:10px; padding:12px 14px 13px; font-size:13px; line-height:1.65;
+  color:var(--text); box-shadow:0 16px 44px rgba(0,0,0,.55); display:none}
+.gloss-pop.show{display:block}
+.gloss-pop .gp-t{font-weight:800; color:var(--green); margin:0 18px 6px 0}
+.gloss-pop .gp-d{color:var(--text)}
+.gloss-pop .gp-close{position:absolute; top:8px; right:11px; cursor:pointer; color:var(--muted); font-size:13px}
+.gloss-pop .gp-close:hover{color:var(--text)}
+
 /* 移动端 */
 .tburger{display:none}
 .tscrim{display:none}

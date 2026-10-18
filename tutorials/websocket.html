@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebSocket · 从小白到资深实时后端</title>
+<title>WebSocket · 从小白到双向长连接</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,145 +15,82 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">WebSocket<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 协议握手</a>
-  <a href="#s4">4. 消息与帧</a>
-  <a href="#s5">5. 收发与序列化</a>
-  <a href="#s6">6. 心跳保活</a>
-  <a href="#s7">7. 重连</a>
-  <a href="#s8">8. 鉴权</a>
-  <a href="#s9">9. 横向扩展</a>
-  <a href="#s10">10. 安全</a>
-  <a href="#s11">11. 部署</a>
-  <a href="#s12">12. 对比 Socket.IO</a>
-  <a href="#s13">13. 常见坑</a>
-  <a href="#s14">14. 调试</a>
-  <a href="#s15">15. 成长路线</a>
+  <div class="tbrand">WebSocket<small>从小白到双向长连接</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 握手</a>
+  <a href="#s3">3. 客户端 API</a>
+  <a href="#s4">4. 服务端</a>
+  <a href="#s5">5. 心跳与重连</a>
+  <a href="#s6">6. 与 HTTP</a>
+  <a href="#s7">7. 与 Socket.IO</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>WebSocket：从小白到资深实时后端</h1>
-  <p class="tsub">WebSocket 是 HTML5 的<strong>全双工通信协议</strong>：一次 HTTP Upgrade 握手后，服务端可随时主动向浏览器推数据，省去轮询。本教程讲透<strong>握手机制、帧与二进制、心跳、重连、鉴权、横向扩展与部署安全</strong>——这是理解一切实时通信（含 <a href="socketio.html">Socket.IO</a>）的底层基础。</p>
+  <h1>WebSocket：从小白到双向长连接</h1>
+  <p class="tsub"><a href="websocket.html">WebSocket</a> 是一次握手后保持的<strong>全双工长连接</strong>协议，客户端和服务器可随时互发数据。它是实时游戏、聊天、流式输出的底层基础，也是 <a href="socketio.html">Socket.IO</a> 的内核。本教程讲清握手、API 与心跳重连。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>HTTP 是“请求-响应”，服务端不能主动推。实时场景若用轮询，浪费连接与延迟。<strong>WebSocket 在单个 TCP 连接上做双向通道</strong>，连上后双方随时互发。</p>
-  <div class="box"><span class="bt">一句话：</span>轮询是“客户端反复问”，WebSocket 是“连上后服务端有消息直接推”。</div>
-  <div class="box ok"><span class="bt">适合：</span>行情推送、实时监控、游戏、消息通知。<br><span class="box warn">注意：</span>它是底层协议，无重连/房间/广播，要自己实现或上 <a href="socketio.html">Socket.IO</a>。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>HTTP 是“请求—响应”一问一答，且服务端不能主动推。WebSocket 在一次升级握手后，建立持久双向通道，双方随时发消息。</p>
+  <div class="box"><span class="bt">一句话：</span>WebSocket = 持久双向通道。适合需要“服务端主动推”的实时场景。</div>
+  <div class="box ok"><span class="bt">适合：</span>聊天、实时游戏、行情推送、<a href="sse.html">SSE</a> 之外的双向流。<span class="box warn">不适合：</span>普通请求—响应（用 HTTP 更简单）。</div>
 
-  <h2 id="s2">2. 工程化起步</h2>
-  <p>浏览器端原生支持，无需依赖；服务端用 Node 的 <code>ws</code> 库（轻量）或 <a href="nodejs.html">Node</a> 原生 http 手写。</p>
-  <pre><code>npm install ws   # 生产级 WS 服务端库</code></pre>
-  <p>生产务必用 <code>wss://</code>（基于 TLS），等同 HTTPS 对实时通道的加密。</p>
+  <h2 id="s2">2. 握手</h2>
+  <p>客户端发一个带特殊头的 HTTP 请求，服务端同意后将连接“升级”为 WebSocket：</p>
+  <pre><code>GET /ws HTTP/1.1
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: ...</code></pre>
 
-  <h2 id="s3">3. 协议握手</h2>
-  <p>WebSocket 始于一次 HTTP 请求，带 <code>Upgrade: websocket</code> 头与服务端用 <code>Sec-WebSocket-Key</code> 计算 <code>Sec-WebSocket-Accept</code> 回应 101 状态码，之后协议切换为 WS 帧。</p>
-  <div class="box ok"><span class="bt">资深：</span>握手是普通 HTTP → 鉴权可借 Cookie/Authorization 头（见第 8 节）；反代必须放行 Upgrade（见第 11 节）。</div>
-
-  <h2 id="s4">4. 消息与帧</h2>
+  <h2 id="s3">3. 客户端 API</h2>
+  <pre><code>const ws = new WebSocket('wss://x.com/ws');
+ws.onopen = () =&gt; ws.send('hi');
+ws.onmessage = (e) =&gt; console.log(e.data);
+ws.onclose = () =&gt; {};</code></pre>
   <ul>
-    <li>数据封装为<strong>帧（frame）</strong>：文本帧（UTF-8）/ 二进制帧（ArrayBuffer/Blob）/ 控制帧（ping/pong/close）。</li>
-    <li>客户端发往服务端的帧必须<strong>掩码（mask）</strong>（防缓存污染），服务端回的不掩码。</li>
-    <li>大消息会被分片（fragment），库一般会帮你重组，但要留意单帧/单消息上限配置。</li>
+    <li>用 <code>wss://</code>（加密）如同 HTTPS，生产必备。</li>
+    <li>数据可是文本或二进制（ArrayBuffer/Blob）。</li>
   </ul>
 
-  <h2 id="s5">5. 收发与序列化</h2>
-  <pre><code>// 浏览器端
-const ws = new WebSocket('wss://你的域名/ws');
-ws.onopen = () =&gt; ws.send(JSON.stringify({ type: 'chat', text: 'hi' }));
-ws.onmessage = (e) =&gt; { const obj = JSON.parse(e.data); };
-// Node ws 服务端收到的 data 是 Buffer
-ws.on('message', (data) =&gt; console.log(data.toString()));</code></pre>
-  <ul>
-    <li>WS 只传字符串/二进制，对象要先 <code>JSON.stringify</code>；用二进制可减体积（如 Protobuf）。</li>
-    <li>接收端判断 <code>typeof e.data</code> 区分文本/二进制。</li>
-  </ul>
-
-  <h2 id="s6">6. 心跳保活</h2>
-  <p>长空闲连接会被代理/系统/NAT 回收，需定期“证明还活着”：</p>
-  <pre><code>// 应用层心跳：每 30s 互发 ping/pong
-const timer = setInterval(() =&gt; {
-  if (ws.readyState === WebSocket.OPEN) ws.send('ping');
-}, 30000);
-ws.onmessage = (e) =&gt; { if (e.data === 'pong') resetTimeout(); };</code></pre>
-  <div class="box warn"><span class="bt">要点：</span>用应用层心跳 + 超时断开，比单纯依赖 TCP keepalive 更可控；超时未收到 pong 即视为断线。</div>
-
-  <h2 id="s7">7. 重连</h2>
-  <p>原生 WS 不自带重连，要在客户端实现：</p>
-  <ul>
-    <li><b>指数退避</b>：断线后 1s、2s、4s… 重连，避免雪崩式重试。</li>
-    <li><b>状态机</b>：区分 connecting/open/closing/closed，避免重复连接。</li>
-    <li>重连后需重新鉴权、重新订阅房间（状态不保留）。</li>
-  </ul>
-
-  <h2 id="s8">8. 鉴权</h2>
-  <p>握手是 HTTP，所以可借 <code>Cookie</code> 或 <code>Authorization</code> 头/查询参数校验：</p>
-  <pre><code>wss.on('connection', (ws, req) =&gt; {
-  const token = new URL(req.url, 'http://x').searchParams.get('token');
-  if (!verify(token)) ws.close(4001, 'unauthorized');  // 握手期即拒绝
+  <h2 id="s4">4. 服务端</h2>
+  <pre><code>import { WebSocketServer } from 'ws';
+const wss = new WebSocketServer({ server });
+wss.on('connection', (ws) =&gt; {
+  ws.on('message', (m) =&gt; ws.send('echo:' + m));
 });</code></pre>
-  <div class="box warn"><span class="bt">别在 WS 消息里才鉴权：</span>连接即资源，握手阶段就该校验；且身份以服务端为准，禁止客户端自报。</div>
+  <p>Node 用 <code>ws</code> 库；<a href="springboot.html">Spring</a> 有 <code>@ServerEndpoint</code>；各语言都有实现。</p>
 
-  <h2 id="s9">9. 横向扩展</h2>
-  <p>WS 无内置广播/房间。多实例时：</p>
+  <h2 id="s5">5. 心跳与重连</h2>
   <ul>
-    <li><b>粘滞会话</b>（Nginx <code>ip_hash</code>）让同用户落同节点；但节点挂了连接全丢。</li>
-    <li><b>Redis pub/sub</b>：节点间转发广播事件（同 <a href="socketio.html">Socket.IO</a> 思路）——更健壮的方案。</li>
+    <li><b>心跳</b>：定时互发小包（ping/pong），探测连接存活，灭掉“假死”连接。</li>
+    <li><b>重连</b>：<code>onclose</code> 里指数退避重连，避免雪崩。</li>
   </ul>
+  <div class="box warn"><span class="bt">坑：</span>中间代理（<a href="nginx.html">Nginx</a>）默认会断空闲长连接，要调长超时或靠心跳保活。</div>
 
-  <h2 id="s10">10. 安全</h2>
-  <ul>
-    <li><b>origin 校验</b>：拒绝非白名单来源，防跨站 WS。</li>
-    <li><b>消息体积上限</b>：<code>ws</code> 可设 <code>maxPayload</code>，防超大帧打爆内存。</li>
-    <li><b>限流</b>：连接频率/消息频率节流，防 DoS。</li>
-    <li>全程 <code>wss</code> 加密，防中间人窃听/篡改。</li>
-  </ul>
-
-  <h2 id="s11">11. 部署</h2>
-  <p>Nginx 反代必须放行 Upgrade，否则握手 400：</p>
-  <pre><code>location /ws {
-  proxy_pass http://backend;
-  proxy_http_version 1.1;
-  proxy_set_header Upgrade $http_upgrade;
-  proxy_set_header Connection "upgrade";
-  proxy_read_timeout 3600s;   # 长连接别被默认超时切掉
-}</code></pre>
-
-  <h2 id="s12">12. 对比 Socket.IO</h2>
+  <h2 id="s6">6. 与 HTTP</h2>
   <table>
-    <tr><th></th><th>WebSocket</th><th><a href="socketio.html">Socket.IO</a></th></tr>
-    <tr><td>重连/降级</td><td>自己写</td><td>内置</td></tr>
-    <tr><td>房间/广播</td><td>自己实现</td><td>内置</td></tr>
-    <tr><td>依赖</td><td>原生零依赖</td><td>需引库</td></tr>
-    <tr><td>可控性</td><td>最高</td><td>封装好</td></tr>
+    <tr><th></th><th>HTTP</th><th>WebSocket</th></tr>
+    <tr><td>模式</td><td>一问一答</td><td>双向长连接</td></tr>
+    <tr><td>服务端推</td><td>不行（需轮询）</td><td>随时推</td></tr>
+    <tr><td>开销</td><td>每次握手</td><td>一次握手持续用</td></tr>
   </table>
-  <div class="box ok"><span class="bt">选型：</span>要极致可控/轻量/对接非 JS 端 → 原生 WS；要快速做聊天/协作/游戏且省心 → Socket.IO。</div>
 
-  <h2 id="s13">13. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>Nginx 没放行 Upgrade → 握手 400。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>ws 收到的是 Buffer，忘 <code>toString()</code> 看到乱码。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>页面 https 但 WS 用 <code>ws://</code> → 被浏览器拦，改用 <code>wss://</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>不重连 → 网络波动后消息发不出。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>不设 maxPayload → 超大消息 OOM。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>心跳缺失 → 代理静默断开，连接“假活”。</div>
+  <h2 id="s7">7. 与 Socket.IO</h2>
+  <p>WebSocket 是协议；<a href="socketio.html">Socket.IO</a> 是库，封装了房间/广播/重连/降级。要简单双向通道用原生 WS，要全套实时能力用 Socket.IO。</p>
 
-  <h2 id="s14">14. 调试</h2>
-  <ul>
-    <li>命令行 <code>wscat -c wss://你的域名/ws</code> 手动收发。</li>
-    <li>Chrome DevTools → Network → WS 看帧；Wireshark 抓帧级数据。</li>
-  </ul>
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 代理超时：</span>见第 5 节，靠心跳。</div>
+  <div class="box warn"><span class="bt">坑 2 离线消息：</span>WS 不持久，断开期间消息丢失；要可靠投递得自己加队列/重发。</div>
+  <div class="box warn"><span class="bt">坑 3 鉴权：</span>握手是普通 HTTP，可在握手头或 query 里带 token 校验。</div>
 
-  <h2 id="s15">15. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能建服务、收发消息、心跳</td></tr>
-    <tr><td>初级</td><td>会鉴权、重连、二进制</td></tr>
-    <tr><td>中级</td><td>横向扩展、Nginx 部署、安全加固</td></tr>
-    <tr><td>资深</td><td>协议级排障、性能与大规模连接治理</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 ws 做实时时钟推送 ② 加握手鉴权并拒绝非法连接 ③ 实现客户端指数退避重连 ④ 配 Nginx Upgrade 反代 ⑤ 设 maxPayload 并测超大消息。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 WS 握手/帧/心跳/鉴权与扩展——能在原生协议层排查实时问题，是资深实时后端的底层功力。</div>
+  <h2 id="s9">9. 资源与路线</h2>
+  <ol>
+    <li>MDN <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/WebSocket" target="_blank" rel="noopener">WebSocket</a> 文档。</li>
+    <li>先学 <a href="nodejs.html">Node</a>、<a href="http">HTTP</a> 基础。</li>
+    <li>练：用 ws 写一个服务端主动定时推送的 demo。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能设计心跳/重连/鉴权三件套，理解代理对长连接的限制，并判断“原生 WS 还是 Socket.IO”哪个更合适。</div>
 </main>
 </div>
 <script>

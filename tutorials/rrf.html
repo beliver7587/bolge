@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
-<title>RRF · 从小白到资深</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RRF · 从小白到结果融合</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,100 +15,55 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">RRF<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化</a>
-  <a href="#s3">3. 融合公式</a>
-  <a href="#s4">4. 为什么用排名</a>
-  <a href="#s5">5. 实现要点</a>
-  <a href="#s6">6. 参数与变体</a>
-  <a href="#s7">7. 在 RAG 中的位置</a>
-  <a href="#s8">8. 评估</a>
-  <a href="#s9">9. 常见坑</a>
-  <a href="#s10">10. 调试</a>
-  <a href="#s11">11. 成长路线</a>
+  <div class="tbrand">RRF<small>从小白到结果融合</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 公式</a>
+  <a href="#s3">3. 为什么用</a>
+  <a href="#s4">4. 与加权对比</a>
+  <a href="#s5">5. 常见坑</a>
+  <a href="#s6">6. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>RRF：从小白到资深</h1>
-  <p class="tsub"><strong>倒数排名融合（RRF）</strong>把多个检索结果列表按“排名”而非“分数”合并——巧妙规避了不同算法分数尺度不一致的问题。它是 <a href="rag.html">RAG</a> 混合检索的关键一步。本教程讲透<strong>排名融合原理、实现要点、参数与变体、与重排配合及评估</strong>。</p>
+  <h1>RRF：从小白到结果融合</h1>
+  <p class="tsub"><a href="rrf.html">RRF</a>（倒数排名融合）把多路召回（如 <a href="bm25.html">BM25</a> + 向量）的结果按排名合成一个列表。它是 <a href="rag.html">RAG</a> 混合检索的最后一步。本教程讲清它为什么比加权平均更稳。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>多种检索（<a href="bm25.html">BM25</a>、<a href="embedding.html">向量</a>、重排）返回的是<strong>不同尺度的分数</strong>：BM25 可能 9.3、向量 0.81、rerank 0.002。直接加权相加会被某一“数值大”的路压倒。RRF 不看分数，只看“排第几”。</p>
-  <div class="box"><span class="bt">一句话：</span>RRF 把“BM25 第3、向量第1”这样的名次，转成可相加的融合分——鲁棒地取长补短。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>多路检索各返回一排好结果（带排名），RRF 只看“排名”不看“分数”，把各路排名倒数相加再排序。</p>
+  <div class="box"><span class="bt">一句话：</span>RRF = 把多路召回按排名融合成一个 TopK。不看分，只看名次。</div>
 
-  <h2 id="s2">2. 工程化</h2>
-  <p>RRF 是无依赖的纯函数，几十行就能实现，常放检索服务里：</p>
-  <pre><code>// lists: 每个是已排序的 id 数组（名次从 1 开始）
-function rrf(lists, k = 60) {
-  const score = new Map();
-  for (const list of lists) {
-    list.forEach((id, i) =&gt; {
-      score.set(id, (score.get(id) || 0) + 1 / (k + i + 1));
-    });
-  }
-  return [...score.entries()].sort((a, b) =&gt; b[1] - a[1]);
-}</code></pre>
+  <h2 id="s2">2. 公式</h2>
+  <pre><code>RRF(d) = Σ 1 / (k + rank_i(d))      // rank 是该路中 d 的排名，k 通常 60
+// 分数高的排前面</code></pre>
+  <p>k 是平滑常数，避免第一名权重过高。</p>
 
-  <h2 id="s3">3. 融合公式</h2>
-  <div class="diagram">RRF_score(d) = Σ_L  1 / (k + rank_L(d))
-k 常数（常取 60）
-rank_L(d) 是文档 d 在列表 L 中的名次（第1名=1）
-最终按 RRF 总分降序输出</div>
-  <p>名次越靠前（rank 小），贡献越大且递减平缓；k 越大，排名差距被“压平”，越偏向多路都靠前的项。</p>
-
-  <h2 id="s4">4. 为什么用排名而非分数</h2>
+  <h2 id="s3">3. 为什么用</h2>
   <ul>
-    <li><b>尺度无关</b>：无论 BM25 是 0~10 还是向量 0~1，名次都在 1~N，可直接相加。</li>
-    <li><b>鲁棒</b>：不敏感于各算法的分数分布/异常值；即使某路分数“虚高”也不致独大。</li>
-    <li><b>无训练</b>：不需要学习各路权重，开箱即用。</li>
+    <li>不同检索的分数量纲不同（BM25 几分 vs 余弦 0–1），直接加权难调权重。</li>
+    <li>RRF 只用排名，天然消除量纲差异，无需调权重。</li>
+    <li>某路漏召的文档，被另一路补上，召回更稳。</li>
   </ul>
+  <div class="box ok"><span class="bt">实战：</span>BM25 + 向量两路各取 Top50，RRF 合成 Top10 喂给 <a href="llm.html">LLM</a>。</div>
 
-  <h2 id="s5">5. 实现要点</h2>
-  <ul>
-    <li><b>名次从 1 开始</b>；数组下标要 +1。</li>
-    <li><b>跨列表去重</b>：同一文档在 BM25 和向量都出现，分数应累加——用 id 做 key 的 Map 天然合并。</li>
-    <li><b>空列表处理</b>：某路无结果时跳过，别让空数组污染。</li>
-  </ul>
-
-  <h2 id="s6">6. 参数与变体</h2>
-  <ul>
-    <li><code>k</code>：太小（如 1）让第 1 名压倒一切，丧失融合意义；太大则各名次差异被抹平。常用 10~60。</li>
-    <li><b>加权 RRF</b>：若某路更可信，可乘权重 <code>w_L / (k + rank)</code>。</li>
-    <li><b>对比 min-max 归一化</b>：把各路分数归一到 [0,1] 再加权——但需各路分数分布稳定，否则不如 RRF 稳。</li>
-  </ul>
-
-  <h2 id="s7">7. 在 RAG 中的位置</h2>
-  <p>典型链路：多路召回（BM25 + 向量）→ <strong>RRF 粗融</strong>取 Top-20 → <strong>rerank 精排</strong>取 Top-5 → 送大模型。RRF 负责“广撒网合并”，rerank 负责“精中选精”。</p>
-  <pre><code>const fused = rrf([bm25Top20, vecTop20], 60);
-const reranked = await reranker.rerank(q, fused.slice(0, 20), 5);</code></pre>
-
-  <h2 id="s8">8. 评估</h2>
-  <p>融合是否真有效，用评测集量化：对比“单路”与“RRF 融合”的 <strong>Recall@K / nDCG@K</strong>。多数情况下融合优于任一路，尤其查询类型多样时。</p>
-
-  <h2 id="s9">9. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>直接把不同算法原始分相加 → 尺度不一，某路独大；用排名。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>k 太小 → 第 1 名压倒一切，融合无意义；常用 60。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>各路窗口不一致（一路 1000、一路 20） → 稀释融合；取相同较小窗口（20~50）。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>忘去重跨列表 id → 分数错乱。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>把 RRF 当最终排序 → 它只是粗融，质量不够，仍需 rerank。</div>
-
-  <h2 id="s10">10. 调试</h2>
-  <ul>
-    <li>打印融合前后每个文档的 RRF 分与各路名次，确认“两路都靠前”的项被推高。</li>
-    <li>调 k 观察 topK 变化，选 Recall@K 最优。</li>
-  </ul>
-
-  <h2 id="s11">11. 成长路线</h2>
+  <h2 id="s4">4. 与加权对比</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能实现 RRF 融合多路结果</td></tr>
-    <tr><td>初级</td><td>懂排名而非分数的理由、去重</td></tr>
-    <tr><td>中级</td><td>调 k、加权、与 rerank 串联、评估</td></tr>
-    <tr><td>资深</td><td>检索融合策略选型、指标驱动迭代</td></tr>
+    <tr><th></th><th>RRF</th><th>加权求和</th></tr>
+    <tr><td>依赖</td><td>只看排名，无权重</td><td>要调各路权重</td></tr>
+    <tr><td>鲁棒</td><td>高（量纲无关）</td><td>低（量纲敏感）</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 实现 RRF 并验证跨列表去重 ② 对比“直接加分数”与 RRF 的结果差异 ③ 调 k 画出 Recall@K 曲线 ④ 串联 RRF+rerank 看 top5 质量 ⑤ 试加权 RRF。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解“按排名融合”的巧妙与边界，能把多路召回稳健合并再精排——这是资深 AI 后端做混合检索的收口能力。</div>
+
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 同分未打散：</span>并列排名要稳定处理，避免 TopK 抖动。</div>
+  <div class="box warn"><span class="bt">坑 2 只召一路：</span>RRF 收益来自多路互补，单路无意义。</div>
+  <div class="box warn"><span class="bt">坑 3 k 设太小：</span>第一名权重过大，融合退化。</div>
+
+  <h2 id="s6">6. 资源与路线</h2>
+  <ol>
+    <li>论文 Reciprocal Rank Fusion；RAG 框架（LangChain）内置。</li>
+    <li>配合 <a href="rag.html">RAG</a>、<a href="bm25.html">BM25</a>、<a href="embedding.html">Embedding</a>。</li>
+    <li>练：写一个小函数，把两路排名用 RRF 融合。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能用 RRF 把异构召回稳健融合，理解“排名比分数更可靠”，并据此提升 RAG 召回质量。</div>
 </main>
 </div>
 <script>

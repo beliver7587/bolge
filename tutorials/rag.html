@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
-<title>RAG · 从小白到资深</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG · 从小白到检索增强生成</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,122 +15,70 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">RAG<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 两阶段架构</a>
-  <a href="#s3">3. 切块策略</a>
-  <a href="#s4">4. 检索与重排</a>
-  <a href="#s5">5. 提示组装</a>
-  <a href="#s6">6. 生成与窗口</a>
-  <a href="#s7">7. 评估体系</a>
-  <a href="#s8">8. 高级技巧</a>
-  <a href="#s9">9. 生产要点</a>
-  <a href="#s10">10. 安全</a>
-  <a href="#s11">11. 常见坑</a>
-  <a href="#s12">12. 调试</a>
-  <a href="#s13">13. 成长路线</a>
+  <div class="tbrand">RAG<small>从小白到检索增强生成</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 为什么需要</a>
+  <a href="#s3">3. 完整流程</a>
+  <a href="#s4">4. 检索方式</a>
+  <a href="#s5">5. 融合 RRF</a>
+  <a href="#s6">6. 分块策略</a>
+  <a href="#s7">7. 与 LLM</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>RAG：从小白到资深</h1>
-  <p class="tsub"><strong>检索增强生成（RAG）</strong>让大模型“先查资料再回答”，解决幻觉、知识截止与私有数据问题——是 Memora 这类知识型 AI 的核心。本教程讲透<strong>两阶段架构、切块、混合检索与重排、提示接地、评估体系、生产与安全</strong>——这是做生产级 RAG 的硬功。</p>
+  <h1>RAG：从小白到检索增强生成</h1>
+  <p class="tsub"><a href="rag.html">RAG</a>（检索增强生成）先检索资料再让 <a href="llm.html">大模型</a> 基于资料作答，解决“模型不懂私有知识、会胡编”的问题。Memora 客服就是 RAG 落地。本教程讲清流程、混合检索与分块策略。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>大模型有两个硬伤：<strong>会编造</strong>（幻觉）和<strong>不懂你的私有/最新数据</strong>。RAG 把“知识”外置到检索系统，只让模型做“基于给定资料的生成”，从而可溯源、可更新。</p>
-  <div class="box"><span class="bt">对比微调：</span>RAG 改知识只需更新文档，无需重训；微调改行为/风格。多数知识问答首选 RAG。</div>
-  <div class="box ok"><span class="bt">适合：</span>企业知识库、客服、文档问答、法律/医疗辅助、带引用的助手。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>RAG = 检索（Retrieval）+ 增强（把资料塞进上下文）+ 生成（Generation）。模型不再只靠训练记忆，而是“现查现答”。</p>
+  <div class="box"><span class="bt">一句话：</span>RAG = 让 LLM 先查资料再回答。专治“知识过时”和“ hallucination（幻觉）”。</div>
 
-  <h2 id="s2">2. 两阶段架构</h2>
-  <div class="diagram">离线建库：文档 → 切块 → 嵌入 → 入库（向量库 + 关键词索引）
-在线问答：提问 → 改写 → 多路召回 → 融合/重排 → 组装 Prompt → LLM 生成（带引用）</div>
-  <p>两阶段解耦：建库是批量离线任务；问答是在线低延迟链路。组件包括分块器、检索器（向量 + BM25）、重排器、提示模板、生成模型。</p>
-
-  <h2 id="s3">3. 切块策略</h2>
-  <p>切块质量直接决定召回上限：</p>
+  <h2 id="s2">2. 为什么需要</h2>
   <ul>
-    <li><b>粒度</b>：200~800 token 常见，带重叠（overlap）防边界信息丢失。</li>
-    <li><b>结构感知</b>：按标题/段落/表格边界切，优于硬按字数切；保留层级上下文（父块）。</li>
-    <li><b>元数据</b>：标题、来源、时间、权限——用于过滤与可解释。</li>
+    <li>LLM 训练数据有截止日期，不懂你公司的私域文档。</li>
+    <li>直接问易“幻觉”编答案；给它真实资料它能基于资料答。</li>
+    <li>资料可溯源、可更新，不必重训模型。</li>
   </ul>
 
-  <h2 id="s4">4. 检索与重排</h2>
-  <pre><code>// 多路召回 + RRF 融合 + 重排
-const vecHits = await vectorDB.search(qEmb, topK=20);
-const bm25Hits = await bm25.search(q, topK=20);
-const fused = rrf([vecHits, bm25Hits], k=60);     // 按排名融合，见 <a href="rrf.html">RRF</a>
-const reranked = await reranker.rerank(q, fused, topN=5);  // 精排取 top5</code></pre>
+  <h2 id="s3">3. 完整流程</h2>
+  <pre><code>入库：文档 → 切片 → Embedding → 向量库
+提问：问题 → Embedding → 检索 TopK → 拼进 Prompt → LLM 作答</code></pre>
+  <p>检索到的片段作为上下文，约束模型“基于这些回答”，并可在答案里附引用。</p>
+
+  <h2 id="s4">4. 检索方式</h2>
   <ul>
-    <li><strong>混合检索</strong>：向量捕语义、<a href="bm25.html">BM25</a> 捕精确词（型号/订单号），互补。</li>
-    <li><strong>重排（rerank）</strong>：用 cross-encoder 对召回结果二次精排，质量显著高于纯向量 topK。</li>
-    <li><strong>元数据过滤</strong>：先按权限/时间/来源缩窄，再语义召回。</li>
+    <li><b>向量检索</b>（语义）：用 <a href="embedding.html">Embedding</a> 找语义相近，能匹配同义。</li>
+    <li><b>BM25</b>（关键词）：精确词面匹配，适合专有名词。</li>
+    <li><b>混合</b>：两者互补，再用 <a href="rrf.html">RRF</a> 融合，效果好于单路。</li>
   </ul>
 
-  <h2 id="s5">5. 提示组装</h2>
-  <pre><code>const context = reranked.map((h,i)=&gt;`[${i+1}] ${h.text}`).join('\n');
-const prompt = `你是基于资料的助手，只根据下面带编号的资料回答，资料没有就如实说“不知道”。
-禁止凭空编造。
-资料：
-${context}
-问题：${question}`;</code></pre>
-  <div class="box warn"><span class="bt">接地（grounding）约束：</span>明确“仅依据资料、无则说不知道、禁止编造”，并让模型输出引用编号——既降幻觉又便于核查。</div>
+  <h2 id="s5">5. 融合 RRF</h2>
+  <p>不同检索返回不同排序，用倒数排名融合（见 <a href="rrf.html">RRF</a>）合成一个 TopK，避免单路漏召。</p>
 
-  <h2 id="s6">6. 生成与上下文窗口</h2>
+  <h2 id="s6">6. 分块策略</h2>
   <ul>
-    <li>控制 topN 与块大小，避免超出模型上下文窗口或稀释重点。</li>
-    <li>长上下文模型能塞更多资料，但“塞太多”反而降低注意力精度——精排比堆量更重要。</li>
+    <li>按语义断句，块大小适中（如 300–800 字），带重叠窗口保上下文。</li>
+    <li>元数据（来源、标题）一并存，便于过滤与引用。</li>
   </ul>
+  <div class="box warn"><span class="bt">坑：</span>块太大噪声多、超出上下文；块太小丢语境。需要调。</div>
 
-  <h2 id="s7">7. 评估体系</h2>
-  <p>别只靠“看着像对”。用离线评测集量化：</p>
-  <ul>
-    <li><b>忠实度（faithfulness）</b>：答案是否真能从资料推出（防编造）。</li>
-    <li><b>答案相关性</b>：是否切题。</li>
-    <li><b>上下文召回率</b>：正确答案所需资料是否进了 topK。</li>
-    <li>框架参考 RAGAS；用 LLM-as-judge 做自动化评分。</li>
-  </ul>
+  <h2 id="s7">7. 与 LLM</h2>
+  <p>RAG 是“外挂知识”，LLM 是“大脑”。检索质量决定上限，生成质量决定下限——检索烂，模型再强也答不对。</p>
 
-  <h2 id="s8">8. 高级技巧</h2>
-  <ul>
-    <li><b>查询改写/扩展</b>：把口语问题改写成检索友好表述，或多查询覆盖不同角度。</li>
-    <li><b>多跳检索</b>：先召一小步、再基于结果二次检索，解决跨文档推理。</li>
-    <li><b>父子块</b>：检索用小块（精准），返回用大块（上下文完整）。</li>
-  </ul>
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 检索质量差：</span>RAG 上限由检索决定，先调 embedding/分块/融合。</div>
+  <div class="box warn"><span class="bt">坑 2 上下文溢出：</span>塞太多块超出模型窗口；按相关度截断 + 摘要。</div>
+  <div class="box warn"><span class="bt">坑 3 不加护栏：</span>用户可能诱导模型忽略资料；需 <a href="promptinject.html">防注入</a> 与约束。</div>
 
-  <h2 id="s9">9. 生产要点</h2>
-  <ul>
-    <li><b>延迟</b>：检索+重排+生成链路要流式返回（见 <a href="sse.html">SSE</a>），别让用户干等。</li>
-    <li><b>缓存</b>：相同/相似问题缓存答案或检索结果，省成本降延迟。</li>
-    <li><b>增量更新</b>：文档变更重嵌受影响块，删旧块，避免脏召回。</li>
-    <li><b>可观测</b>：记录每次召回的命中与耗时，便于排障与评估。</li>
-  </ul>
-
-  <h2 id="s10">10. 安全</h2>
-  <div class="box warn"><span class="bt">检索内容也可能注入：</span>若资料（尤其用户可投稿内容）里藏有“忽略上述指令…”的提示，可能劫持模型。要做输入净化、输出校验，详见 <a href="promptinject.html">提示注入防护</a>。</div>
-
-  <h2 id="s11">11. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>切块不当 → 召回不准（按语义边界切）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>只靠向量 → 精确词查不出 → 混合检索 + 重排。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>不约束“依据资料” → 模型仍编造。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>上下文超窗 → 控制 topN/块大小。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>文档更新后旧向量残留 → 脏召回。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>忽略检索内容注入 → 被恶意资料劫持。</div>
-
-  <h2 id="s12">12. 调试</h2>
-  <ul>
-    <li>打印 topK 召回内容与相似度，看是否相关；用评测集跑忠实度/召回率。</li>
-    <li>端到端 tracing（LangSmith 之类）定位是“召回错”还是“生成错”。</li>
-  </ul>
-
-  <h2 id="s13">13. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能搭“检索→拼Prompt→生成”链路</td></tr>
-    <tr><td>初级</td><td>会切块、混合检索、约束提示</td></tr>
-    <tr><td>中级</td><td>重排、评估体系、查询改写</td></tr>
-    <tr><td>资深</td><td>生产调优、安全、指标驱动迭代</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 搭一条含 BM25+向量+RRF 的检索 ② 加 rerank 看答案质量变化 ③ 用评测集算忠实度/召回率 ④ 在资料藏一句注入指令验证防护 ⑤ 做增量更新脚本。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 RAG 的不是“调一个接口”，而是检索质量×提示工程×评估×安全的系统工程——这是资深 AI 后端做知识型产品的核心能力。</div>
+  <h2 id="s9">9. 资源与路线</h2>
+  <ol>
+    <li>学 <a href="embedding.html">Embedding</a>、<a href="bm25.html">BM25</a>、<a href="llm.html">LLM</a> 后再做 RAG。</li>
+    <li>框架：LangChain、LlamaIndex、Dify。</li>
+    <li>练：用向量库 + LLM 搭一个“基于你笔记的问答”。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>把 RAG 当成“检索系统 + 生成系统”两块独立优化，清楚“检索上限论”，并用混合检索 + 融合压高召回。</div>
 </main>
 </div>
 <script>

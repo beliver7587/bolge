@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
-<title>BM25 · 从小白到资深</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BM25 · 从小白到全文检索</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,105 +15,62 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">BM25<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化选型</a>
-  <a href="#s3">3. 核心公式</a>
-  <a href="#s4">4. 倒排索引</a>
-  <a href="#s5">5. 中文分词</a>
-  <a href="#s6">6. 调参与解释</a>
-  <a href="#s7">7. 与向量混合</a>
-  <a href="#s8">8. 生产要点</a>
-  <a href="#s9">9. 评估</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试</a>
-  <a href="#s12">12. 成长路线</a>
+  <div class="tbrand">BM25<small>从小白到全文检索</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 原理</a>
+  <a href="#s3">3. 与向量检索</a>
+  <a href="#s4">4. 用法</a>
+  <a href="#s5">5. 与 RAG</a>
+  <a href="#s6">6. 常见坑</a>
+  <a href="#s7">7. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>BM25：从小白到资深</h1>
-  <p class="tsub"><strong>BM25</strong> 是搜索引擎同款的关键词相关性算法，按“词频饱和、词稀有度、文档长度”给文档打分。它是 <a href="rag.html">RAG</a> 混合检索里的关键词主力——精准命中“型号/订单号/专名”。本教程讲透<strong>公式原理、倒排索引、中文分词、调参、与向量混合及评估</strong>。</p>
+  <h1>BM25：从小白到全文检索</h1>
+  <p class="tsub"><a href="bm25.html">BM25</a> 是经典的全文检索打分算法，衡量“查询词与文档的相关度”。它是 <a href="rag.html">RAG</a> 混合检索的关键一路，擅长精确词面匹配（如专有名词）。本教程讲清原理、与向量检索的互补，以及落地用法。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p><a href="embedding.html">向量检索</a>看“语义相近”，但遇到“订单号、型号、专有名词”这类字面对才相关的查询会失灵。BM25 看“字面命中”，正好补位。</p>
-  <div class="box"><span class="bt">一句话：</span>BM25 捕“词命中”（精确），向量捕“意思近”（语义）——生产 RAG 两者混合，缺一不可。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>BM25 基于 TF-IDF 改进：词在文档出现越多越相关（TF），但越常见的词权重越低（IDF），并对长文档做归一。</p>
+  <div class="box"><span class="bt">一句话：</span>BM25 = 关键词相关度打分。词面匹配强，专治“精确词/专有名词”。</div>
 
-  <h2 id="s2">2. 工程化选型</h2>
+  <h2 id="s2">2. 原理</h2>
+  <pre><code>score(D,Q) = Σ IDF(qi) · (f(qi,D)·(k+1)) / (f(qi,D)+k·(1-b+b·|D|/avg))
+// IDF 抑制常见词，k/b 是调节参数</code></pre>
   <ul>
-    <li><b>轻量</b>：<code>flexsearch</code> / <code>minisearch</code> / <code>lunr</code>（浏览器/Node 内建索引）。</li>
-    <li><b>内置</b>：<a href="bettersqlite.html">SQLite</a> <code>FTS5</code>（一行 SQL 做全文检索，零额外服务）。</li>
-    <li><b>大规模</b>：Elasticsearch / OpenSearch（分布式、分词插件齐全）。</li>
+    <li><b>TF</b>：词频，但饱和（出现再多边际递减）。</li>
+    <li><b>IDF</b>：越罕见词越重要。</li>
+    <li><b>长度归一</b>：长文档不过分占优（<code>b</code> 控制）。</li>
   </ul>
 
-  <h2 id="s3">3. 核心公式</h2>
-  <div class="diagram">score(D, Q) = Σ IDF(qi) · (f · (k+1)) / (f + k·(1 - b + b·|D|/avgDL))
-f: 词在文档 D 的频率（词频）
-|D|: 文档长度   avgDL: 语料平均长度
-IDF(qi): 词稀有度（越罕见权重越高）
-k≈1.5 控制词频饱和，b≈0.75 控制长度惩罚</div>
-  <ul>
-    <li><b>词频饱和</b>：出现 1 次和 10 次相关度差别大，但 100 次和 110 次几乎无差（不会无限涨）。</li>
-    <li><b>长度归一</b>：长文档天然词多，按 b 惩罚，避免长文占便宜。</li>
-  </ul>
-
-  <h2 id="s4">4. 倒排索引</h2>
-  <p>BM25 建立在<strong>倒排索引</strong>之上：记录“每个词 → 出现在哪些文档（posting list）及词频/位置”。查询时只取相关词的 posting list 求交并打分，极快。</p>
-  <ul>
-    <li><b>分词（tokenize）</b>：把文本切成词项；英文按空格、中文需专门分词。</li>
-    <li><b>词干/归并</b>：run/running 归并，提升召回（按语言）。</li>
-    <li><b>停用词</b>：去掉“的/的”等无区分度词，省空间提速。</li>
-  </ul>
-
-  <h2 id="s5">5. 中文分词</h2>
-  <div class="box warn"><span class="bt">中文是头号坑：</span>中文没有空格，直接按字符或大粒度切会严重掉命中。方案：① 用 <code>jieba</code> 等分词器按词切；② 或二元分词（bigram）保召回；③ 选自带中文支持的引擎（ES 的 ik 插件）。</div>
-
-  <h2 id="s6">6. 调参与解释</h2>
-  <ul>
-    <li><code>k1</code>（默认 ~1.5）：越大词频越“不饱和”，长文档里多次命中更受重视。</li>
-    <li><code>b</code>（默认 ~0.75）：越接近 1，长度惩罚越强，越抑制长文。</li>
-    <li>多数场景用默认即可；极端长文档/短文本可调。</li>
-  </ul>
-
-  <h2 id="s7">7. 与向量混合</h2>
-  <p>在 RAG 里：向量路召回“语义近”，BM25 路召回“词命中”，两路分数量纲不同、不能直接相加——用 <a href="rrf.html">RRF</a> 按排名融合，再上 rerank。这是生产标配。</p>
-
-  <h2 id="s8">8. 生产要点</h2>
-  <ul>
-    <li><b>增量更新</b>：文档增删要增量改索引，别每次全量重建（慢）。</li>
-    <li><b>内存/磁盘</b>：倒排索引随语料增长；大规模交给 ES 托管。</li>
-    <li><b>字段加权</b>：标题命中比正文命中更重要，可做字段级 BM25。</li>
-  </ul>
-
-  <h2 id="s9">9. 评估</h2>
-  <ul>
-    <li><b>Precision@K / Recall@K</b>：topK 里相关比例 / 覆盖多少相关项。</li>
-    <li><b>nDCG</b>：考虑排名位置的指标，更适合排序质量。</li>
-    <li>对比“纯向量”与“BM25+向量”：常能看到精确词查询显著提升。</li>
-  </ul>
-
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>中文不分词直接搜 → 命中率极低。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>停用词/大小写未归一 → 无关词干扰排序。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>只靠 BM25 做语义搜索 → 漏同义不同词，必须配向量。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>每次全量重建索引 → 慢；用增量。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>把 BM25 分数和向量分数直接相加 → 量纲不同，应走 RRF。</div>
-
-  <h2 id="s11">11. 调试</h2>
-  <ul>
-    <li>打印每个命中词的 IDF 与词频贡献，定位为何某文档排前/排后。</li>
-    <li>看分词结果，确认中文是否被正确切词。</li>
-  </ul>
-
-  <h2 id="s12">12. 成长路线</h2>
+  <h2 id="s3">3. 与向量检索</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能用 BM25 库做关键词搜索</td></tr>
-    <tr><td>初级</td><td>会中文分词、调参、增量索引</td></tr>
-    <tr><td>中级</td><td>懂倒排索引、与向量混合、评估</td></tr>
-    <tr><td>资深</td><td>分布式检索、检索质量负责</td></tr>
+    <tr><th></th><th>BM25</th><th>向量检索</th></tr>
+    <tr><td>匹配</td><td>词面（关键词）</td><td>语义（同义/改写）</td></tr>
+    <tr><td>强项</td><td>精确词、专有名词</td><td>口语化、语义相近</td></tr>
+    <tr><td>弱项</td><td>不懂同义</td><td>精确词略弱</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 FTS5 或 flexsearch 建中文索引 ② 对比“分词与否”的命中率 ③ 调 k1/b 看排序变化 ④ 与向量路用 RRF 融合 ⑤ 算 Precision@K。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解关键词检索的数学与索引原理，能与向量互补做出生产级混合检索——这是资深 AI 后端做召回的关键拼图。</div>
+  <div class="box ok"><span class="bt">互补：</span>两者融合（见 <a href="rrf.html">RRF</a>）效果最好。</div>
+
+  <h2 id="s4">4. 用法</h2>
+  <pre><code>// 用 Elasticsearch / OpenSearch / whoosh / bm25s
+const hits = index.search("React 缓存策略");</code></pre>
+  <p>中文要先分词（jieba 等），再建倒排索引。</p>
+
+  <h2 id="s5">5. 与 RAG</h2>
+  <p>在 <a href="rag.html">RAG</a> 中，BM25 负责“词面召回”，与向量“语义召回”互补，再用 <a href="rrf.html">RRF</a> 融合，提升整体召回率。</p>
+
+  <h2 id="s6">6. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 不分词：</span>中文整句建索引，召回极差；必须分词。</div>
+  <div class="box warn"><span class="bt">坑 2 停用词：</span>“的/是”等要过滤，否则噪声大。</div>
+  <div class="box warn"><span class="bt">坑 3 只靠 BM25：</span>语义改写查不到，需混合向量。</div>
+
+  <h2 id="s7">7. 资源与路线</h2>
+  <ol>
+    <li>Elasticsearch 文档、<code>bm25s</code> 轻量库。</li>
+    <li>配合 <a href="rag.html">RAG</a>、<a href="embedding.html">Embedding</a>。</li>
+    <li>练：用 BM25 给一份中文文档做关键词检索，再与向量检索对比。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>知道 BM25 与向量各管什么，并用分词 + 混合 + 融合把召回率做扎实，而不是单路上线。</div>
 </main>
 </div>
 <script>

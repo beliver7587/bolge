@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
-<title>大模型 LLM · 从小白到资深</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM · 从小白到大语言模型</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,105 +15,71 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">LLM<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化与密钥</a>
-  <a href="#s3">3. 消息模型</a>
+  <div class="tbrand">LLM<small>从小白到大语言模型</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 核心能力</a>
+  <a href="#s3">3. 怎么调用</a>
   <a href="#s4">4. 关键参数</a>
-  <a href="#s5">5. 流式输出</a>
-  <a href="#s6">6. 上下文与成本</a>
-  <a href="#s7">7. 可靠性</a>
-  <a href="#s8">8. 模型选型</a>
-  <a href="#s9">9. 常见坑</a>
-  <a href="#s10">10. 调试</a>
-  <a href="#s11">11. 成长路线</a>
+  <a href="#s5">5. 与 Provider</a>
+  <a href="#s6">6. 局限</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>大模型 LLM：从小白到资深</h1>
-  <p class="tsub"><strong>LLM（大语言模型）</strong> 是用海量文本训练的“下一个词预测器”，是 <a href="rag.html">RAG</a>/<a href="agent.html">Agent</a>/客服的大脑。本教程讲透<strong>消息模型、参数精解、流式、上下文成本、可靠性工程与模型选型</strong>——这是用大模型做产品的地基。</p>
+  <h1>LLM：从小白到大语言模型</h1>
+  <p class="tsub"><a href="llm.html">LLM</a>（大语言模型）是基于海量文本训练出的神经网络，能理解并生成自然语言，是 <a href="rag.html">RAG</a>、<a href="agent.html">Agent</a> 的“大脑”。Memora 用它做客服回答。本教程讲清调用方式、参数与局限。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>你发一段“提示（prompt）”，模型返回“合理的续写”。它本质是<strong>概率模型</strong>，所以同样的 prompt 也可能给出不同答案——这与传统确定性 API 不同，需要新的工程思维。</p>
-  <div class="box"><span class="bt">一句话：</span>LLM 不是查数据库，而是“按概率生成”；可控性要靠 prompt + 参数 + 后处理共同保证。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>LLM 本质是“超强的文本续写器”：给定上下文，预测下一个最可能 token。通过提示（Prompt）引导它完成任务。</p>
+  <div class="box"><span class="bt">一句话：</span>LLM = 读得多、会续写的 AI。Prompt 是给它的指令，输出是它“猜”的续写。</div>
 
-  <h2 id="s2">2. 工程化与密钥</h2>
-  <pre><code>npm install openai
-export OPENAI_API_KEY=sk-xxxx    # 只在服务端环境变量，绝不进前端/仓库</code></pre>
-  <div class="box danger"><span class="bt">密钥红线：</span>API Key 只在后端用、走环境变量；前端若直连会泄露被盗刷。用 <a href="provider.html">供应商抽象</a> 隐藏具体 SDK。</div>
+  <h2 id="s2">2. 核心能力</h2>
+  <ul>
+    <li>理解：问答、摘要、分类、翻译。</li>
+    <li>生成：写代码、写文案、写 SQL。</li>
+    <li>推理（有限）：按步骤思考（思维链）解决简单问题。</li>
+  </ul>
 
-  <h2 id="s3">3. 消息模型</h2>
-  <p>对话是一组有角色的 messages：</p>
-  <table>
-    <tr><th>角色</th><th>作用</th></tr>
-    <tr><td><code>system</code></td><td>系统指令（人设/规则），最前，定调行为</td></tr>
-    <tr><td><code>user</code></td><td>用户输入</td></tr>
-    <tr><td><code>assistant</code></td><td>模型回复（多轮需回传以“记忆”）</td></tr>
-    <tr><td><code>tool</code></td><td>工具结果（配合 <a href="functioncalling.html">Function Calling</a>）</td></tr>
-  </table>
-  <div class="box warn"><span class="bt">多轮必须回传完整历史：</span>否则模型“失忆”。但历史会累积 token，需做截断/摘要（见 <a href="memory.html">四层记忆</a>）。</div>
+  <h2 id="s3">3. 怎么调用</h2>
+  <pre><code>const res = await client.chat.completions.create({
+  model: 'gpt-4o-mini',
+  messages: [{ role:'user', content:'用一句话解释 RAG' }],
+});
+console.log(res.choices[0].message.content);</code></pre>
+  <p>消息分 <code>system</code>（设定角色/规则）、<code>user</code>、<code>assistant</code>（历史）。</p>
 
   <h2 id="s4">4. 关键参数</h2>
-  <ul>
-    <li><code>temperature</code>：0 最确定（适合抽取/分类），越高越发散（适合创意）。</li>
-    <li><code>max_tokens</code>：单次最多生成 token（≠上下文上限），设太小会截断。</li>
-    <li><code>top_p</code>：核采样，控制候选词范围；与 temperature 二选一调。</li>
-    <li><code>frequency/presence penalty</code>：抑制重复/鼓励新话题。</li>
-    <li><code>response_format: {type:'json_object'}</code>：强制 JSON 输出，便于结构化解析。</li>
-    <li><code>stop</code>：遇到指定串停止。</li>
-  </ul>
-
-  <h2 id="s5">5. 流式输出</h2>
-  <p>开 <code>stream:true</code> 后按 chunk 增量返回，配合 <a href="sse.html">SSE</a> 推前端做打字机：</p>
-  <pre><code>const stream = await client.chat.completions.create({ model, messages, stream: true });
-let full = '';
-for await (const chunk of stream) {
-  const d = chunk.choices[0]?.delta?.content || '';
-  full += d;                      // 增量拼接
-  res.write(`data: ${d}\n\n`);    // 经 SSE 推出
-}</code></pre>
-
-  <h2 id="s6">6. 上下文与成本</h2>
-  <ul>
-    <li>计费按 <strong>token</strong>（输入+输出）算；长上下文/多轮会快速烧钱。</li>
-    <li>上下文窗口有上限（如 8k/32k/128k/200k），超限报 400。</li>
-    <li>对策：截断旧消息、摘要压缩、把长资料外置到 <a href="rag.html">RAG</a> 检索而非全塞。</li>
-  </ul>
-
-  <h2 id="s7">7. 可靠性</h2>
-  <ul>
-    <li><b>超时</b>：设请求超时（如 30s），别让用户无限等。</li>
-    <li><b>重试/退避</b>：遇 429（限流）按指数退避重试；遇 5xx 重试。</li>
-    <li><b>错误处理</b>：解析失败、内容审核拦截要兜底，返回友好提示而非 500。</li>
-  </ul>
-
-  <h2 id="s8">8. 模型选型</h2>
-  <p>不必全用最强模型：规划/分类用便宜小模型，关键推理/生成用强模型（分层降本）。国产（智谱/DeepSeek/通义）在合规与成本上有优势——用 <a href="provider.html">供应商抽象</a> 便于切换与降级。</p>
-
-  <h2 id="s9">9. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>Key 写死前端 → 泄露盗刷；走环境变量。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>多轮不回传历史 → 失忆。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>上下文超窗报 400 → 截断/摘要/RAG。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>temperature 太高导致确定性任务答乱 → 设 0。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>不同厂商参数/模型名直接搬运 → 用抽象隔离。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>没超时/重试 → 偶发失败即 500。</div>
-
-  <h2 id="s10">10. 调试</h2>
-  <ul>
-    <li>打印每次的 token 用量（prompt_tokens / completion_tokens）做成本监控。</li>
-    <li>记录入参出参与耗时，定位质量/延迟问题。</li>
-  </ul>
-
-  <h2 id="s11">11. 成长路线</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能装 SDK、构造 messages、调通对话</td></tr>
-    <tr><td>初级</td><td>会参数调优、流式、多轮</td></tr>
-    <tr><td>中级</td><td>上下文成本控制、可靠性工程</td></tr>
-    <tr><td>资深</td><td>模型分层选型、供应商治理、成本优化</td></tr>
+    <tr><th>参数</th><th>作用</th></tr>
+    <tr><td><code>temperature</code></td><td>越高越随机，越低越确定</td></tr>
+    <tr><td><code>top_p</code></td><td>核采样，控制多样性</td></tr>
+    <tr><td><code>max_tokens</code></td><td>最大输出长度</td></tr>
+    <tr><td><code>stop</code></td><td>停止符</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 调 temperature 看同一 prompt 差异 ② 用 stream+SSE 做打字机 ③ 设超时+429 退避重试 ④ 用 response_format 拿 JSON ⑤ 统计一次对话 token 成本 ⑥ 接供应商抽象切换模型。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 LLM 的概率性与工程约束，能可控、可靠、低成本地调用——这是资深 AI 后端用大模型的地基。</div>
+
+  <h2 id="s5">5. 与 Provider</h2>
+  <p>模型由 <a href="provider.html">Provider</a>（如 OpenAI、通义、DeepSeek、本地模型）提供，通过统一网关（如 one-api）切换，避免绑定单一厂商。</p>
+
+  <h2 id="s6">6. 局限</h2>
+  <ul>
+    <li><b>幻觉</b>：会编看似合理但错误的内容（用 <a href="rag.html">RAG</a> 缓解）。</li>
+    <li><b>知识截止</b>：训练数据有时间点。</li>
+    <li><b>上下文窗口</b>：一次能处理的 token 有限，超了要截断/摘要。</li>
+  </ul>
+
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 当百科用：</span>不问出处直接信，会踩幻觉；关键事实要 RAG + 引用。</div>
+  <div class="box warn"><span class="bt">坑 2 参数乱调：</span>temperature 太高回答飘，太低死板；按任务选。</div>
+  <div class="box warn"><span class="bt">坑 3 上下文溢出：</span>塞太多历史/资料超窗口，要管理记忆（<a href="memory.html">Memory</a>）。</div>
+
+  <h2 id="s8">8. 资源与路线</h2>
+  <ol>
+    <li>各 Provider 官方文档、提示工程指南。</li>
+    <li>接着学 <a href="rag.html">RAG</a>、<a href="agent.html">Agent</a>、<a href="provider.html">Provider</a>。</li>
+    <li>练：用 API 做一个带 system prompt 的问答机器人。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能把 LLM 当“不确定但强大”的组件，用 RAG/工具/护栏把它约束到可靠，而不是无脑当真理源。</div>
 </main>
 </div>
 <script>

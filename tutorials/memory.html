@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
-<title>四层记忆 · 从小白到资深</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory · 从小白到 AI 记忆</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,90 +15,55 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">四层记忆<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 四层模型</a>
-  <a href="#s3">3. 工作记忆</a>
-  <a href="#s4">4. 情景记忆</a>
-  <a href="#s5">5. 语义记忆</a>
-  <a href="#s6">6. 程序记忆</a>
-  <a href="#s7">7. 隐私与留存</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 成长路线</a>
+  <div class="tbrand">Memory<small>从小白到 AI 记忆</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 记忆的类型</a>
+  <a href="#s3">3. 实现方式</a>
+  <a href="#s4">4. 与 RAG 的区别</a>
+  <a href="#s5">5. 常见坑</a>
+  <a href="#s6">6. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>四层记忆：从小白到资深</h1>
-  <p class="tsub">AI 的上下文窗口有限，不能把所有历史一股脑塞进去。<strong>四层记忆</strong>按“时效与用途”分层管理：工作/情景/语义/程序记忆，分别用不同技术存储与检索。它是 <a href="agent.html">Agent</a> 长期“记得你”的底座（Memora 即如此）。本教程讲透<strong>分层原理与各层工程实现、隐私与留存</strong>。</p>
+  <h1>Memory：从小白到 AI 记忆</h1>
+  <p class="tsub"><a href="memory.html">Memory</a>（记忆）让 <a href="llm.html">大模型</a> 应用跨轮对话保持上下文、记住用户偏好。Memora 的“四层记忆”就是典型实现。本教程讲清记忆分层与实现取舍。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>上下文窗口是“金贵资源”：塞太多 → 超窗报错、烧钱、注意力稀释。四层记忆让“该短期的不留痕、该长期的精准召回”。</p>
-  <div class="box"><span class="bt">一句话：</span>像人一样分层——眼前的事（工作）、最近聊的（情景）、长期知道的事实（语义）、天生会的技能（程序）。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>LLM 本身无状态，每次调用都只是“一段文本”。记忆就是把这些状态（对话历史、用户画像、事实）存起来，下次再喂回模型。</p>
+  <div class="box"><span class="bt">一句话：</span>Memory = 给无状态的 LLM 加“上下文仓库”。让它显得“记得你”。</div>
 
-  <h2 id="s2">2. 四层模型</h2>
+  <h2 id="s2">2. 记忆的类型</h2>
   <table>
-    <tr><th>层</th><th>存什么</th><th>时效</th><th>技术</th></tr>
-    <tr><td>工作记忆</td><td>当前对话的 messages</td><td>本轮</td><td>内存</td></tr>
-    <tr><td>情景记忆</td><td>历史对话记录</td><td>中短期</td><td>DB + 摘要</td></tr>
-    <tr><td>语义记忆</td><td>提炼的长期事实（偏好/资料）</td><td>长期</td><td>向量库 <a href="embedding.html">Embedding</a></td></tr>
-    <tr><td>程序记忆</td><td>固定指令/技能/工具</td><td>永久</td><td>系统提示 + 配置</td></tr>
+    <tr><th>类型</th><th>作用</th><th>例子</th></tr>
+    <tr><td>短期/会话</td><td>当前对话历史</td><td>这轮聊了什么</td></tr>
+    <tr><td>长期/用户</td><td>跨会话的用户画像</td><td>偏好、姓名</td></tr>
+    <tr><td>工作记忆</td><td>本次任务的中间结论</td><td>Agent 的待办</td></tr>
   </table>
 
-  <h2 id="s3">3. 工作记忆</h2>
-  <p>即当前发给模型的 <code>messages</code>。管理策略：</p>
+  <h2 id="s3">3. 实现方式</h2>
   <ul>
-    <li><b>滑动窗口</b>：只保留最近 N 轮。</li>
-    <li><b>摘要压缩</b>：超长时把早期对话摘要成一段，省 token。</li>
-    <li><b>不变量前置</b>：system 指令始终在最前，不被截断。</li>
-  </ul>
-  <pre><code>if (messages.length &gt; 20) messages = [systemMsg, ...(await summarize(messages.slice(1)))];</code></pre>
-
-  <h2 id="s4">4. 情景记忆</h2>
-  <p>每轮对话落库，需要时用（时间/关键词/向量）取回最近若干轮做“续上上下文”：</p>
-  <pre><code>await db.insert('turn', { user: q, ai: a, ts: Date.now() });
-// 召回：取最近 10 轮 + 也许按语义相似的历史片段
-const recent = await db.query('SELECT * FROM turn ORDER BY ts DESC LIMIT 10');</code></pre>
-  <div class="box ok"><span class="bt">资深：</span>情景记忆不仅是“全量回放”，可按相关性检索关键历史，避免无脑塞满。</div>
-
-  <h2 id="s5">5. 语义记忆</h2>
-  <p>把“用户偏好、关键事实”从对话中<strong>抽取</strong>成句子，生成向量入库；对话时检索相关事实拼进提示，让 AI 长期“记得你”：</p>
-  <pre><code>const facts = await extractFacts(history);          // 抽取“用户喜欢简洁回答”等
-for (const f of facts) vecDB.add(embed(f), f);
-// 对话时召回相关长期事实
-const rel = vecDB.search(embed(question), 5);</code></pre>
-  <ul>
-    <li><b>抽取质量</b>：用更强的模型/提示抽取；冲突事实要做合并或时间戳取新。</li>
-    <li><b>去重/更新</b>：同一事实别重复存储；用户改了偏好要更新而非叠加。</li>
+    <li><b>会话历史</b>：直接把 messages 存库，按会话取。</li>
+    <li><b>向量记忆</b>：把长期事实 <a href="embedding.html">Embedding</a> 入向量库，需要时检索相关片段。</li>
+    <li><b>摘要记忆</b>：历史过长时让 LLM 总结，压缩成短上下文。</li>
+    <li><b>结构化</b>：用户画像存成字段（JSON），便于精确读取。</li>
   </ul>
 
-  <h2 id="s6">6. 程序记忆</h2>
-  <p>固定的人设、可用工具列表（<a href="functioncalling.html">Function Calling</a>）、业务规则、技能模板——放在 system 提示或配置里，每次都带，不随对话变化，类似“天生会的本能”。</p>
-  <div class="box warn"><span class="bt">版本化：</span>程序记忆变更要灰度，避免一次改坏所有对话行为。</div>
+  <h2 id="s4">4. 与 RAG 的区别</h2>
+  <p><a href="rag.html">RAG</a> 是“外部知识库检索”（面向文档），Memory 是“关于用户/会话的状态”（面向交互）。二者常结合：检索知识 + 记住用户。</p>
+  <div class="box ok"><span class="bt">Memora 做法：</span>四层记忆 = 短期（本轮）+ 长期（用户）+ 知识（RAG）+ 工作（任务），分层管理。</div>
 
-  <h2 id="s7">7. 隐私与留存</h2>
-  <ul>
-    <li><b>留存期</b>：情景/语义记忆设 TTL 与删除能力，满足“被遗忘权”。</li>
-    <li><b>敏感过滤</b>：写入前脱敏（手机号/身份证），避免长期记忆存隐私。</li>
-    <li><b>注入防护</b>：记忆里可能混入恶意指令，召回时按 <a href="promptinject.html">提示注入防护</a> 处理。</li>
-  </ul>
+  <h2 id="s5">5. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 上下文溢出：</span>历史越攒越长，超 <a href="llm.html">LLM</a> 窗口；用摘要/检索裁剪。</div>
+  <div class="box warn"><span class="bt">坑 2 隐私：</span>记忆里可能含敏感信息，要加密、可删除（合规）。</div>
+  <div class="box warn"><span class="bt">坑 3 记忆污染：</span>错误/被注入的内容记下来会持续影响；写前校验。</div>
 
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>不分层的把所有历史塞进上下文 → 超窗又烧钱；按层取舍。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>语义记忆抽取质量差 → 召回无关/错事实；用强抽取+校验。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>情景记忆不清理 → 隐私/过期信息长期留存；设留存期。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>忽略注入 → 记忆里藏毒劫持后续对话。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>事实冲突不处理 → AI 一会儿这样一会儿那样。</div>
-
-  <h2 id="s9">9. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能分层概念、做工作记忆截断</td></tr>
-    <tr><td>初级</td><td>会情景落库、语义抽取入库</td></tr>
-    <tr><td>中级</td><td>事实冲突处理、程序记忆版本化</td></tr>
-    <tr><td>资深</td><td>留存/隐私治理、检索质量负责</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 给对话加滑动窗口+摘要 ② 落库历史对话并按时间召回 ③ 抽用户偏好入向量库并召回 ④ 处理两条冲突事实（取新）⑤ 给记忆加 TTL 与脱敏 ⑥ 在召回记忆上做注入防护。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解“上下文窗口不是记忆”，能用四层结构让 AI 短期不丢、长期不忘、技能稳定——这是资深 AI 后端做有记忆系统的核心能力。</div>
+  <h2 id="s6">6. 资源与路线</h2>
+  <ol>
+    <li>LangChain Memory、MemGPT 思路。</li>
+    <li>配合 <a href="rag.html">RAG</a>、<a href="agent.html">Agent</a>、<a href="embedding.html">Embedding</a>。</li>
+    <li>练：给聊天机器人加“记住用户名”的长期记忆。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能用分层记忆把“上下文管理”做对——既不溢出也不丢关键信息，并处理好隐私与删除。</div>
 </main>
 </div>
 <script>

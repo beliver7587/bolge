@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ant Design · 从小白到资深前端</title>
+<title>Ant Design · 从小白到企业级组件</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,142 +15,122 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Ant Design<small>从小白到资深前端</small></div>
+  <div class="tbrand">Ant Design<small>从小白到企业级组件</small></div>
   <a href="#s1">1. 它解决什么问题</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 组件体系</a>
-  <a href="#s4">4. 主题与令牌</a>
-  <a href="#s5">5. Form 深入</a>
-  <a href="#s6">6. Table 深入</a>
-  <a href="#s7">7. 按需与体积</a>
-  <a href="#s8">8. 二次封装</a>
-  <a href="#s9">9. 与 Tailwind 协同</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试</a>
-  <a href="#s12">12. 成长路线</a>
+  <a href="#s3">3. 设计令牌</a>
+  <a href="#s4">4. 核心组件</a>
+  <a href="#s5">5. 表单与校验</a>
+  <a href="#s6">6. Table 表格</a>
+  <a href="#s7">7. 主题定制</a>
+  <a href="#s8">8. 按需与体积</a>
+  <a href="#s9">9. 布局 Layout</a>
+  <a href="#s10">10. 国际化</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 与 Tailwind</a>
+  <a href="#s13">13. 最佳实践</a>
+  <a href="#s14">14. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Ant Design：从小白到资深前端</h1>
-  <p class="tsub">Ant Design（antd）是国内最主流的<strong>企业级 React 组件库</strong>：几十个高质量组件 + 设计语言 + 主题系统。本教程讲清它“怎么用、怎么定制、怎么控体积、怎么二次封装、怎么和 <a href="tailwind.html">Tailwind</a> 共存”——这是资深前端落地中后台的实战能力。</p>
+  <h1>Ant Design：从小白到企业级组件</h1>
+  <p class="tsub"><a href="antd.html">Ant Design</a>（antd）是蚂蚁出品的企业级 <a href="react.html">React</a> 组件库：表单、表格、弹窗、布局一应俱全，自带设计语言。本教程讲清它怎么提效、主题怎么改、以及与体积/样式的常见冲突怎么解。</p>
 
   <h2 id="s1">1. 它解决什么问题</h2>
-  <p>从零写 Button/DatePicker/Table/Modal 既慢又难一致。antd 把“企业级 UI 需求”做成经过打磨的组件，统一交互与视觉，研发效率与一致性兼得。</p>
-  <div class="box"><span class="bt">一句话：</span>antd 是<strong>带设计语言的组件库</strong>，让你专注业务而非重复造输入框、表格、弹窗。</div>
-  <div class="box ok"><span class="bt">适合：</span>中后台、管理系统、内部工具、B 端产品。<br><span class="box warn">不适合：</span>强品牌个性的 C 端营销页（视觉被框架锁死）、超轻量项目。</div>
+  <p>每个项目都在重复造 Button、Modal、Table、分页、日期选择……不仅慢，还多团队视觉不一致、可访问性参差不齐。</p>
+  <div class="box"><span class="bt">一句话：</span>antd 把“成熟的企业级 UI 组件 + 统一设计语言”打包好，你只拼业务，不用纠结像素与交互细节。</div>
+  <div class="box ok"><span class="bt">适合：</span>中后台、管理控制台、表单密集应用。<span class="box warn">不适合：</span>追求高度定制的营销页、品牌极强的 C 端产品（改造成本高）。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
-  <pre><code">'use client';
-import { ConfigProvider, Button } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+  <div class="step"><div class="n">1</div><div class="b"><h4>安装</h4>
+  <pre><code>npm i antd           # v5 自带 CSS-in-JS，无需引 CSS 文件
+npm i @ant-design/icons  # 图标</code></pre></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>用起来</h4>
+  <pre><code>import { Button, DatePicker } from 'antd';
+import dayjs from 'dayjs';   // antd v5 用 dayjs 而非 moment
+export default () =&gt; &lt;Button type="primary"&gt;提交&lt;/Button&gt;;</code></pre></div></div>
 
-export default function App({ children }) {
-  return (
-    &lt;ConfigProvider locale={zhCN} theme={{ token: { colorPrimary: '#6366f1' } }}&gt;
-      {children}
-    &lt;/ConfigProvider&gt;
-  );
-}</code></pre>
+  <h2 id="s3">3. 设计令牌</h2>
+  <p>antd 用 <strong>Design Token</strong>（CSS 变量）描述颜色/圆角/阴影。改主题就是改这些 token，全站统一生效。</p>
+  <div class="box ok"><span class="bt">资深做法：</span>用 token 定义品牌色、圆角、字体，团队所有页面共用一套，避免“每个人手调颜色”。</div>
+
+  <h2 id="s4">4. 核心组件</h2>
   <ul>
-    <li>用 <code>ConfigProvider</code> 包住应用，统一语言、主题、尺寸。</li>
-    <li>antd v5 用 CSS-in-JS 注入样式；<a href="nextjs.html">Next.js</a> 需按官方指南处理 SSR 样式（避免闪烁）。</li>
+    <li><code>Button</code>：<code>type</code>（primary/default/dashed/link）、<code>loading</code>、<code>size</code>。</li>
+    <li><code>Input / Select / DatePicker</code>：受控值 + onChange。</li>
+    <li><code>Modal</code>：确认框、表单弹窗。</li>
+    <li><code>Message / Notification</code>：全局反馈。</li>
   </ul>
+  <pre><code>&lt;Select options={[{value:'a',label:'A'}]} onChange={v=&gt;...} /&gt;</code></pre>
 
-  <h2 id="s3">3. 组件体系</h2>
-  <p>核心几类：</p>
-  <ul>
-    <li><b>通用</b>：Button、Typography、Icon、Space。</li>
-    <li><b>布局</b>：Layout（Header/Sider/Content）、Grid、Flex。</li>
-    <li><b>数据录入</b>：Form、Input、Select、DatePicker、Upload。</li>
-    <li><b>数据展示</b>：Table、List、Tag、Descriptions、Statistic。</li>
-    <li><b>反馈</b>：Modal、Message、Notification、Spin。</li>
-  </ul>
-  <div class="box ok"><span class="bt">资深用法：</span>优先用 antd 组合出业务区块；把高频组合（如“搜索栏 + 表格”）封成自己的业务组件（见第 8 节）。</div>
-
-  <h2 id="s4">4. 主题与令牌</h2>
-  <p>antd v5 的主题用<strong>设计令牌（Design Token）</strong>，而非改 CSS 变量：</p>
-  <pre><code">theme={{
-  token: { colorPrimary: '#6366f1', borderRadius: 6 },
-  algorithm: theme.darkAlgorithm,   // 暗色算法
-}}</code></pre>
-  <ul>
-    <li><code>token</code>：全局基础值（主色、圆角、字号）。</li>
-    <li><code>algorithm</code>：预设算法（默认/暗色/紧凑），一键换肤。</li>
-    <li>组件级覆盖用 <code>theme={{ components: { Button: { primaryColor: ... } } }}</code>。</li>
-  </ul>
-
-  <h2 id="s5">5. Form 深入</h2>
-  <pre><code">'use client';
-import { Form, Input, Button } from 'antd';
-const [form] = Form.useForm();
-&lt;Form form={form} initialValues={{ name: '' }} onFinish={(v) =&gt; save(v)}&gt;
-  &lt;Form.Item name="name" label="名称" rules={[{ required: true }]}&gt;
+  <h2 id="s5">5. 表单与校验</h2>
+  <pre><code>const [form] = Form.useForm();
+&lt;Form form={form} onFinish={save}&gt;
+  &lt;Form.Item name="email" rules={[{required:true,type:'email'}]}&gt;
     &lt;Input /&gt;
   &lt;/Form.Item&gt;
   &lt;Button htmlType="submit"&gt;提交&lt;/Button&gt;
 &lt;/Form&gt;</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>antd Form 是<strong>托管受控</strong>的——不要自己再 <code>value/onChange</code> 包 Input，交给 <code>Form.Item</code> 即可，否则冲突。</div>
+
+  <h2 id="s6">6. Table 表格</h2>
+  <pre><code>&lt;Table rowKey="id" dataSource={list} columns={[
+  { title:'名称', dataIndex:'name' },
+  { title:'操作', render:(_,r)=&gt;&lt;Button&gt;编辑&lt;/Button&gt; },
+]} pagination={{ pageSize:10 }} /&gt;</code></pre>
   <ul>
-    <li><code>rules</code> 内置常用校验；复杂校验可用 <code>validator</code> 或配合 <a href="typescript.html">zod</a> 在 <code>onFinish</code> 再校验。</li>
-    <li>异步数据回填：<code>form.setFieldsValue</code>（注意要在组件挂载后、数据到达后调）。</li>
+    <li><code>columns</code> 声明列；<code>render</code> 自定义单元格。</li>
+    <li>分页、排序、筛选开箱即用；大数据用 <code>scroll</code> + 虚拟滚动。</li>
   </ul>
 
-  <h2 id="s6">6. Table 深入</h2>
-  <pre><code">const columns = [
-  { title: '名称', dataIndex: 'name', sorter: (a, b) =&gt; a.name.localeCompare(b.name) },
-  { title: '操作', render: (_, r) =&gt; &lt;Button onClick={() =&gt; edit(r)}&gt;编辑&lt;/Button&gt; },
-];
-&lt;Table rowKey="id" columns={columns} dataSource={list}
-       pagination={{ pageSize: 10 }} /&gt;</code></pre>
+  <h2 id="s7">7. 主题定制</h2>
+  <pre><code>import { ConfigProvider, theme } from 'antd';
+&lt;ConfigProvider theme={{ token:{ colorPrimary:'#5b8cff', borderRadius:8 },
+  algorithm: theme.darkAlgorithm }}&gt;
+  &lt;App /&gt;
+&lt;/ConfigProvider&gt;</code></pre>
+  <div class="box ok"><span class="bt">暗色模式：</span>一行 <code>theme.darkAlgorithm</code> 全局切换，不必自己写两套样式。</div>
+
+  <h2 id="s8">8. 按需与体积</h2>
   <ul>
-    <li>分页、排序、筛选、固定列、展开行都内置。</li>
-    <li><b>性能</b>：大数据用 <code>virtual</code> 虚拟滚动，避免一次性渲染万行。</li>
+    <li>v5 用 CSS-in-JS，<strong>没有全量 CSS 文件</strong>，按使用组件动态注入样式。</li>
+    <li>图标要按需引入具体图标，避免全量打包。</li>
+    <li>体积大头在组件本身；非必要别整站引入，配合路由拆包。</li>
   </ul>
 
-  <h2 id="s7">7. 按需与体积</h2>
+  <h2 id="s9">9. 布局 Layout</h2>
+  <pre><code>&lt;Layout&gt;&lt;Layout.Sider&gt;菜单&lt;/Layout.Sider&gt;
+  &lt;Layout&gt;&lt;Layout.Header/&gt;&lt;Layout.Content&gt;页面&lt;/Layout.Content&gt;&lt;/Layout&gt;
+&lt;/Layout&gt;</code></pre>
+  <p><code>Layout</code> 提供 Sider/Header/Content/Footer 标准中后台骨架。</p>
+
+  <h2 id="s10">10. 国际化</h2>
+  <pre><code>import zhCN from 'antd/locale/zh_CN';
+&lt;ConfigProvider locale={zhCN}&gt;…&lt;/ConfigProvider&gt;</code></pre>
+  <p>内置多语言包，切换 locale 即可。</p>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 v4→v5 差异：</span>v5 去 CSS 文件、改用 dayjs、主题用 token。老项目升级要对照迁移指南。</div>
+  <div class="box warn"><span class="bt">坑 2 样式污染：</span>和全局 CSS/reset 冲突时，用 <code>ConfigProvider</code> 的 <code>cssVar</code> 或调优先级。</div>
+  <div class="box warn"><span class="bt">坑 3 受控冲突：</span>Form.Item 已托管，别再给子组件加 value。</div>
+
+  <h2 id="s12">12. 与 Tailwind</h2>
+  <p>两者可共存：Tailwind 管布局/间距，antd 管复杂交互组件。注意 className 优先级与 reset 冲突，建议用 antd 的 token 而非 Tailwind 改组件内部。</p>
+
+  <h2 id="s13">13. 最佳实践</h2>
   <ul>
-    <li>antd v5 默认按需引入（ESM + tree-shaking），无需额外 babel 插件（v4 才需要）。</li>
-    <li>若体积仍大：只引入用到的子包、配合 <a href="vite.html">Vite</a> 分包、用图标按需（<code>@ant-design/icons</code> 也走 tree-shaking）。</li>
+    <li>用 <code>ConfigProvider</code> 统一主题与 locale。</li>
+    <li>复杂表单交给 antd Form，别手写受控。</li>
+    <li>表格分页/排序用内置，少造轮子。</li>
   </ul>
 
-  <h2 id="s8">8. 二次封装</h2>
-  <p>别在业务里到处裸用 antd。把高频模式封成业务组件：</p>
-  <ul>
-    <li><code>&lt;SearchTable/&gt;</code>：搜索表单 + 表格 + 分页一体化。</li>
-    <li><code>&lt;ConfirmButton/&gt;</code>：带二次确认的危险操作按钮。</li>
-    <li>统一规范（尺寸、文案、 loading 态）收口在一处，改主题/交互全站生效。</li>
-  </ul>
-
-  <h2 id="s9">9. 与 Tailwind 协同</h2>
-  <div class="box warn"><span class="bt">冲突：</span>Tailwind 的 reset（Preflight）会清掉 antd 的部分默认样式（如按钮边距）；且两者类名优先级可能打架。</div>
-  <ul>
-    <li>用 antd 的 <code>prefixCls</code> 给组件加前缀，隔离样式作用域。</li>
-    <li>用 <code>:where()</code> 降低 Tailwind 基础层优先级，避免覆盖 antd。</li>
-    <li>分工：antd 负责组件内部，Tailwind 负责页面级布局（不抢组件样式）。</li>
-  </ul>
-
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>大版本升级（v4→v5）破坏性大：v5 改 CSS-in-JS、弃用部分 API，要按迁移指南改。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>Next.js 没处理 SSR 样式，antd 组件首屏样式闪。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>Form 异步回填用 <code>initialValues</code> 不生效（initial 只首次）——要用 <code>setFieldsValue</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>Table 一次性渲染大数据，卡；用 virtual。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>和 Tailwind 混用类名冲突，样式错乱。</div>
-
-  <h2 id="s11">11. 调试</h2>
-  <ul>
-    <li>React DevTools 看 antd 组件树与 props。</li>
-    <li>官方文档“组件 API”最权威；用 <code>theme</code> 调试令牌覆盖。</li>
-  </ul>
-
-  <h2 id="s12">12. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>会用 Button/Form/Table 拼页面</td></tr>
-    <tr><td>初级</td><td>会主题定制、表单校验</td></tr>
-    <tr><td>中级</td><td>二次封装业务组件、控体积、处理 SSR</td></tr>
-    <tr><td>资深</td><td>设计组件分层、与 Tailwind 协同、大版本迁移、性能调优</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 antd 搭一个带搜索/分页的列表页 ② 定制品牌主色+暗色主题 ③ 封装一个 SearchTable 业务组件 ④ 处理 Next.js 下 antd 的 SSR 样式。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>能把组件库“用好、定好、封好、控好体积”，并和工程体系协同——这是资深中后台前端的核心能力。</div>
+  <h2 id="s14">14. 资源与路线</h2>
+  <ol>
+    <li>官方站点 <a href="https://ant.design" target="_blank" rel="noopener">ant.design</a>（组件示例齐全）。</li>
+    <li>先学 <a href="react.html">React</a> 受控/表单概念。</li>
+    <li>练：用 Layout + Form + Table 搭一个带增删改查的管理页。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能用 token 建立团队设计系统、规避样式冲突、把 antd 当“积木”而非“黑盒”——出了问题知道往哪改。</div>
 </main>
 </div>
 <script>

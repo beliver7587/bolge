@@ -88,7 +88,19 @@
     "AI Agent": "见 Agent。能自主使用工具、记忆与规划完成复杂任务的 AI。",
     "记忆": "Memory：AI 保存的上下文/历史，让对话有连续性与个性化。",
     "脚手架": "Scaffold：一键生成项目初始结构的工具，免去手动搭目录。",
-    "渲染": "Render：把数据/代码变成用户可见的界面或画面的过程。"
+    "渲染": "Render：把数据/代码变成用户可见的界面或画面的过程。",
+    "Rollup": "JavaScript 模块打包器，Vite 的底层构建工具，插件生态丰富。",
+    "Babel": "JS 编译器，可把新语法/JSX 转译为兼容旧浏览器的代码。",
+    "SWC": "用 Rust 写的超快 JS/TS 编译器，Next.js/Vite 可选它替代 Babel。",
+    "Next.js": "React 全栈框架，内置路由、SSR/SSG、API 路由与 SWC 构建。",
+    "@vitejs/plugin-react": "官方 Vite 插件，让 Vite 项目支持 React + JSX + HMR。",
+    "@vitejs/plugin-vue": "官方 Vite 插件，让 Vite 项目支持 Vue 单文件组件（.vue）。",
+    ".vue": "Vue 单文件组件扩展名，一个文件里写模板、脚本、样式三部分。",
+    "unplugin-auto-import": "自动按需导入 API（如 ref/useState）的构建插件，省掉手写 import。",
+    "vite-plugin-pwa": "把 Vite 项目变成渐进式 Web 应用（PWA）的插件。",
+    "vite-tsconfig-paths": "让 Vite 读取 tsconfig.json 里的路径别名，支持 @/ 导入。",
+    "PWA": "Progressive Web App，可离线、可安装、体验接近原生 App 的 Web 应用。",
+    "tsconfig.json": "TypeScript 配置文件，声明编译选项、路径别名与包含的文件。"
   };
 
   var main = document.querySelector('.tmain');
@@ -123,9 +135,9 @@
   function wrapTerms(root) {
     if (!root || !window.GLOSSARY) return;
     var terms = Object.keys(window.GLOSSARY).sort(function (a, b) { return b.length - a.length; });
-    var re = new RegExp('\\b(' + terms.map(function (t) {
+    var re = new RegExp('(?<![A-Za-z0-9_])(' + terms.map(function (t) {
       return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }).join('|') + ')\\b', 'g');
+    }).join('|') + ')(?![A-Za-z0-9_])', 'g');
 
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: function (n) {

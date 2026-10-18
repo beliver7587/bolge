@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bun · 从小白到资深后端</title>
+<title>Bun + Elysia · 从小白到极速运行时</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,116 +15,88 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Bun<small>从小白到资深后端</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
+  <div class="tbrand">Bun + Elysia<small>从小白到极速运行时</small></div>
+  <a href="#s1">1. 它是什么</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 核心能力</a>
-  <a href="#s4">4. HTTP 服务</a>
-  <a href="#s5">5. 兼容与边界</a>
-  <a href="#s6">6. 性能</a>
-  <a href="#s7">7. 测试与构建</a>
+  <a href="#s3">3. 为什么快</a>
+  <a href="#s4">4. 内置 API</a>
+  <a href="#s5">5. 与 Node 兼容</a>
+  <a href="#s6">6. Elysia 框架</a>
+  <a href="#s7">7. 打包与测试</a>
   <a href="#s8">8. 部署</a>
-  <a href="#s9">9. 与 Node 选型</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试</a>
-  <a href="#s12">12. 成长路线</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Bun：从小白到资深后端</h1>
-  <p class="tsub">Bun 是用 Zig 写的新一代 JS 运行时与<strong>一体化工具链</strong>：直接跑 TS、自带包管理/测试/打包，启动与安装速度远超 <a href="nodejs.html">Node.js</a>。本教程讲清<strong>它为何快、兼容性边界、性能取舍与部署要点</strong>——帮你在“尝鲜”与“生产选型”间做对判断。</p>
+  <h1>Bun + Elysia：从小白到极速运行时</h1>
+  <p class="tsub"><a href="bun.html">Bun</a> 是用 Zig 写的 JS/TS 运行时，比 <a href="nodejs.html">Node</a> 启动更快、API 更全（自带打包/测试/转译）。Elysia 是其上的轻量后端框架。本教程讲清它为什么快、能替代 Node 哪些部分、以及局限。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>Node 生态分散：运行时是 Node、装包用 npm、测试用 jest、打包用 esbuild/webpack。Bun 想“一个工具全包”：运行时 + 包管理 + 测试 + 构建，且全部更快。</p>
-  <div class="box"><span class="bt">一句话：</span>Bun = 运行时 + 工具链一体化，且兼容绝大多数 npm 包，目标是更省心、更高速的 JS 开发体验。</div>
-  <div class="box ok"><span class="bt">适合：</span>新项目、CLI、对启动/安装速度敏感的场景。<br><span class="box warn">不适合：</span>强依赖 Node 专属原生模块、或要求极致生态稳定性的生产系统（先用 Bun 试兼容）。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>Bun 不只是运行时，还内置了包管理、打包器、测试运行器、转译器——一个工具顶 Node + npm + esbuild + jest 的组合。</p>
+  <div class="box"><span class="bt">一句话：</span>Bun = 更快的 JS/TS 运行时 + 全家桶工具链。开箱即跑 TS，不用额外编译。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
-  <pre><code>curl -fsSL https://bun.sh/install | bash     # macOS/Linux
-bun -v
-bun init                                      # 生成 package.json
-bun install                                    # 装依赖，秒级（比 npm 快数倍）</code></pre>
-  <p>Bun 兼容现有 <code>package.json</code> 与 <code>node_modules</code>，可渐进替换 npm。</p>
+  <pre><code>curl -fsSL https://bun.sh/install | bash
+bun create elysia myapp
+bun run dev          // 直接跑 TS，无需编译</code></pre>
 
-  <h2 id="s3">3. 核心能力</h2>
-  <pre><code>const txt = await Bun.file('a.txt').text();   // 读文件，API 简洁
-await Bun.write('b.txt', txt);                // 写文件
-console.log(Bun.env.API_KEY);                  // 环境变量（也兼容 process.env）</code></pre>
+  <h2 id="s3">3. 为什么快</h2>
   <ul>
-    <li><b>原生 TS</b>：<code>bun run server.ts</code> 直接跑 TypeScript，无需 tsc/ts-node 预编译。</li>
-    <li><b>内置 API</b>：文件、环境变量、哈希、SQLite（<code>bun:sqlite</code>）等开箱即用。</li>
-    <li><b>内置工具</b>：<code>bun test</code>（测试）、<code>bun build</code>（打包）替代 jest/esbuild。</li>
+    <li>用 Zig + 自研 JS 引擎（JavaScriptCore 衍生），启动与冷运行快。</li>
+    <li>内置基于字节的 HTTP 服务器，吞吐高于 Node 的 http。</li>
+    <li>热重载、转译在原生层完成，省去 JS 侧开销。</li>
   </ul>
+  <div class="box ok"><span class="bt">资深视角：</span>快在“少一层抽象”——Node 用 V8 + C++ http + JS 生态；Bun 把更多收进原生层。</div>
 
-  <h2 id="s4">4. HTTP 服务</h2>
+  <h2 id="s4">4. 内置 API</h2>
   <pre><code>Bun.serve({
   port: 3000,
-  fetch(req) {
-    return new Response(JSON.stringify({ msg: 'hi from Bun' }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-  },
+  fetch(req) { return new Response('hi'); },  // 兼容 Web 标准 fetch/Response
 });</code></pre>
-  <p><code>Bun.serve</code> 基于 Web 标准 <code>fetch/Response</code>，比 Node 原生 <code>http</code> 简洁，性能也更优。生产仍可用 <a href="express.html">Express</a>/Elysia 等框架（Bun 兼容大多 npm 框架）。</p>
-
-  <h2 id="s5">5. 兼容与边界</h2>
   <ul>
-    <li><b>兼容</b>：绝大多数纯 JS npm 包、Node 的 <code>process</code>/<code>Buffer</code> 等 API 兼容层。</li>
-    <li><b>边界</b>：依赖特定 Node 原生模块（如某些 C++ addon）或老库可能不兼容；<code>worker_threads</code> 等部分 API 覆盖不全。</li>
-  </ul>
-  <div class="box warn"><span class="bt">资深判断：</span>上生产前先用 Bun 跑完整测试套件，确认没有隐式依赖 Node 专属行为。</div>
-
-  <h2 id="s6">6. 性能</h2>
-  <ul>
-    <li><b>为何快</b>：用 JavaScriptCore 引擎、Zig 写系统调用层、更少抽象开销；<code>bun install</code> 并行解析 + 缓存。</li>
-    <li><b>启动/冷启动</b>：显著快于 Node，利于 Serverless/CLI。</li>
-    <li>基准仅供参考，真实收益取决于业务（I/O 密集差异小，启动/安装收益明显）。</li>
+    <li><code>Bun.serve</code>：高性能 HTTP。</li>
+    <li><code>Bun.file</code>、<code>Bun.write</code>：文件操作。</li>
+    <li><code>bun test</code>、<code>bun build</code>：测试与打包开箱即用。</li>
   </ul>
 
-  <h2 id="s7">7. 测试与构建</h2>
-  <pre><code>// math.test.ts
-import { expect, test } from 'bun:test';
-test('add', () =&gt; expect(1 + 1).toBe(2));
-// 运行：bun test</code></pre>
-  <p><code>bun build</code> 可作 esbuild 替代；<code>bun test</code> 内置断言与覆盖率，省去 jest 配置。</p>
+  <h2 id="s5">5. 与 Node 兼容</h2>
+  <p>大部分 Node API（<code>fs</code>、<code>process</code>、<code>Buffer</code>）与 npm 包可用。但生态仍在追赶，少数原生插件/老包可能不兼容。</p>
+  <div class="box warn"><span class="bt">坑：</span>生产前先验证关键依赖在 Bun 下是否正常，别盲目替换。</div>
+
+  <h2 id="s6">6. Elysia 框架</h2>
+  <pre><code>import { Elysia } from 'elysia';
+new Elysia()
+  .get('/user/:id', ({ params }) =&gt; ({ id: params.id }))
+  .listen(3000);</code></pre>
+  <ul>
+    <li>端到端类型安全：从路由到响应类型自动推导。</li>
+    <li>插件式（cors、swagger、trpc），轻量无负担。</li>
+  </ul>
+
+  <h2 id="s7">7. 打包与测试</h2>
+  <pre><code>bun build ./src/index.ts --outdir dist   # 自带打包
+bun test                                 # 自带测试</code></pre>
+  <p>不必再装 esbuild/jest，工具链更短。</p>
 
   <h2 id="s8">8. 部署</h2>
   <ul>
-    <li>CI/启动命令用 <code>bun run</code> 而非 <code>node</code>；镜像用官方 <code>oven/bun</code> 基础镜像。</li>
-    <li>自带 <code>--watch</code> 热重载；生产建议用进程管理（<a href="pm2.html">PM2</a> 或容器）守护。</li>
+    <li>单二进制友好，适合 <a href="docker.html">Docker</a> 多阶段构建。</li>
+    <li>前接 <a href="nginx.html">Nginx</a> 反代，用 <a href="pm2.html">PM2</a> 类工具守护（或系统进程管理）。</li>
   </ul>
 
-  <h2 id="s9">9. 与 Node 选型</h2>
-  <table>
-    <tr><th></th><th>Bun</th><th>Node.js</th></tr>
-    <tr><td>生态稳定</td><td>成长中</td><td>最成熟</td></tr>
-    <tr><td>速度</td><td>快（启动/安装）</td><td>稳</td></tr>
-    <tr><td>工具链</td><td>一体化</td><td>需组合</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">选型：</span>新项目、要速度与一体化工具链 → Bun；生产要求极致稳定/依赖 Node 原生能力 → Node。</div>
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 生态成熟度：</span>某些 Node 原生模块不支持，先验证。</div>
+  <div class="box warn"><span class="bt">坑 2 版本差异：</span>Bun 迭代快，生产锁版本，避免破坏性更新。</div>
+  <div class="box warn"><span class="bt">坑 3 调试工具：</span>部分 Node 调试生态未完全对等。</div>
 
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>某些 Node 专属原生模块不兼容 → 先跑测试验证再上生产。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>Windows 用 npm 全局装 bun 后 PATH 未生效 → 重开终端或手动加。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>部署忘了运行时是 Bun，仍用 <code>node</code> 启动 → 改用 <code>bun run</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>版本迭代快，跨小版本偶有 breaking → 锁版本（bun.lockb）。</div>
-
-  <h2 id="s11">11. 调试</h2>
-  <ul>
-    <li><code>bun --inspect</code> 接 DevTools；<code>bun test --coverage</code> 看覆盖。</li>
-    <li>兼容 Node 生态调试工具。</li>
-  </ul>
-
-  <h2 id="s12">12. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能装 Bun、跑 TS、起服务</td></tr>
-    <tr><td>初级</td><td>会用 bun install/test 替代 npm/jest</td></tr>
-    <tr><td>中级</td><td>懂兼容边界、性能取舍</td></tr>
-    <tr><td>资深</td><td>做生产选型、验证兼容性、落地部署</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 把一个 Express 项目改用 bun install + bun run ② 用 bun test 写测试 ③ 用 Bun.serve 写个接口对比 Express 吞吐 ④ 打 Bun 官方镜像部署一次。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解“一体化工具链”的收益与兼容代价，能在速度与稳定间做出有依据的选型——这是资深对运行时的判断力。</div>
+  <h2 id="s10">10. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://bun.sh" target="_blank" rel="noopener">bun.sh</a>、<a href="https://elysiajs.com" target="_blank" rel="noopener">elysiajs.com</a>。</li>
+    <li>已有 <a href="nodejs.html">Node</a>/<a href="express.html">Express</a> 基础再迁移更稳。</li>
+    <li>练：用 Elysia 写一个带类型推导的 REST 服务。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能为团队评估“Bun 带来的提速”是否值得“生态风险”，并在合适项目（新服务、内部工具）果断采用。</div>
 </main>
 </div>
 <script>

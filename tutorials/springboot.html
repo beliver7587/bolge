@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spring Boot · 从小白到资深后端</title>
+<title>Spring Boot · 从小白到后端主力</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,185 +15,139 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Spring Boot<small>从小白到资深后端</small></div>
+  <div class="tbrand">Spring Boot<small>从小白到后端主力</small></div>
   <a href="#s1">1. 它解决什么问题</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 核心原理</a>
-  <a href="#s4">4. 分层架构</a>
+  <a href="#s3">3. 核心注解</a>
+  <a href="#s4">4. 依赖注入</a>
   <a href="#s5">5. Web 层</a>
-  <a href="#s6">6. 数据访问与事务</a>
-  <a href="#s7">7. 配置与多环境</a>
+  <a href="#s6">6. 数据层</a>
+  <a href="#s7">7. 配置管理</a>
   <a href="#s8">8. 安全</a>
-  <a href="#s9">9. 性能优化</a>
+  <a href="#s9">9. 异常处理</a>
   <a href="#s10">10. 测试</a>
-  <a href="#s11">11. 可观测性</a>
-  <a href="#s12">12. 部署运维</a>
-  <a href="#s13">13. 常见坑</a>
-  <a href="#s14">14. 调试</a>
-  <a href="#s15">15. 成长路线</a>
+  <a href="#s11">11. 部署</a>
+  <a href="#s12">12. 常见坑</a>
+  <a href="#s13">13. 与 Node 对比</a>
+  <a href="#s14">14. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Spring Boot：从小白到资深后端</h1>
-  <p class="tsub">Spring Boot 是 Java 企业级后端的<strong>事实标准</strong>：内嵌服务器、自动配置、起步依赖，几分钟内搭出生产级 API 服务。本教程从“能写接口”讲到“IoC 容器原理、事务边界、安全、性能调优、测试体系与可观测性”——这是资深 Java 工程师的护城河。</p>
+  <h1>Spring Boot：从小白到后端主力</h1>
+  <p class="tsub">Spring Boot 是 Java 后端一站式框架，靠“约定优于配置”让你几行注解就跑起生产级服务。本教程从自动配置讲到 Web/数据/安全/部署，带你把简历工坊这类项目真正落地。</p>
 
   <h2 id="s1">1. 它解决什么问题</h2>
-  <p>传统 JavaEE/Spring 要写大量 XML、单独装 Tomcat、手动配 Bean，启动一个项目成本高。Spring Boot 用“约定优于配置”：引入依赖即自动装配、内嵌服务器一条命令跑起。</p>
-  <div class="box"><span class="bt">一句话：</span>Spring Boot 让你用最少的配置，获得一个自带容器、可独立运行、生产就绪的 Spring 应用。</div>
-  <div class="box ok"><span class="bt">适合：</span>企业后端、微服务、中台、简历工坊这类需要稳定与生态的项目。<br><span class="box warn">不适合：</span>极轻量脚本（用 <a href="bun.html">Bun</a>/Node 更省）、对启动内存敏感的边缘场景。</div>
+  <p>传统 <a href="javaspring.html">Spring</a> 要手写大量 XML、配 Tomcat、管依赖版本，搭个空项目都费劲。Spring Boot 用<strong>自动配置 + 起步依赖（starter）</strong>把这些样板收掉。</p>
+  <div class="box"><span class="bt">一句话：</span>Spring Boot = Spring 全家桶 + 自动配置 + 内嵌服务器。开箱即跑，生产可用。</div>
+  <div class="box ok"><span class="bt">适合：</span>企业级后端、需要强类型与稳定生态的服务。<span class="box warn">不适合：</span>极轻量脚本（用 <a href="nodejs.html">Node</a> 更快）。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
-  <ul>
-    <li><b>JDK</b>：Spring Boot 3 要求 Java 17+（推荐 21 LTS）。</li>
-    <li><b>构建工具</b>：Maven（普及）或 Gradle。装好 <code>mvn -v</code> 验证。</li>
-    <li><b>创建</b>：用 <a href="https://start.spring.io" target="_blank" rel="noopener">start.spring.io</a> 勾选依赖（Spring Web、Data JPA、MySQL Driver、Validation、Actuator 等）生成骨架。</li>
-  </ul>
-  <pre><code>// 启动类：@SpringBootApplication = @Configuration + @EnableAutoConfiguration + @ComponentScan
-@SpringBootApplication
-public class DemoApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
-    }
-}</code></pre>
+  <div class="step"><div class="n">1</div><div class="b"><h4>用 start.spring.io 生成</h4><p>选 Java 17 + Maven + 依赖（Web、JPA、MySQL、Security），下载即用。</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>最小应用</h4>
+  <pre><code>@SpringBootApplication
+public class App { public static void main(String[] a){ SpringApplication.run(App.class,a);} }</code></pre>
+  <p>一个注解 + 一个 main，内嵌 Tomcat 已就绪。</p></div></div>
 
-  <h2 id="s3">3. 核心原理</h2>
-  <ul>
-    <li><b>IoC / DI</b>：控制反转容器管理对象（Bean）的创建与依赖注入。你声明“我需要什么”，容器负责装配——解耦、可测、可替换。</li>
-    <li><b>自动配置</b>：<code>@EnableAutoConfiguration</code> 按 classpath 上的 jar 自动配好 DataSource、WebMvc 等；靠<strong>条件装配</strong>（<code>@ConditionalOnClass</code> 等）决定装不装。</li>
-    <li><b>Starter</b>：<code>spring-boot-starter-web</code> 把 web 全家桶打包成一个依赖，无需逐个引。</li>
-    <li><b>Bean 生命周期</b>：实例化 → 属性填充 → <code>@PostConstruct</code> → 就绪 → <code>@PreDestroy</code>。构造注入优于字段注入（不可变、易测、循环依赖早暴露）。</li>
-  </ul>
-  <pre><code>@Component
+  <h2 id="s3">3. 核心注解</h2>
+  <table>
+    <tr><th>注解</th><th>作用</th></tr>
+    <tr><td><code>@SpringBootApplication</code></td><td>启动 + 组件扫描 + 自动配置</td></tr>
+    <tr><td><code>@RestController</code></td><td>返回 JSON 的控制器</td></tr>
+    <tr><td><code>@RequestMapping</code></td><td>路由映射</td></tr>
+    <tr><td><code>@Service / @Repository</code></td><td>分层标记</td></tr>
+  </table>
+
+  <h2 id="s4">4. 依赖注入</h2>
+  <pre><code>@Service
 public class UserService {
-    private final UserRepository repo;          // 构造注入（推荐）
-    public UserService(UserRepository repo) { this.repo = repo; }
+  private final UserRepo repo;
+  public UserService(UserRepo repo) { this.repo = repo; }  // 构造注入
 }</code></pre>
-
-  <h2 id="s4">4. 分层架构</h2>
-  <p>标准三层 + 防腐层：</p>
   <ul>
-    <li><b>Controller</b>：接 HTTP、参数校验、调用 Service、组装响应。</li>
-    <li><b>Service</b>：业务逻辑核心，事务边界所在。</li>
-    <li><b>Repository</b>：数据访问，对上层屏蔽存储细节。</li>
-    <li><b>DTO / Entity 分离</b>：对外用 DTO，持久化用 Entity，避免把数据库结构直接暴露给前端。</li>
+    <li>容器负责创建与装配对象（<a href="javaspring.html">IoC/DI</a>），组件加 <code>@Component</code> 系列注解即被管理。</li>
+    <li>优先<strong>构造注入</strong>，便于测试与不可变。</li>
   </ul>
-  <div class="box ok"><span class="bt">资深：</span>依赖倒置——Service 依赖 Repository 的<strong>接口</strong>而非实现，便于测试时用内存实现替换。</div>
 
   <h2 id="s5">5. Web 层</h2>
   <pre><code>@RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
-    private final UserService service;
-    public UserController(UserService s) { this.service = s; }
-
-    @PostMapping
-    public ResponseEntity&lt;UserDTO&gt; create(@Valid @RequestBody CreateUserReq req) {
-        return ResponseEntity.ok(service.create(req));
-    }
+  @GetMapping("/{id}") public User get(@PathVariable Long id) { ... }
+  @PostMapping public User create(@RequestBody User u) { ... }
 }</code></pre>
-  <ul>
-    <li><code>@Valid</code>：用注解（<code>@NotBlank/@Email</code>）声明参数约束，非法请求自动 400。</li>
-    <li><b>统一响应 & 异常处理</b>：用 <code>@ControllerAdvice</code> + <code>@ExceptionHandler</code> 把业务异常转成统一 JSON 结构，别在每个接口里 try-catch。</li>
-    <li><b>拦截器/过滤器</b>：鉴权、日志、跨域在 <code>HandlerInterceptor</code> 或 <code>Filter</code> 统一处理。</li>
-  </ul>
+  <div class="box warn"><span class="bt">坑：</span><code>@RequestBody</code> 需要 Jackson 序列化；字段名不符要加 <code>@JsonProperty</code>。</div>
 
-  <h2 id="s6">6. 数据访问与事务</h2>
-  <pre><code>@Service
-public class TransferService {
-    @Transactional                       // 事务边界：方法内全部成功或回滚
-    public void transfer(Long from, Long to, BigDecimal amount) {
-        accountRepo.debit(from, amount);
-        accountRepo.credit(to, amount);
-    }
+  <h2 id="s6">6. 数据层</h2>
+  <p>用 Spring Data JPA 或 <a href="mybatisplus.html">MyBatis-Plus</a>：</p>
+  <pre><code>public interface UserRepo extends JpaRepository&lt;User, Long&gt; {
+  List&lt;User&gt; findByEmail(String email);
 }</code></pre>
-  <ul>
-    <li><b>ORM 选型</b>：JPA/Hibernate 开发快、跨库；<a href="mybatisplus.html">MyBatis-Plus</a> SQL 可控、适合复杂查询。简历工坊用后者。</li>
-    <li><b>连接池</b>：默认 HikariCP，配置 <code>maximum-pool-size</code> 控制并发数据库连接。</li>
-    <li><b>事务失效</b>：自调用（同类内方法互调）、非 public、异常被吞都会导致 <code>@Transactional</code> 不生效（见第 13 节）。</li>
-  </ul>
+  <p>继承接口即得 CRUD，无需写实现。关系库见 <a href="mysql.html">MySQL</a>。</p>
 
-  <h2 id="s7">7. 配置与多环境</h2>
+  <h2 id="s7">7. 配置管理</h2>
   <pre><code># application.yml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/demo?useSSL=false&amp;serverTimezone=UTC
-    username: ${DB_USER}
-    password: ${DB_PWD}
----
-spring:
-  config:
-    activate:
-      on-profile: prod   # 生产环境专用配置</code></pre>
+    url: jdbc:mysql://localhost:3306/db
+    username: ${DB_USER}   # 环境变量注入</code></pre>
   <ul>
-    <li><b>外部化配置</b>：敏感信息用环境变量/配置中心（如 Nacos），别硬编码进仓库。</li>
-    <li><code>@ConfigurationProperties</code>：把一组配置绑定成类型安全的对象，优于零散 <code>@Value</code>。</li>
+    <li>多环境：<code>application-dev.yml</code> / <code>-prod.yml</code>，用 <code>spring.profiles.active</code> 切换。</li>
+    <li>敏感配置走环境变量/配置中心，别硬编码。</li>
   </ul>
 
   <h2 id="s8">8. 安全</h2>
+  <p>Spring Security 做认证/授权：</p>
   <ul>
-    <li><b>Spring Security</b>：认证（你是谁）+ 授权（能做什么），默认表单登录可换成 JWT。</li>
-    <li><b>JWT</b>：登录发 token，后续请求带 <code>Authorization</code> 头，过滤器校验（详见 <a href="jwt.html">JWT</a>）。</li>
-    <li>密码用 <code>BCryptPasswordEncoder</code> 加盐哈希，绝不存明文。</li>
-    <li>防 CSRF / 越权：对资源做“是否属于当前用户”的归属校验，不能只靠前端隐藏按钮。</li>
+    <li>密码用 <code>BCryptPasswordEncoder</code> 哈希。</li>
+    <li>路由加 <code>SecurityFilterChain</code> 规则（哪些要登录）。</li>
+    <li>JWT 见 <a href="jwt.html">JWT</a>，配合 <code>OncePerRequestFilter</code> 校验。</li>
   </ul>
 
-  <h2 id="s9">9. 性能优化</h2>
-  <ul>
-    <li><b>连接池</b>：按数据库承载与并发调 <code>maximum-pool-size</code>，过大反而拖垮 DB。</li>
-    <li><b>缓存</b>：<code>@Cacheable</code> + <a href="redis.html">Redis</a> 挡热点；注意缓存穿透/击穿/雪崩。</li>
-    <li><b>异步</b>：<code>@Async</code> 把非关键路径（发邮件、写日志）丢到线程池。</li>
-    <li><b>N+1</b>：ORM 懒加载导致一查列表发 N 条 SQL，用 <code>fetch join</code>/批量抓取解决。</li>
-    <li><b>JVM 调优</b>：按容器内存设 <code>-Xmx</code>，选 G1/ZGC 降低停顿。</li>
-  </ul>
+  <h2 id="s9">9. 异常处理</h2>
+  <pre><code>@RestControllerAdvice
+public class GlobalEx {
+  @ExceptionHandler(NotFound.class)
+  public ResponseEntity&lt;?&gt; handle(NotFound e) { return status(404).body(e.msg); }
+}</code></pre>
+  <p>全局统一错误结构，前端（如 <a href="react.html">React</a>）好处理。</p>
 
   <h2 id="s10">10. 测试</h2>
+  <pre><code>@SpringBootTest
+class UserTest {
+  @Autowired UserRepo repo;
+  @Test void save() { assertTrue(repo.save(new User()).getId() &gt; 0); }
+}</code></pre>
   <ul>
-    <li><b>单元测试</b>：JUnit 5 + Mockito，mock 掉 Repository 测 Service 逻辑。</li>
-    <li><b>Web 层测试</b>：<code>@WebMvcTest</code> + MockMvc 测 Controller 而不起全容器。</li>
-    <li><b>集成测试</b>：<code>@SpringBootTest</code> 起完整上下文；用 <strong>Testcontainers</strong> 起真实 MySQL/Redis 容器，测试最接近生产。</li>
-    <li>测试覆盖率 + CI 门禁，是资深团队的硬指标。</li>
+    <li><code>@WebMvcTest</code> 测 Controller；<code>@DataJpaTest</code> 测数据层（用内存库）。</li>
+    <li>测试是资深交付的标配。</li>
   </ul>
 
-  <h2 id="s11">11. 可观测性</h2>
+  <h2 id="s11">11. 部署</h2>
   <ul>
-    <li><b>Actuator</b>：暴露 <code>/health</code>、<code>/metrics</code>、<code>/env</code> 等端点，配合 Prometheus/Grafana。</li>
-    <li><b>日志</b>：用 SLF4J + Logback，按环境调级别；敏感字段别打进日志。</li>
-    <li><b>链路追踪</b>：Micrometer Tracing 接 Zipkin，定位跨服务慢调用。</li>
+    <li><code>mvn package</code> 打出可执行 jar（内嵌服务器）。</li>
+    <li>用 <a href="docker.html">Docker</a> 镜像 + <a href="pm2.html">PM2</a>/systemd 守护，前接 <a href="nginx.html">Nginx</a> 反代。</li>
   </ul>
 
-  <h2 id="s12">12. 部署运维</h2>
-  <pre><code>mvn clean package -DskipTests      # 打出可执行 jar
-java -jar demo.jar --spring.profiles.active=prod</code></pre>
-  <ul>
-    <li>用 <a href="docker.html">Docker</a> 打成镜像，配合 <a href="nginx.html">Nginx</a> 反向代理。</li>
-    <li>进程守护用 <a href="pm2.html">PM2</a>（Node）/systemd（见运维篇）或 K8s。</li>
-  </ul>
+  <h2 id="s12">12. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 循环依赖：</span>两个 Bean 互相注入会启动失败；重构拆分或改用 <code>@Lazy</code>。</div>
+  <div class="box warn"><span class="bt">坑 2 N+1 查询：</span>JPA 懒加载触发大量 SQL；用 <code>@EntityGraph</code> 或 DTO 投影。</div>
+  <div class="box warn"><span class="bt">坑 3 版本冲突：</span>起步依赖已管版本，别手动乱引导致冲突。</div>
 
-  <h2 id="s13">13. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>事务自调用失效——同类方法互调绕过代理，<code>@Transactional</code> 不生效；拆到另一个 Bean 或用 AOP 代理调用。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>字段注入（<code>@Autowired</code> 字段）导致循环依赖、难测试；改构造注入。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>Bean 未扫描到——启动类包路径要覆盖 Controller/Service，否则 NoSuchBean。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>ORM N+1 拖垮列表接口；用 fetch join/批量。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>配置被覆盖——外部环境变量优先级高于 yml，排查“为什么配置不生效”先看生效来源。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>内存泄漏——未关闭的流/连接池/ThreadLocal，容器重启才恢复；用 MAT 分析堆转储。</div>
-
-  <h2 id="s14">14. 调试</h2>
-  <ul>
-    <li>IDEA 断点调试；<code>/actuator/beans</code> 看容器里有哪些 Bean。</li>
-    <li>启动时加 <code>--debug</code> 看自动配置命中/未命中原因。</li>
-    <li>慢接口用 APM 或日志打耗时定位。</li>
-  </ul>
-
-  <h2 id="s15">15. 成长路线</h2>
+  <h2 id="s13">13. 与 Node 对比</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能建项目、写 CRUD 接口</td></tr>
-    <tr><td>初级</td><td>分层清晰、会用 JPA/MyBatis、基本事务</td></tr>
-    <tr><td>中级</td><td>懂 IoC/自动配置、事务边界、安全、缓存</td></tr>
-    <tr><td>资深</td><td>性能调优、测试体系、可观测、复杂架构设计</td></tr>
+    <tr><th></th><th>Spring Boot</th><th>Node/Express</th></tr>
+    <tr><td>语言</td><td>Java（强类型）</td><td>JS/TS</td></tr>
+    <tr><td>生态</td><td>企业级、全面</td><td>轻快、社区大</td></tr>
+    <tr><td>启动</td><td>稍重（JVM）</td><td>快</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 start.spring.io 搭一个带校验的用户接口 ② 用 @ControllerAdvice 做统一异常处理 ③ 写 @Transactional 转账并故意自调用看失效 ④ 用 Testcontainers 跑一个集成测试 ⑤ 加 Actuator 并接 Prometheus。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 IoC 容器与自动配置的运作、能设计分层与事务边界、掌握安全/性能/测试/可观测——这是资深 Java 后端的全栈能力。</div>
+
+  <h2 id="s14">14. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://spring.io/projects/spring-boot" target="_blank" rel="noopener">spring.io</a> + Baeldung 教程。</li>
+    <li>补 <a href="java.html">Java</a>、<a href="mysql.html">MySQL</a>、<a href="mybatisplus.html">MyBatis-Plus</a>。</li>
+    <li>练：用 Spring Boot + JPA 做一个带鉴权与异常的 CRUD 服务。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>理解自动配置原理、能设计分层与事务边界、把安全/测试/多环境当成默认项，而不是事后补。</div>
 </main>
 </div>
 <script>

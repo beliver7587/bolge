@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyBatis-Plus · 从小白到资深后端</title>
+<title>MyBatis-Plus · 从小白到数据层主力</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,128 +15,108 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">MyBatis-Plus<small>从小白到资深后端</small></div>
+  <div class="tbrand">MyBatis-Plus<small>从小白到数据层主力</small></div>
   <a href="#s1">1. 它解决什么问题</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 核心机制</a>
-  <a href="#s4">4. CRUD 与分页</a>
+  <a href="#s3">3. 实体映射</a>
+  <a href="#s4">4. 基础 Mapper</a>
   <a href="#s5">5. 条件构造器</a>
-  <a href="#s6">6. 代码生成器</a>
-  <a href="#s7">7. 企业插件</a>
-  <a href="#s8">8. 性能与优化</a>
-  <a href="#s9">9. 与 JPA 对比</a>
+  <a href="#s6">6. 分页</a>
+  <a href="#s7">7. 代码生成</a>
+  <a href="#s8">8. 乐观锁/逻辑删除</a>
+  <a href="#s9">9. 与 JPA</a>
   <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试</a>
-  <a href="#s12">12. 成长路线</a>
+  <a href="#s11">11. 最佳实践</a>
+  <a href="#s12">12. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>MyBatis-Plus：从小白到资深后端</h1>
-  <p class="tsub">MyBatis-Plus（MP）是国内 Java 后端的<strong>持久层事实标准</strong>：在 MyBatis 之上提供通用 Mapper/Service，单表 CRUD 零 SQL，复杂查询仍由你掌控。本教程讲透<strong>通用 Mapper 原理、Lambda 条件构造、逻辑删除/乐观锁/多租户插件、代码生成与性能优化</strong>。</p>
+  <h1>MyBatis-Plus：从小白到数据层主力</h1>
+  <p class="tsub"><a href="mybatisplus.html">MyBatis-Plus</a>（MP）是 MyBatis 的增强工具：单表 CRUD 几乎零 SQL，还带条件构造器、分页、代码生成。它是简历工坊数据层的主力。本教程讲清它怎么把“写 SQL”变成“写 Java”。</p>
 
   <h2 id="s1">1. 它解决什么问题</h2>
-  <p>原生 MyBatis 每个表都要写 Mapper 接口 + XML + SQL，单表 CRUD 大量重复。MP 在 MyBatis 之上注入“通用方法”，单表操作开箱即用，同时保留 XML/注解写复杂 SQL 的能力。</p>
-  <div class="box"><span class="bt">一句话：</span>MyBatis 让你“完全手写 SQL”；MP 把“通用 CRUD”默认实现好，复杂 SQL 你再补——既省事又不失灵活。</div>
-  <div class="box ok"><span class="bt">适合：</span>管理后台、表单多的业务（单表操作占多数）。<br><span class="box warn">不适合：</span>极致复杂动态 SQL 且团队已熟练手写——但 MP 仍可 coexist。</div>
+  <p>原生 MyBatis 每个表要写 Mapper 接口 + XML 映射 + 一堆基础 SQL。MP 在 MyBatis 之上“增强”：单表操作用内置 API，复杂 SQL 仍可用 XML。</p>
+  <div class="box"><span class="bt">一句话：</span>MP = MyBatis + 通用 Mapper + 条件构造器 + 分页/生成器。简单的不用写 SQL，复杂的不受限。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
   <pre><code>&lt;dependency&gt;
   &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
-  &lt;artifactId&gt;mybatis-plus-spring-boot3-starter&lt;/artifactId&gt;  &lt;!-- Spring Boot 3 用此 starter --&gt;
-  &lt;version&gt;3.5.7&lt;/version&gt;
+  &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt;
 &lt;/dependency&gt;</code></pre>
-  <p>在 <a href="springboot.html">Spring Boot</a> 启动类加 <code>@MapperScan("com.example.demo.mapper")</code> 扫描 Mapper 接口；配置 <code>mybatis-plus.mapper-locations</code> 指向 XML（如有）。</p>
+  <p>在 <a href="springboot.html">Spring Boot</a> 配好数据源（见 <a href="mysql.html">MySQL</a>）即可。</p>
 
-  <h2 id="s3">3. 核心机制</h2>
+  <h2 id="s3">3. 实体映射</h2>
   <pre><code>@TableName("user")
 public class User {
   @TableId(type = IdType.AUTO) private Long id;
-  @TableField("user_name")     private String name;   // 列名映射
-  @TableLogic                 private Integer deleted; // 逻辑删除
-  @Version                     private Integer version; // 乐观锁
+  private String name;
+  @TableField("email") private String mail;
 }</code></pre>
   <ul>
-    <li><code>BaseMapper&lt;T&gt;</code>：注入通用 CRUD（insert/selectById/updateById/delete...），无需写 XML。</li>
-    <li><code>IService&lt;T&gt;</code> + <code>ServiceImpl</code>：再包一层业务通用方法（批量、链式）。</li>
-    <li><b>注解</b>：<code>@TableName/@TableId/@TableField</code> 做对象-表映射；<code>@TableField(fill=...)</code> 配自动填充（如 create_time）。</li>
-    <li><b>主键策略</b>：<code>IdType.AUTO</code>（数据库自增）/ <code>ASSIGN_ID</code>（雪花算法，分布式推荐）。</li>
+    <li><code>@TableName</code>：类→表；<code>@TableId</code>：主键；<code>@TableField</code>：字段（名不同才标）。</li>
   </ul>
 
-  <h2 id="s4">4. CRUD 与分页</h2>
-  <pre><code>userMapper.insert(user);
-userMapper.selectById(1L);
-userMapper.selectPage(new Page&lt;&gt;(1, 10), null);  // 分页
-
-@Bean
-public MybatisPlusInterceptor mpInterceptor() {
-  var i = new MybatisPlusInterceptor();
-  i.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL)); // 分页插件必加
-  return i;
-}</code></pre>
-  <div class="box warn"><span class="bt">坑：</span>不注册分页插件，<code>selectPage</code> 会返回全部而非分页。</div>
+  <h2 id="s4">4. 基础 Mapper</h2>
+  <pre><code>public interface UserMapper extends BaseMapper&lt;User&gt; {}  // 白送 CRUD
+userMapper.insert(user);
+User u = userMapper.selectById(1L);
+userMapper.updateById(user);</code></pre>
+  <div class="box ok"><span class="bt">价值：</span>单表增删改查零 SQL，开发提速显著。</div>
 
   <h2 id="s5">5. 条件构造器</h2>
-  <pre><code>// 推荐 Lambda 形式：字段名用方法引用，重构安全、防拼错
-LambdaQueryWrapper&lt;User&gt; w = new LambdaQueryWrapper&lt;&gt;();
-w.gt(User::getAge, 18).like(User::getName, "王").orderByDesc(User::getId);
-userMapper.selectList(w);</code></pre>
+  <pre><code>QueryWrapper&lt;User&gt; w = new QueryWrapper&lt;&gt;();
+w.eq("status", 1).like("name", "王").orderByDesc("id");
+List&lt;User&gt; list = userMapper.selectList(w);</code></pre>
   <ul>
-    <li>优先 <code>LambdaQueryWrapper</code>（编译期检查字段），少用字符串 <code>QueryWrapper</code>（字段名写错无感知）。</li>
-    <li>条件值来自用户输入时，MP 用预编译参数绑定，<strong>不易 SQL 注入</strong>；但别用 <code>last("...")</code> 拼用户输入。</li>
+    <li>链式构造 <code>eq/ne/gt/like/in/orderBy</code> 等，拼出 WHERE。</li>
+    <li>复杂联表仍写 XML/注解 SQL，MP 不抢这块。</li>
   </ul>
 
-  <h2 id="s6">6. 代码生成器</h2>
-  <p>用 <code>AutoGenerator</code> + 模板，连上数据库一键生成 Entity/Mapper/Service/Controller，省去样板。逆向工程对中后台极提效，但要<strong>生成后人工核对</strong>字段与业务。</p>
+  <h2 id="s6">6. 分页</h2>
+  <pre><code>@Bean public MybatisPlusInterceptor mp() {
+  MybatisPlusInterceptor i = new MybatisPlusInterceptor();
+  i.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+  return i;
+}
+Page&lt;User&gt; p = userMapper.selectPage(new Page&lt;&gt;(1,10), w);</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>不注册分页插件，<code>selectPage</code> 不会分页，会查全表！这是新手最常踩的。</div>
 
-  <h2 id="s7">7. 企业插件</h2>
+  <h2 id="s7">7. 代码生成器</h2>
+  <p>用 <code>AutoGenerator</code> 按数据库表一键生成 Entity/Mapper/Service/Controller，进一步省样板。</p>
+
+  <h2 id="s8">8. 乐观锁 / 逻辑删除</h2>
   <ul>
-    <li><b>逻辑删除</b> <code>@TableLogic</code>：删除变 UPDATE 置 deleted=1，查询自动带条件——数据不物理丢失，合规友好。</li>
-    <li><b>乐观锁</b> <code>@Version</code>：更新时带版本号，并发修改冲突则失败重试，避免丢失更新。</li>
-    <li><b>多租户</b>：<code>TenantLineInnerInterceptor</code> 自动给查询加租户 ID 条件，SaaS 隔离利器。</li>
+    <li><b>乐观锁</b>：<code>@Version</code> 字段，更新时校验版本防并发覆盖。</li>
+    <li><b>逻辑删除</b>：<code>@TableLogic</code>，删除变 UPDATE 标记，数据不真删。</li>
   </ul>
 
-  <h2 id="s8">8. 性能与优化</h2>
-  <ul>
-    <li><b>只查所需列</b>：<code>select(User::getId, User::getName)</code> 避免 <code>select *</code>。</li>
-    <li><b>批量</b>：用 <code>saveBatch</code> 而非循环 insert；调大 <code>rewriteBatchedStatements=true</code>（MySQL）走真批量。</li>
-    <li><b>大分页</b>：深翻页用“游标/延迟游标”或按 ID 分段，避免 <code>limit 1000000,10</code> 全表扫描。</li>
-    <li><b>N+1</b>：关联查询用 <code>leftJoin</code>/一次批量查，而非循环中单查。</li>
-  </ul>
-
-  <h2 id="s9">9. 与 JPA 对比</h2>
+  <h2 id="s9">9. 与 JPA</h2>
   <table>
     <tr><th></th><th>MyBatis-Plus</th><th>Spring Data JPA</th></tr>
-    <tr><td>SQL 掌控</td><td>强（可手写）</td><td>弱（自动生成）</td></tr>
-    <tr><td>学习/上手</td><td>中</td><td>低</td></tr>
-    <tr><td>复杂查询</td><td>灵活</td><td>受限（需 Specification）</td></tr>
-    <tr><td>国内生态</td><td>极好</td><td>一般</td></tr>
+    <tr><td>风格</td><td>SQL 可控</td><td>对象/方法名驱动</td></tr>
+    <tr><td>复杂查询</td><td>写 XML 更顺</td><td>需 Specification/QueryDSL</td></tr>
+    <tr><td>国内生态</td><td>更流行</td><td>较通用</td></tr>
   </table>
-  <div class="box ok"><span class="bt">选型：</span>要 SQL 可控、国内协作 → MP；要开发极快、跨库、少写 SQL → JPA。两者都能与 <a href="springboot.html">Spring Boot</a> 无缝集成。</div>
 
   <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>忘了 <code>@MapperScan</code> → 启动找不到 Mapper Bean。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>字段名与列名不一致导致 null → 用 <code>@TableField</code> 映射。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>主键自增未标 <code>IdType.AUTO</code> → 插入报错。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>分页插件漏配 → 不分页。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>逻辑删除字段 + 唯一索引冲突（deleted 相同导致唯一键重复）→ 唯一索引要含租户/删除标记。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>用 <code>last()</code> 拼接用户输入 → SQL 注入。</div>
+  <div class="box warn"><span class="bt">坑 1 分页插件漏配：</span>见第 6 节。</div>
+  <div class="box warn"><span class="bt">坑 2 字段名不一致：</span>数据库下划线、Java 驼峰，开 <code>mapUnderscoreToCamelCase</code> 或显式 <code>@TableField</code>。</div>
+  <div class="box warn"><span class="bt">坑 3 全表更新：</span><code>update</code> 忘给 WHERE 会全表更新，MP 有防止全表操作的保护。</div>
 
-  <h2 id="s11">11. 调试</h2>
+  <h2 id="s11">11. 最佳实践</h2>
   <ul>
-    <li>开 <code>mybatis-plus.configuration.log-impl=StdOutImpl</code> 看实际 SQL 与参数。</li>
-    <li>p6spy 打印带参数的完整 SQL，定位慢查询。</li>
+    <li>单表用 MP，联表/报表用 XML。</li>
+    <li>复杂查询抽成 XML，保持可维护。</li>
+    <li>用逻辑删除 + 乐观锁保数据安全。</li>
   </ul>
 
-  <h2 id="s12">12. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>会用 Mapper 做 CRUD、分页</td></tr>
-    <tr><td>初级</td><td>Lambda 条件、字段映射</td></tr>
-    <tr><td>中级</td><td>逻辑删除/乐观锁/多租户、代码生成</td></tr>
-    <tr><td>资深</td><td>性能调优、复杂 SQL 设计、插件扩展、选型有据</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 MP 写用户管理 CRUD + 分页 ② 用 LambdaQueryWrapper 做多条件搜索 ③ 加逻辑删除与乐观锁并处理并发更新 ④ 用 p6spy 观察一条分页 SQL。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解“通用 Mapper 省去样板、复杂 SQL 仍归你管”的平衡，能设计高性能、可审计的持久层——这是资深 Java 后端的核心能力。</div>
+  <h2 id="s12">12. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://baomidou.com" target="_blank" rel="noopener">baomidou.com</a>。</li>
+    <li>先学 <a href="springboot.html">Spring Boot</a>、<a href="mysql.html">MySQL</a>。</li>
+    <li>练：用 MP 搭一个分页 + 条件查询的用户管理。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>清楚“MP 管单表、XML 管复杂”的边界，把分页/逻辑删除/乐观锁作为默认配置，而不是出事才加。</div>
 </main>
 </div>
 <script>

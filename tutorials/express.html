@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Express · 从小白到资深后端</title>
+<title>Express · 从小白到 Node Web 框架</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,139 +15,95 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Express<small>从小白到资深后端</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
+  <div class="tbrand">Express<small>从小白到 Node Web 框架</small></div>
+  <a href="#s1">1. 它是什么</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 路由深入</a>
-  <a href="#s4">4. 中间件机制</a>
-  <a href="#s5">5. 请求处理</a>
+  <a href="#s3">3. 路由</a>
+  <a href="#s4">4. 中间件</a>
+  <a href="#s5">5. 请求与响应</a>
   <a href="#s6">6. 错误处理</a>
-  <a href="#s7">7. 安全加固</a>
-  <a href="#s8">8. 性能与部署</a>
-  <a href="#s9">9. 测试</a>
-  <a href="#s10">10. 框架对比</a>
-  <a href="#s11">11. 常见坑</a>
-  <a href="#s12">12. 调试</a>
-  <a href="#s13">13. 成长路线</a>
+  <a href="#s7">7. 静态文件</a>
+  <a href="#s8">8. 安全加固</a>
+  <a href="#s9">9. 与框架对比</a>
+  <a href="#s10">10. 常见坑</a>
+  <a href="#s11">11. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Express：从小白到资深后端</h1>
-  <p class="tsub">Express 是 <a href="nodejs.html">Node.js</a> 最经典的 Web 框架，用“中间件 + 路由”模型把原生 http 的啰嗦封装掉。本教程讲透<strong>洋葱模型、Router 模块化、集中错误处理、安全加固、测试与框架选型</strong>——这是资深 Node 后端写生产 API 的范式。</p>
+  <h1>Express：从小白到 Node Web 框架</h1>
+  <p class="tsub"><a href="express.html">Express</a> 是最经典的 <a href="nodejs.html">Node.js</a> Web 框架，用中间件 + 路由写接口。Memora 的 REST 与 SSE 流式都基于它。本教程讲清中间件模型、路由与错误处理——这是 Node 后端的事实标准。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>原生 <code>http</code> 要手动解析 URL、路由、请求体，写接口很啰嗦。Express 提供声明式路由（<code>app.get('/x')</code>）和<strong>中间件管线</strong>，让横切逻辑（日志、鉴权、错误处理）可插拔复用。</p>
-  <div class="box"><span class="bt">一句话：</span>Express = 路由 + 中间件。你写“对每个请求做什么”的函数链，框架负责按顺序跑。</div>
-  <div class="box ok"><span class="bt">适合：</span>REST API、BFF、中小型后端；生态成熟、文档多。<br><span class="box warn">不适合：</span>追求极致吞吐或强约束架构（看第 10 节 Fastify/NestJS）。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>Express 在 Node 原生 http 之上提供：路由、中间件管道、便捷的请求/响应对象。它“极简”，把组织逻辑的自由留给你。</p>
+  <div class="box"><span class="bt">一句话：</span>Express = 路由 + 中间件 + 轻量封装。小而灵活，生态成熟。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
-  <pre><code>mkdir my-api &amp;&amp; cd my-api
-npm init -y &amp;&amp; npm pkg set type=module
-npm install express</code></pre>
-  <p>真实项目按职责分层：<code>routes/</code>、<code>controllers/</code>、<code>services/</code>、<code>middlewares/</code>、<code>validators/</code>。配 <a href="typescript.html">TypeScript</a> 加类型更安全（Express 类型用 <code>@types/express</code>）。</p>
-
-  <h2 id="s3">3. 路由深入</h2>
   <pre><code>import express from 'express';
-const router = express.Router();
-router.get('/:id', (req, res) =&gt; res.json({ id: req.params.id }));
-// 路由级中间件：只对该路由生效
-router.use(authenticate);          // 该 router 下所有请求先鉴权
-app.use('/users', router);         // 挂载到 /users 前缀</code></pre>
+const app = express();
+app.use(express.json());            // 解析 JSON 请求体
+app.listen(3000, () =&gt; console.log('up'));</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>忘了 <code>express.json()</code>，<code>req.body</code> 是 undefined。</div>
+
+  <h2 id="s3">3. 路由</h2>
+  <pre><code>app.get('/api/users/:id', (req, res) =&gt; {
+  res.json({ id: req.params.id });
+});
+app.post('/api/login', (req, res) =&gt; { /* req.body */ });</code></pre>
   <ul>
-    <li><b>Router 模块化</b>：每个业务一个 router，主应用 <code>app.use('/x', router)</code> 挂载，避免单文件膨胀。</li>
-    <li>404 用“兜底路由”在最后注册：<code>app.use((req,res)=&gt;res.status(404).json({error:'not found'}))</code>。</li>
+    <li>方法 <code>get/post/put/delete</code> 对应 REST。</li>
+    <li><code>req.params</code> 路径参数，<code>req.query</code> 查询参数。</li>
   </ul>
 
-  <h2 id="s4">4. 中间件机制</h2>
-  <p>中间件是 <code>(req, res, next) =&gt; {}</code>。核心是<strong>洋葱模型</strong>：请求从外到内穿过各中间件，响应再从内到外返回。</p>
-  <pre><code>app.use((req, res, next) =&gt; {           // 进入
+  <h2 id="s4">4. 中间件</h2>
+  <p>中间件是“请求处理流水线上的函数”，签名 <code>(req,res,next)</code>：</p>
+  <pre><code>app.use((req, res, next) =&gt; {          // 全局中间件
   console.log(req.method, req.url);
-  next();                                // 放行；不调 next 则请求挂起
+  next();                              // 放行到下一个
 });</code></pre>
-  <ul>
-    <li><b>应用级</b> <code>app.use</code> 全局；<b>路由级</b> 挂在 router；<b>错误级</b> 四参 <code>(err,req,res,next)</code> 必须在最后。</li>
-    <li><b>顺序即一切</b>：<code>express.json()</code> 要在读取 <code>req.body</code> 的路由之前；鉴权中间件要在受保护路由之前。</li>
-  </ul>
+  <div class="box ok"><span class="bt">资深：</span>鉴权、日志、CORS 都做成中间件；顺序很重要——先解析 body，再路由。</div>
 
-  <h2 id="s5">5. 请求处理</h2>
-  <pre><code>app.use(express.json({ limit: '1mb' }));          // 解析 JSON 体，限大小防滥用
-import { body, validationResult } from 'express-validator';
-app.post('/users', body('email').isEmail(), (req, res) =&gt; {
-  const errs = validationResult(req);
-  if (!errs.isEmpty()) return res.status(400).json({ errors: errs.array() });
-  // 业务...
-});</code></pre>
+  <h2 id="s5">5. 请求与响应</h2>
   <ul>
-    <li>文件上传用 <code>multer</code>；大文件走流而非缓冲进内存。</li>
-    <li>校验放中间件层，别散在控制器里。</li>
+    <li><code>req.body / params / query / headers</code> 拿输入。</li>
+    <li><code>res.json() / res.send() / res.status().json()</code> 返回。</li>
+    <li><code>res.setHeader</code> 或 <code>res.cookie</code> 控制响应头/ cookie。</li>
   </ul>
 
   <h2 id="s6">6. 错误处理</h2>
-  <pre><code>app.use((err, req, res, next) =&gt; {           // 四参错误中间件，必须最后
-  console.error(err);
-  res.status(err.status || 500).json({ error: err.message });
+  <pre><code>app.use((err, req, res, next) =&gt; {     // 4 参中间件 = 错误处理器
+  res.status(err.status || 500).json({ msg: err.message });
 });</code></pre>
+  <p>业务里 <code>next(err)</code> 把错误抛给统一处理器。</p>
+
+  <h2 id="s7">7. 静态文件</h2>
+  <pre><code>app.use(express.static('public'));  // 托管 public/ 下静态资源</code></pre>
+
+  <h2 id="s8">8. 安全加固</h2>
   <ul>
-    <li>异步路由里抛错不会自动进错误中间件——用 <code>try/catch</code> 包后 <code>next(err)</code>，或用 <code>express-async-errors</code> 让 async 错误自动冒泡。</li>
-    <li>统一错误结构（<code>{error, code}</code>），前端才好处理。</li>
+    <li><code>helmet</code>：加安全响应头。</li>
+    <li><code>cors</code>：控制跨域（前端 <a href="react.html">React</a> 调用时配）。</li>
+    <li><code>express-rate-limit</code>：防刷/防爆破。</li>
   </ul>
 
-  <h2 id="s7">7. 安全加固</h2>
-  <ul>
-    <li><code>helmet</code>：设安全响应头（CSP、XSS 防护等）。</li>
-    <li><code>cors</code>：精确配置允许的来源，别 <code>*</code> 全开。</li>
-    <li><b>限流</b> <code>express-rate-limit</code>：防爆破/刷接口。</li>
-    <li>校验 + 参数化查询防注入；密钥走环境变量。</li>
-  </ul>
-
-  <h2 id="s8">8. 性能与部署</h2>
-  <ul>
-    <li>Express 中间件串行、同步为主，吞吐低于 Fastify；但多数 I/O 场景够用。</li>
-    <li>用 <a href="pm2.html">PM2</a> 或 cluster 起多进程吃满多核；前置 <a href="nginx.html">Nginx</a> 做反向代理/TLS/静态。</li>
-    <li>用 <code>compression</code> 开 gzip 减响应体积。</li>
-  </ul>
-
-  <h2 id="s9">9. 测试</h2>
-  <pre><code>import request from 'supertest';
-import app from '../app.js';
-test('GET /users 返回 200', async () =&gt; {
-  const r = await request(app).get('/users');
-  expect(r.status).toBe(200);
-});</code></pre>
-
-  <h2 id="s10">10. 框架对比</h2>
+  <h2 id="s9">9. 与框架对比</h2>
   <table>
-    <tr><th></th><th>Express</th><th>Koa</th><th>Fastify</th><th>NestJS</th></tr>
-    <tr><td>风格</td><td>中间件</td><td>洋葱/async</td><td>高性能</td><td>装饰器/DI</td></tr>
-    <tr><td>约束</td><td>自由</td><td>自由</td><td>自由</td><td>强（架构）</td></tr>
-    <tr><td>吞吐</td><td>中</td><td>中</td><td>高</td><td>中</td></tr>
+    <tr><th></th><th>Express</th><th>NestJS</th><th>Next.js</th></tr>
+    <tr><td>风格</td><td>极简、自由</td><td>装饰器、模块化</td><td>全栈/SSR</td></tr>
+    <tr><td>适合</td><td>中型 API</td><td>大型结构化后端</td><td>前端全栈</td></tr>
   </table>
-  <div class="box ok"><span class="bt">选型：</span>快速灵活 → Express；极致性能 → Fastify；大企业级强架构 → NestJS。</div>
 
-  <h2 id="s11">11. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>忘了 <code>express.json()</code> → <code>req.body</code> 为 undefined。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>中间件漏调 <code>next()</code> → 请求挂起超时。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>中间件顺序错（如鉴权在路由后）→ 保护失效。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>跨域被拦 → 配 <code>cors</code> 并限制来源。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>异步错误没冒泡 → 用 async-errors 或 try/catch+next(err)。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>对同一 res 多次 <code>send/json</code> → 抛 "headers already sent"。</div>
+  <h2 id="s10">10. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 忘 json 解析：</span>见第 2 节。</div>
+  <div class="box warn"><span class="bt">坑 2 异步错误未捕获：</span>async 路由里 throw 不会进错误中间件，要用 try/catch 或包装。</div>
+  <div class="box warn"><span class="bt">坑 3 中间件顺序：</span>错误处理中间件必须放最后。</div>
 
-  <h2 id="s12">12. 调试</h2>
-  <ul>
-    <li><code>DEBUG=express:*</code> 看路由匹配；morgan 记录请求日志。</li>
-    <li>用 <code>node --inspect</code> 断点；Postman/curl 联调。</li>
-  </ul>
-
-  <h2 id="s13">13. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能写路由、解析 body</td></tr>
-    <tr><td>初级</td><td>会用中间件、模块化路由</td></tr>
-    <tr><td>中级</td><td>集中错误处理、校验、安全加固</td></tr>
-    <tr><td>资深</td><td>架构分层、性能与选型、测试与排障</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 Router 把用户/订单拆模块 ② 写集中错误中间件并处理 async 错误 ③ 加 helmet+cors+限流 ④ 用 supertest 测一个接口 ⑤ 对比 Fastify 写同一接口测吞吐。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解中间件洋葱模型与分层架构，能写出安全、可测、可维护的生产 API——这是资深 Node 后端的核心能力。</div>
+  <h2 id="s11">11. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://expressjs.com" target="_blank" rel="noopener">expressjs.com</a>。</li>
+    <li>先学 <a href="nodejs.html">Node.js</a>、<a href="typescript.html">TypeScript</a>。</li>
+    <li>练：用 Express + 中间件做一个带鉴权与全局错误处理的 REST API。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能用中间件把横切关注点（日志/鉴权/限流）解耦，理解请求生命周期，并知道何时该换 NestJS 上结构。</div>
 </main>
 </div>
 <script>

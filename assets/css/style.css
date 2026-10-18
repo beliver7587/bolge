@@ -45,6 +45,9 @@ img{max-width:100%}
 .nav-item.active{color:#fff; background:linear-gradient(120deg,rgba(91,140,255,.22),rgba(124,92,255,.22)); box-shadow:inset 0 0 0 1px var(--line2)}
 .nav-burger{display:none; margin-left:auto; font-size:20px; line-height:1; background:var(--panel2);
   color:var(--text); border:1px solid var(--line); border-radius:10px; padding:8px 13px; cursor:pointer}
+.theme-toggle{cursor:pointer; background:var(--panel2); color:var(--text); border:1px solid var(--line2);
+  border-radius:10px; padding:8px 12px; font-size:16px; line-height:1; transition:.18s}
+.theme-toggle:hover{background:var(--panel); border-color:var(--accent)}
 .scrim{display:none; position:fixed; inset:0; z-index:40; background:rgba(0,0,0,.55)}
 
 /* ===== 主容器 ===== */
@@ -107,11 +110,14 @@ main{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding
   background:var(--bg2); border:1px solid var(--line)}
 
 /* ===== 主页技术教程区 ===== */
-.tech-section{padding:34px 30px 40px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); margin-top:40px; scroll-margin-top:80px}
+.tech-section{padding:34px 30px 40px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); margin-top:40px; scroll-margin-top:80px; text-align:center}
 .tech-section h2{font-size:30px; margin:0 0 8px}
 .tech-section>p{color:var(--muted); margin:0 0 22px; font-size:15px}
-.hub-tools{display:flex; flex-direction:column; gap:16px; margin-bottom:8px}
-.search-box{position:relative; max-width:560px}
+.hub-tools{display:flex; flex-direction:column; gap:16px; margin-bottom:8px; align-items:center}
+.search-box{position:relative; max-width:560px; width:100%}
+.filters{justify-content:center}
+.hub-count{text-align:center}
+.hub-grid{text-align:left}
 .search-ico{position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:15px; opacity:.7}
 #searchInput{width:100%; padding:14px 16px 14px 44px; border-radius:14px; font-size:15px;
   font-family:inherit; color:var(--text); background:var(--panel); border:1px solid var(--line2); outline:none; transition:.2s}
@@ -152,6 +158,7 @@ main{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding
     transform:translateX(100%); transition:transform .25s ease; margin-left:0; gap:6px; z-index:45}
   .nav.open{transform:translateX(0)}
   .nav-item{padding:13px 14px; font-size:15px}
+  .nav .theme-toggle{width:100%; text-align:center; padding:13px 14px; font-size:15px; border-radius:10px}
   .scrim.show{display:block}
   .cards{grid-template-columns:1fr}
   main{padding:0 16px 50px}
@@ -170,3 +177,18 @@ main{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding
 @media (max-width:860px){
   .tech-section{padding:22px 18px 28px}
 }
+
+/* ===== 亮色主题 ===== */
+[data-theme="light"]{
+  --bg:#f6f8fb; --bg2:#eef1f6; --panel:#ffffff; --panel2:#f3f5f9;
+  --line:#e2e8f0; --line2:#cbd5e1;
+  --text:#0f172a; --muted:#475569; --muted2:#64748b;
+  --accent:#2563eb; --accent2:#7c3aed; --cyan:#0891b2; --green:#16a34a;
+  --yellow:#ca8a04; --pink:#db2777;
+  --grad:linear-gradient(120deg,#2563eb,#7c3aed 55%,#0891b2);
+  --shadow:0 18px 50px rgba(0,0,0,.12);
+}
+[data-theme="light"] .hero-tags span{background:rgba(15,23,42,.04); border-color:var(--line2)}
+[data-theme="light"] .tut-tags span{background:rgba(15,23,42,.04); border-color:var(--line2)}
+[data-theme="light"] .topbar{background:rgba(255,255,255,.82)}
+[data-theme="light"] #contentFrame{background:var(--bg2)}

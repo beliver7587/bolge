@@ -4,12 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>网页游戏平台 · 从零到上线 · 完全手册（面试 + 小白向）</title>
+<script src="../assets/js/theme.js"></script>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
     --text:#e6e9ef; --muted:#9aa4b2; --accent:#FFD23F; --accent2:#3DDC84;
     --blue:#4FC3F7; --red:#ff6b6b; --code:#0b0d11;
   }
+  [data-theme="light"]{
+    --bg:#f6f8fb; --panel:#ffffff; --panel2:#f3f5f9; --line:#e2e8f0;
+    --text:#0f172a; --muted:#475569; --accent:#ca8a04; --accent2:#16a34a;
+    --blue:#2563eb; --red:#dc2626; --code:#f1f5f9;
+  }
+  [data-theme="light"] body{background:var(--bg); color:var(--text)}
+  [data-theme="light"] .sidebar{background:var(--panel); border-color:var(--line)}
+  [data-theme="light"] .card, [data-theme="light"] .box{background:var(--panel); border-color:var(--line)}
+  [data-theme="light"] pre{background:var(--code); color:var(--text); border-color:var(--line)}
+  [data-theme="light"] code{background:#e2e8f0; color:#0f172a}
+  [data-theme="light"] th{background:#e2e8f0; color:#0f172a}
+  [data-theme="light"] tr:hover td{background:#f1f5f9}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);
     font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;

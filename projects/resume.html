@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>简历工坊 · 从零部署 + 实现详解（小白手把手版）</title>
+<script src="../assets/js/theme.js"></script>
 <style>
   :root{
     --bg:#0b1220; --panel:#0e1729; --panel2:#101c30; --card:#111c2f;
@@ -13,6 +14,26 @@
     --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
     --side-w:264px;
   }
+  [data-theme="light"]{
+    --bg:#f6f8fb; --panel:#ffffff; --panel2:#f3f5f9; --card:#ffffff;
+    --ink:#0f172a; --ink-strong:#0f172a; --muted:#475569;
+    --green:#16a34a; --green-dim:#16a34a; --yellow:#ca8a04; --blue:#2563eb;
+    --line:#e2e8f0; --code-bg:#f1f5f9; --code-line:#e2e8f0;
+  }
+  [data-theme="light"] body{background:var(--bg); color:var(--ink)}
+  [data-theme="light"] .sidebar{background:var(--panel); border-color:var(--line)}
+  [data-theme="light"] .sidebar nav a:hover{color:var(--green); background:#f1f5f9}
+  [data-theme="light"] .sidebar nav a.active{color:var(--green); background:#e2e8f0}
+  [data-theme="light"] header.hero .badge{border-color:var(--line2); color:var(--green); background:#f1f5f9}
+  [data-theme="light"] code{background:#e2e8f0; color:#0f172a}
+  [data-theme="light"] pre{background:var(--code-bg); border-color:var(--code-line); color:#0f172a}
+  [data-theme="light"] th,td{background:var(--card); border-color:var(--line)}
+  [data-theme="light"] th{background:#e2e8f0; color:#0f172a}
+  [data-theme="light"] tr:hover td{background:#f1f5f9}
+  [data-theme="light"] .q, [data-theme="light"] .step{background:var(--card); border-color:var(--line)}
+  [data-theme="light"] .note, [data-theme="light"] .warn{background:#fef9c3; border-color:#fde047; color:#854d0e}
+  [data-theme="light"] .tip, [data-theme="light"] .plus{background:#dcfce7; border-color:#86efac; color:#166534}
+  [data-theme="light"] .box{background:#f1f5f9; border-color:var(--line2); color:#0f172a}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);line-height:1.85;font-size:15px}

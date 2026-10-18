@@ -4,12 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Memora · 有记忆的 AI 客服 Agent —— 项目讲解手册（面试版）</title>
+<script src="../assets/js/theme.js"></script>
 <style>
 :root{
   --bg:#0a0e14; --content:#0d1117; --panel:#111823; --line:#1d2735;
   --green:#4ade80; --amber:#fbbf24; --blue:#38bdf8; --purple:#c084fc;
   --text:#d5dce6; --muted:#7d8a99; --code-bg:#0f1520; --card:#101724;
 }
+[data-theme="light"]{
+  --bg:#f6f8fb; --content:#ffffff; --panel:#ffffff; --line:#e2e8f0;
+  --green:#16a34a; --amber:#ca8a04; --blue:#2563eb; --purple:#9333ea;
+  --text:#0f172a; --muted:#475569; --code-bg:#f1f5f9; --card:#ffffff;
+}
+[data-theme="light"] body{background:var(--bg); color:var(--text)}
+[data-theme="light"] nav{background:var(--panel); border-color:var(--line)}
+[data-theme="light"] .card, [data-theme="light"] .box{background:var(--card); border-color:var(--line)}
+[data-theme="light"] pre{background:var(--code-bg); color:var(--text); border-color:var(--line)}
+[data-theme="light"] code{background:#e2e8f0; color:#0f172a}
+[data-theme="light"] th{background:#e2e8f0; color:#0f172a}
+[data-theme="light"] tr:hover td{background:#f1f5f9}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
   font-family:-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75}

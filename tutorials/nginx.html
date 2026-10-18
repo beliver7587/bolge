@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nginx · 从小白到资深</title>
+<title>Nginx · 从小白到反向代理</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,129 +15,79 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Nginx<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 架构原理</a>
-  <a href="#s3">3. 配置体系</a>
-  <a href="#s4">4. 反向代理精髓</a>
+  <div class="tbrand">Nginx<small>从小白到反向代理</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 静态托管</a>
+  <a href="#s4">4. 反向代理</a>
   <a href="#s5">5. 负载均衡</a>
-  <a href="#s6">6. 静态与缓存</a>
-  <a href="#s7">7. WebSocket/SSE</a>
-  <a href="#s8">8. 性能调优</a>
-  <a href="#s9">9. 限流与安全</a>
-  <a href="#s10">10. 可观测</a>
-  <a href="#s11">11. 常见坑</a>
-  <a href="#s12">12. 成长路线</a>
+  <a href="#s6">6. HTTPS</a>
+  <a href="#s7">7. 性能优化</a>
+  <a href="#s8">8. 与部署</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Nginx：从小白到资深</h1>
-  <p class="tsub"><strong>Nginx</strong> 是高性能 Web 服务器 / 反向代理 / 负载均衡器，作为“网站前台”统一收口外部流量、转发后端、托管静态、做 TLS 终止。本教程讲透<strong>事件驱动架构、配置体系、反向代理路径陷阱、负载均衡、缓存压缩、长连接、性能调优与限流安全</strong>——这是把服务稳稳上线、扛住流量的核心能力。</p>
+  <h1>Nginx：从小白到反向代理</h1>
+  <p class="tsub"><a href="nginx.html">Nginx</a> 是高性能 Web 服务器，也常作反向代理与负载均衡。它是把多个后端（<a href="springboot.html">Spring Boot</a>、<a href="nodejs.html">Node</a>）统一暴露、加 HTTPS 的入口。本教程讲清反向代理、负载均衡与上线部署。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>直接把后端暴露公网问题多：端口乱、无 TLS、单点、无静态能力。Nginx 作为统一入口：对外只开 80/443，对内把请求按规则转发给多个后端，同时托管静态资源、做压缩与限流。</p>
-  <div class="box"><span class="bt">一句话：</span>用户只和 Nginx 打交道，Nginx 决定“给哪个后端 / 返回哪个静态文件”。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>Nginx 事件驱动、高并发低内存，既能托管静态文件，也能把请求转发给后端服务（反向代理）。</p>
+  <div class="box"><span class="bt">一句话：</span>Nginx = 静态托管 + 反向代理 + 负载均衡。部署的“门面”。</div>
 
-  <h2 id="s2">2. 架构原理</h2>
-  <ul>
-    <li><b>事件驱动 + 多 worker</b>：单 worker 用 epoll/kqueue 异步处理上万并发连接，远胜传统每连接一线程。</li>
-    <li><b>master/worker</b>：master 管配置与子进程，worker 干活；reload 平滑不中断。</li>
-    <li><b>阶段化处理</b>：接收 → 重写 → 访问控制 → 内容处理 → 响应过滤，可挂模块。</li>
-  </ul>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>nginx -t            # 测试配置
+nginx               # 启动
+nginx -s reload     # 热重载配置</code></pre>
 
-  <h2 id="s3">3. 配置体系</h2>
-  <p>主配置 <code>/etc/nginx/nginx.conf</code> 用 <code>include</code> 引入站点；Ubuntu 习惯放 <code>sites-available/</code> 软链到 <code>sites-enabled/</code>。</p>
-  <pre><code># nginx.conf 关键
-worker_processes auto;          # 通常 = CPU 核数
-events { worker_connections 10240; }   # 单 worker 最大连接
-http {
-  include /etc/nginx/sites-enabled/*;
-  gzip on;                      # 全局开压缩
+  <h2 id="s3">3. 静态托管</h2>
+  <pre><code>server {
+  listen 80; server_name x.com;
+  root /var/www; location / { try_files $uri $uri/ /index.html; }
 }</code></pre>
+  <p><code>try_files</code> 让前端路由（<a href="react.html">SPA</a>）刷新不 404。</p>
 
-  <h2 id="s4">4. 反向代理精髓</h2>
-  <p>最易踩坑的是 <code>proxy_pass</code> 的<strong>路径拼接</strong>：</p>
+  <h2 id="s4">4. 反向代理</h2>
   <pre><code>location /api/ {
-  proxy_pass http://127.0.0.1:3000/;   # 末尾有 / ，把 /api/ 去掉再转发
-  # 请求 /api/user → 转发到 http://127.0.0.1:3000/user
+  proxy_pass http://127.0.0.1:3000/;
   proxy_set_header Host $host;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  proxy_set_header X-Forwarded-Proto $scheme;
-  proxy_read_timeout 60s;       # 长任务（如 AI 流式）要调大
 }</code></pre>
-  <div class="box warn"><span class="bt">路径陷阱：</span><code>proxy_pass</code> 末尾有无 <code>/</code> 决定 URI 是否被替换；后端拿到的 path 不同，务必联调确认。</div>
+  <div class="box ok"><span class="bt">用法：</span>浏览器只访问 Nginx，Nginx 把 <code>/api</code> 转给后端，隐藏真实端口与拓扑。</div>
 
   <h2 id="s5">5. 负载均衡</h2>
-  <pre><code>upstream backend {
-  least_conn;                   # 最少连接（默认 round-robin 轮询）
-  server 127.0.0.1:3000 weight=3;   # 加权
-  server 127.0.0.1:3001;
-  server 127.0.0.1:3002 backup;     # 备胎，主全挂才用
-}
-location /api/ { proxy_pass http://backend; }</code></pre>
-  <div class="box ok"><span class="bt">算法：</span>round-robin（均匀）/least_conn（谁闲给谁）/ip_hash（同 IP 落同节点，有状态会话用）/hash（自定义键）。健康检查靠 <code>max_fails</code>/<code>fail_timeout</code> 自动摘流。</div>
+  <pre><code>upstream api { server 127.0.0.1:3000; server 127.0.0.1:3001; }
+location /api/ { proxy_pass http://api/; }   # 默认轮询</code></pre>
+  <p>可换 <code>ip_hash</code> 或 <code>least_conn</code> 策略。</p>
 
-  <h2 id="s6">6. 静态与缓存</h2>
-  <pre><code>location /static/ {
-  root /var/www;
-  expires 30d;                  # 浏览器/CDN 缓存
-  add_header Cache-Control "public, immutable";
-  gzip_static on;               # 优先发 .gz 预压缩
-}
-location / { try_files $uri $uri/ /index.html; }   # SPA 兜底</code></pre>
+  <h2 id="s6">6. HTTPS</h2>
+  <pre><code>listen 443 ssl;
+ssl_certificate /path/fullchain.pem;
+ssl_certificate_key /path/privkey.pem;</code></pre>
+  <p>证书用 <a href="https.html">certbot</a> 免费签发并自动续期。</p>
 
-  <h2 id="s7">7. WebSocket / SSE</h2>
-  <pre><code># WebSocket 必须升级协议
-location /ws/ {
-  proxy_pass http://127.0.0.1:8080;
-  proxy_http_version 1.1;
-  proxy_set_header Upgrade $http_upgrade;
-  proxy_set_header Connection "upgrade";
-}
-# SSE 关闭缓冲，避免打字机延迟（Memora 已配）
-location /stream { proxy_buffering off; proxy_pass http://127.0.0.1:3000; }</code></pre>
-
-  <h2 id="s8">8. 性能调优</h2>
+  <h2 id="s7">7. 性能优化</h2>
   <ul>
-    <li><code>worker_connections</code> 与系统 <code>ulimit -n</code> 配合，撑高并发。</li>
-    <li>开启 <code>keepalive</code>（上游长连）减少 TCP 握手。</li>
-    <li><code>sendfile on; tcp_nopush on;</code> 提升静态吞吐。</li>
-    <li>合理设 <code>client_max_body_size</code>（上传限制）。</li>
+    <li><code>gzip on</code> 压缩文本。</li>
+    <li><code>expires</code> 给静态资源加缓存头。</li>
+    <li>开启 <code>keepalive</code> 复用后端连接。</li>
   </ul>
 
-  <h2 id="s9">9. 限流与安全</h2>
-  <pre><code>limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;   # 每 IP 10 次/秒
-location /api/ { limit_req zone=api burst=20 nodelay; }       # 令牌桶+突发
-limit_conn_zone $binary_remote_addr zone=conn:10m;
-limit_conn conn 50;                                           # 单 IP 并发连接</code></pre>
-  <div class="box ok"><span class="bt">TLS：</span>证书与加固见 <a href="https.html">HTTPS</a>（HSTS、强套件）。</div>
+  <h2 id="s8">8. 与部署</h2>
+  <p>典型链路：域名 → Nginx（HTTPS + 反代） → 后端服务（<a href="docker.html">Docker</a> 容器，用 <a href="pm2.html">PM2</a> 或 <a href="systemd.html">systemd</a> 守护）。</p>
 
-  <h2 id="s10">10. 可观测</h2>
-  <ul>
-    <li><code>access_log</code> 自定义格式（含 <code>$upstream_response_time</code> 定位慢后端）。</li>
-    <li><code>stub_status</code> 暴露连接/请求计数，接 Prometheus。</li>
-    <li>改完必 <code>nginx -t</code> 再 <code>reload</code>。</li>
-  </ul>
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 长连接超时：</span>WebSocket/流式要配 <code>proxy_read_timeout</code> 与 Upgrade 头，否则被断。</div>
+  <div class="box warn"><span class="bt">坑 2 403 权限：</span>root 目录的读权限与 SELinux/用户要对。</div>
+  <div class="box warn"><span class="bt">坑 3 配置错未测：</span>改完先 <code>nginx -t</code> 再 reload，避免全站挂。</div>
 
-  <h2 id="s11">11. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>不 <code>nginx -t</code> 就 reload，配置错导致 502；先测再载。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>proxy_pass 路径错（有无斜杠）致后端 404。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>没带 Host/X-Real-IP，后端拿不到真实域名与客户端 IP。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>WebSocket/SSE 缺 Upgrade 或 buffering 未关，长连接异常。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>防火墙未放行 80/443，外部访问不了。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>超时太短，AI 流式/大文件上传被掐断。</div>
-
-  <h2 id="s12">12. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能装 Nginx、配站点、反代</td></tr>
-    <tr><td>初级</td><td>会负载均衡、静态缓存、WS/SSE</td></tr>
-    <tr><td>中级</td><td>性能调优、限流、TLS 加固</td></tr>
-    <tr><td>资深</td><td>可观测体系、灰度/AB、高可用架构</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 反代一个 Node 服务并验证路径 ② 配 upstream 做负载均衡 ③ 给 /static 加 30 天缓存 ④ 配 WS Upgrade 与 SSE buffering off ⑤ 加 limit_req 限流 ⑥ 用 <code>nginx -t</code>+<code>access_log</code> 排查一次 502。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 Nginx 既当入口又当盾牌，能从架构层做转发、均衡、缓存、限流与可观测——这是资深后端做高可用上线的标配。</div>
+  <h2 id="s10">10. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://nginx.org/en/docs" target="_blank" rel="noopener">nginx.org</a>。</li>
+    <li>配合 <a href="docker.html">Docker</a>、<a href="https.html">HTTPS</a>、<a href="pm2.html">PM2</a>。</li>
+    <li>练：用 Nginx 反代一个本地 Node 服务并加静态托管。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能用反代/负载均衡设计可扩展部署，正确处理长连接与缓存，并把 TLS 终止统一收在 Nginx 层。</div>
 </main>
 </div>
 <script>

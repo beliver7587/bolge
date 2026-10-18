@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, scale=1.0">
-<title>Redis · 从小白到资深后端</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redis · 从小白到内存缓存</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,127 +15,89 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Redis<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 数据结构</a>
-  <a href="#s4">4. 持久化</a>
-  <a href="#s5">5. 内存与淘汰</a>
-  <a href="#s6">6. 缓存与一致性</a>
-  <a href="#s7">7. 三大经典问题</a>
-  <a href="#s8">8. 分布式锁</a>
-  <a href="#s9">9. 发布订阅/Stream</a>
-  <a href="#s10">10. 高可用</a>
-  <a href="#s11">11. 性能</a>
-  <a href="#s12">12. 常见坑</a>
-  <a href="#s13">13. 调试</a>
-  <a href="#s14">14. 成长路线</a>
+  <div class="tbrand">Redis<small>从小白到内存缓存</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 数据类型</a>
+  <a href="#s4">4. 缓存模式</a>
+  <a href="#s5">5. 过期与淘汰</a>
+  <a href="#s6">6. 持久化</a>
+  <a href="#s7">7. 与 MySQL</a>
+  <a href="#s8">8. 其他用途</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Redis：从小白到资深后端</h1>
-  <p class="tsub">Redis 是内存中的<strong>键值数据库</strong>，读写微秒级，常做缓存、会话、限流、排行榜、轻量队列。本教程讲透<strong>数据结构选型、持久化、缓存三件套（雪崩/穿透/击穿）、分布式锁、高可用集群与性能陷阱</strong>——这是资深后端做高并发系统的必备。</p>
+  <h1>Redis：从小白到内存缓存</h1>
+  <p class="tsub"><a href="redis.html">Redis</a> 是内存键值数据库，读写极快，常用作缓存、会话、排行榜。简历工坊用它在 <a href="mysql.html">MySQL</a> 前扛热点流量。本教程讲清数据类型、缓存模式与三大坑（击穿/穿透/雪崩）。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>相比 <a href="mysql.html">MySQL</a> 落盘、适合业务主数据，Redis 把数据放内存、访问极快，适合“要快”或“临时”的数据：缓存、计数、排行榜、Session、限流。</p>
-  <div class="box"><span class="bt">一句话：</span>把慢的 DB 查询结果暂存到 Redis，下次命中缓存，系统快几十倍——但它是缓存/加速层，不是主存储。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>Redis 把数据放内存，单线程处理命令，因此极快（十万级 QPS）。它不只是缓存，还是数据结构服务器。</p>
+  <div class="box"><span class="bt">一句话：</span>Redis = 内存 KV + 丰富数据结构 + 持久化可选。快，是它的最大卖点。</div>
 
-  <h2 id="s2">2. 工程化起步</h2>
-  <pre><code>docker run -d --name redis -p 6379:6379 redis:7
-redis-cli -h 127.0.0.1 -p 6379        # 连上操作</code></pre>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>redis-cli
+SET name "王越" EX 60      # 存，60 秒过期
+GET name
+DEL name</code></pre>
+  <p>生产用 <a href="docker.html">Docker</a> 起，配密码与持久化，客户端用连接池。</p>
 
-  <h2 id="s3">3. 数据结构</h2>
+  <h2 id="s3">3. 数据类型</h2>
   <table>
-    <tr><th>类型</th><th>典型用途</th></tr>
-    <tr><td>String</td><td>缓存值、计数器（INCR）、分布式锁</td></tr>
-    <tr><td>Hash</td><td>对象（用户资料），部分更新友好</td></tr>
-    <tr><td>List</td><td>队列、最新 N 条</td></tr>
-    <tr><td>Set / ZSet</td><td>去重 / 排行榜（按分排序）</td></tr>
-    <tr><td>Stream</td><td>消息队列（带消费组）</td></tr>
-    <tr><td>Bitmap / HyperLogLog</td><td>签到位图 / UV 去重估算</td></tr>
+    <tr><th>类型</th><th>用途</th></tr>
+    <tr><td>String</td><td>缓存值、计数器（INCR）</td></tr>
+    <tr><td>Hash</td><td>对象属性（用户信息）</td></tr>
+    <tr><td>List</td><td>队列、最新列表</td></tr>
+    <tr><td>Set/ZSet</td><td>去重、排行榜（ZSet 有序）</td></tr>
   </table>
-  <div class="box ok"><span class="bt">选型：</span>排行榜用 ZSet（<code>ZADD/ZRANGE</code>）；UV 估算用 HLL（省内存）；签到用 Bitmap。</div>
 
-  <h2 id="s4">4. 持久化</h2>
+  <h2 id="s4">4. 缓存模式</h2>
+  <pre><code>// 读：缓存优先
+const hit = await redis.get(key);
+if (!hit) { const v = await db.query(); redis.set(key, v, 'EX', 60); }</code></pre>
   <ul>
-    <li><b>RDB</b>：定时快照，恢复快、文件小，但可能丢最近数据（两次快照间）。</li>
-    <li><b>AOF</b>：记每条写命令，丢数据少，但文件大、恢复慢。</li>
-    <li>生产常用<strong>混合持久化</strong>：RDB 打底 + AOF 增量，兼顾速度与安全性。</li>
-  </ul>
-  <div class="box warn"><span class="bt">别把 Redis 当主库：</span>若只当缓存、关持久化也可；但若靠它存“不能丢”的数据，必须开持久化并确认。</div>
-
-  <h2 id="s5">5. 内存与淘汰</h2>
-  <pre><code>maxmemory 2gb
-maxmemory-policy allkeys-lru     # 内存满时淘汰最近最少用</code></pre>
-  <ul>
-    <li>策略：<code>noeviction</code>（写报错）/ <code>allkeys-lru</code>（全量 LRU）/ <code>volatile-lru</code>（仅过期键）/ <code>lfu</code>（最不常使用）。</li>
-    <li>不设会吃光内存被 OOM 杀掉——务必配 maxmemory。</li>
+    <li><b>Cache-Aside</b>：应用自己管读写缓存（最常用）。</li>
+    <li>写时更新数据库后删缓存（或更新），保持最终一致。</li>
   </ul>
 
-  <h2 id="s6">6. 缓存与一致性</h2>
-  <p><strong>Cache Aside（旁路缓存）</strong>是主流：</p>
-  <pre><code>// 读：先缓存，未命中查 DB 再写回
-// 写：先更新 DB，再删除缓存（不是更新缓存）
-await db.update(...);     // 1. 改主数据
-await r.del('user:'+id);  // 2. 删缓存，下次读自然回填</code></pre>
-  <div class="box warn"><span class="bt">为什么删而非更新缓存：</span>避免并发下“先更新缓存后更新 DB”导致脏数据；删缓存 + 回源更简单可靠（注意罕见的“删缓存失败”需重试/延迟双删）。</div>
-
-  <h2 id="s7">7. 三大经典问题</h2>
+  <h2 id="s5">5. 过期与淘汰</h2>
   <ul>
-    <li><b>缓存雪崩</b>：大量 key 同时过期 → 请求全压 DB。对策：过期时间加随机抖动、熔断降级。</li>
-    <li><b>缓存穿透</b>：查不存在的数据，缓存永不命中，直打 DB。对策：缓存空值、布隆过滤器拦截。</li>
-    <li><b>缓存击穿</b>：热点 key 失效瞬间高并发打 DB。对策：互斥重建（只让一个请求回源）、逻辑过期。</li>
+    <li>过期：<code>EXPIRE</code> 设 TTL，到点删除（惰性 + 定期删）。</li>
+    <li>淘汰：内存满时按策略（LRU/LFU）清键。</li>
   </ul>
 
-  <h2 id="s8">8. 分布式锁</h2>
-  <pre><code>// 原子加锁：不存在才设，并带过期（防死锁）
-const ok = await r.set('lock:order', token, 'NX', 'PX', 30000);
-if (ok) { try { ... } finally { if (await r.get('lock:order')===token) r.del('lock:order'); } }
-// 释放要校验 token，防误删别人的锁；长任务用看门狗续期</code></pre>
-  <div class="box warn"><span class="bt">Redlock 争议：</span>跨多实例的 Redlock 在分布式时钟/网络异常下并非绝对安全；强一致锁考虑 ZooKeeper/etcd，普通防重可用单机 SET NX。</div>
-
-  <h2 id="s9">9. 发布订阅 / Stream</h2>
+  <h2 id="s6">6. 持久化</h2>
   <ul>
-    <li><code>PUBSUB</code> 轻量广播，但消息不持久、离线丢失。</li>
-    <li><code>Stream</code> + 消费组：可持久、可重放、能多个消费者分摊——更像正经消息队列（替代部分 Kafka 轻量场景）。</li>
+    <li>RDB：定时快照，恢复快但有丢失窗口。</li>
+    <li>AOF：记录每条写命令，更持久但文件大。</li>
+    <li>缓存场景常关持久化（丢了能从 DB 重建）。</li>
   </ul>
 
-  <h2 id="s10">10. 高可用</h2>
+  <h2 id="s7">7. 与 MySQL</h2>
+  <p>典型分层：请求先查 <a href="redis.html">Redis</a>，命中即返；未命中查 <a href="mysql.html">MySQL</a> 并回填。热点数据放 Redis 扛量，DB 兜底。</p>
+
+  <h2 id="s8">8. 其他用途</h2>
   <ul>
-    <li><b>主从复制</b>：主写从读，从可故障切换（哨兵 Sentinel 自动选主）。</li>
-    <li><b>Cluster</b>：数据分片（16384 槽）到多节点，水平扩展；客户端按槽路由。</li>
+    <li><b>会话存储</b>：多实例共享登录态。</li>
+    <li><b>排行榜</b>：ZSet 按分数排序。</li>
+    <li><b>限流</b>：INCR + EXPIRE 做简单计数限流。</li>
+    <li><b>消息队列</b>：List/BRPOP 简易队列（严肃场景用专业 MQ）。</li>
   </ul>
 
-  <h2 id="s11">11. 性能</h2>
-  <ul>
-    <li>Redis 是<strong>单线程处理命令</strong>（6.0 后 IO 多线程），所以命令要快——避免 <code>KEYS *</code>、大事务。</li>
-    <li><b>Pipelining</b>：批量发命令省网络往返；<b>Lua 脚本</b>把多命令打包原子执行（如限流 + 记录）。</li>
-  </ul>
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 缓存击穿：</span>热点 key 过期瞬间大量请求打到 DB；用互斥锁或逻辑过期重建。</div>
+  <div class="box warn"><span class="bt">坑 2 缓存穿透：</span>查不存在的数据，缓存永远不命中；用空值缓存或布隆过滤器。</div>
+  <div class="box warn"><span class="bt">坑 3 缓存雪崩：</span>大量 key 同时过期；给 TTL 加随机抖动分散。</div>
+  <div class="box warn"><span class="bt">坑 4 大 key：</span>超大 Hash/List 阻塞单线程；拆分或改用分片。</div>
 
-  <h2 id="s12">12. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>当主库又没持久化 → 重启丢数据。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>bigkey（大 Hash/List）删除阻塞 → 用渐进删除/UNLINK。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>热 key 集中单节点 → 本地缓存/多副本。</div>
-  <div class="box warn"><span class="bt">坑 4：</span><code>KEYS *</code> 阻塞服务 → 用 <code>SCAN</code> 游标迭代。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>缓存与 DB 不一致 → 用 Cache Aside + 删缓存。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>不设 maxmemory → 内存爆 OOM。</div>
-
-  <h2 id="s13">13. 调试</h2>
-  <ul>
-    <li><code>SLOWLOG</code> 看慢命令；<code>INFO memory</code> 看内存；<code>MONITOR</code> 看实时命令（生产慎用）。</li>
-    <li><code>redis-cli --bigkeys</code> 找 bigkey。</li>
-  </ul>
-
-  <h2 id="s14">14. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>会用基本命令/类型、做缓存</td></tr>
-    <tr><td>初级</td><td>懂缓存模式、过期策略</td></tr>
-    <tr><td>中级</td><td>解决雪崩/穿透/击穿、分布式锁</td></tr>
-    <tr><td>资深</td><td>高可用集群、性能调优、容量规划</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 ZSet 做排行榜 ② 实现 Cache Aside 并演示删缓存 ③ 复现并解决缓存穿透（布隆过滤器）④ 用 SET NX 写分布式锁并防误删 ⑤ 用 SCAN 替代 KEYS 找 key。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>能设计缓存一致性、扛住高并发三大问题、用 Redis 做锁与队列——这是资深后端做高性能系统的关键能力。</div>
+  <h2 id="s10">10. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://redis.io/docs" target="_blank" rel="noopener">Redis 文档</a>。</li>
+    <li>配合 <a href="mysql.html">MySQL</a>、<a href="springboot.html">Spring Boot</a>。</li>
+    <li>练：用 Redis 给接口加缓存，并模拟击穿/穿透做防护。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能设计缓存分层与一致性策略，并提前布防击穿/穿透/雪崩三大坑，而不是线上炸了才补。</div>
 </main>
 </div>
 <script>

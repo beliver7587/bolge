@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>better-sqlite3 · 从小白到资深后端</title>
+<title>better-sqlite3 · 从小白到嵌入式数据库</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,122 +15,70 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">better-sqlite3<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 打开与模式</a>
-  <a href="#s4">4. 建表与类型</a>
-  <a href="#s5">5. 预编译语句</a>
-  <a href="#s6">6. 事务</a>
-  <a href="#s7">7. 查询</a>
-  <a href="#s8">8. 性能与并发</a>
-  <a href="#s9">9. 迁移</a>
-  <a href="#s10">10. 索引优化</a>
-  <a href="#s11">11. 常见坑</a>
-  <a href="#s12">12. 调试</a>
-  <a href="#s13">13. 成长路线</a>
+  <div class="tbrand">better-sqlite3<small>从小白到嵌入式数据库</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 同步 API</a>
+  <a href="#s4">4. 增删改查</a>
+  <a href="#s5">5. 事务</a>
+  <a href="#s6">6. 预处理</a>
+  <a href="#s7">7. 与 MySQL</a>
+  <a href="#s8">8. 常见坑</a>
+  <a href="#s9">9. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>better-sqlite3：从小白到资深后端</h1>
-  <p class="tsub">better-sqlite3 是 <a href="nodejs.html">Node.js</a> 上最快的<strong>嵌入式 SQLite</strong> 封装，最大特点是<strong>同步 API</strong> 与零配置单文件数据库（如 Memora 的生产存储就用它）。本教程讲透<strong>同步模型、预编译语句、事务、WAL 并发、跨平台原生模块与性能边界</strong>——何时用、怎么用、哪里会踩雷。</p>
+  <h1>better-sqlite3：从小白到嵌入式数据库</h1>
+  <p class="tsub"><a href="bettersqlite.html">better-sqlite3</a> 是 <a href="nodejs.html">Node.js</a> 上最快的 SQLite 库，<strong>同步 API</strong> 但底层用事务批量写，简单又高性能。它适合本地/嵌入式存储，是 <a href="mysql.html">MySQL</a> 之外轻量级场景的好选择。本教程讲清它为什么用同步、以及和 MySQL 的取舍。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>相比 <a href="mysql.html">MySQL</a> 要起服务、配账号、运维，SQLite 是个<strong>文件</strong>——开箱即用、零依赖、事务完备（ACID）。better-sqlite3 在此基础上做到“同步调用、原生速度”。</p>
-  <div class="box"><span class="bt">一句话：</span>要“一个文件搞定持久化、又能扛事务”的单机/中小流量场景，SQLite 是首选；高并发写/需要网络共享则上 MySQL。</div>
-  <div class="box ok"><span class="bt">适合：</span>CLI/桌面应用、个人项目、Demo、边缘/Serverless 本地存储、单写者业务。<br><span class="box warn">不适合：</span>高并发写（>数百 TPS 写）、多机共享数据。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>SQLite 是单文件嵌入式数据库；better-sqlite3 是它的 Node 绑定，主打同步、零回调、事务友好。</p>
+  <div class="box"><span class="bt">一句话：</span>better-sqlite3 = 嵌入式 SQLite + 同步 API。小、快、零依赖服务。</div>
+  <div class="box ok"><span class="bt">适合：</span>本地应用、CLI、原型、单实例小服务。<span class="box warn">不适合：</span>高并发多写/需要网络访问的客户端（用 <a href="mysql.html">MySQL</a>）。</div>
 
-  <h2 id="s2">2. 工程化起步</h2>
-  <pre><code>npm install better-sqlite3</code></pre>
-  <p>它是<strong>原生模块（C++ 编译）</strong>：</p>
-  <ul>
-    <li>开发机需编译环境（Windows 装 VS Build Tools / 已带 python+node-gyp）。</li>
-    <li>通常能拿到预编译二进制；CI 上若拉不到，用 <code>npm rebuild better-sqlite3</code>。</li>
-    <li><b>跨平台部署陷阱</b>：在 Mac 装好、部署到 Linux 要重新编译——务必在目标平台 <code>npm install --ignore-scripts</code> 后再 <code>npm rebuild</code>，或构建镜像里装。</li>
-  </ul>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>npm i better-sqlite3
+const Database = require('better-sqlite3');
+const db = new Database('app.db');   // 一个文件就是一个库</code></pre>
 
-  <h2 id="s3">3. 打开与模式</h2>
-  <pre><code>import Database from 'better-sqlite3';
-const db = new Database('/abs/path/app.db');   // 用绝对路径，避免工作目录漂移
-db.pragma('journal_mode = WAL');              // 开 WAL：读写可并发、崩溃更安全
-db.pragma('foreign_keys = ON');               // 开外键约束</code></pre>
-  <ul>
-    <li>内存库 <code>new Database(':memory:')</code> 用于测试/临时计算。</li>
-    <li>只读打开 <code>new Database('app.db', { readonly: true })</code> 防误写。</li>
-  </ul>
+  <h2 id="s3">3. 同步 API</h2>
+  <pre><code>const row = db.prepare('SELECT * FROM user WHERE id=?').get(1);</code></pre>
+  <div class="box ok"><span class="bt">为什么同步还快：</span>SQLite 本身毫秒级，同步反而免去异步开销；用事务批量写性能极高。</div>
 
-  <h2 id="s4">4. 建表与类型</h2>
-  <pre><code>db.exec(`
-  CREATE TABLE IF NOT EXISTS user (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    age INTEGER
-  );`);</code></pre>
-  <div class="box ok"><span class="bt">SQLite 弱类型：</span>列声明是“类型亲和”，理论上可存任意类型；但请按语义约束，避免脏数据。主键 INTEGER 自增走 rowid 优化，最快。</div>
+  <h2 id="s4">4. 增删改查</h2>
+  <pre><code>db.prepare('INSERT INTO user(name) VALUES(?)').run('王越');
+const list = db.prepare('SELECT * FROM user').all();</code></pre>
 
-  <h2 id="s5">5. 预编译语句</h2>
-  <p>用 <code>prepare</code> 编译一次、多次执行——<strong>既快又防注入</strong>：</p>
-  <pre><code>const insert = db.prepare('INSERT INTO user(name, age) VALUES (?, ?)');
-insert.run('小王', 18);                 // 参数绑定，杜绝 SQL 拼接注入
-const one = db.prepare('SELECT * FROM user WHERE id = ?').get(1);</code></pre>
-
-  <h2 id="s6">6. 事务</h2>
-  <pre><code>const insertMany = db.transaction((names) =&gt; {
-  for (const n of names) insert.run(n);   // 整批原子、且比逐条快很多
+  <h2 id="s5">5. 事务</h2>
+  <pre><code>const insertMany = db.transaction((rows) =&gt; {
+  for (const r of rows) db.prepare('INSERT INTO user VALUES(?)').run(r);
 });
-insertMany(['a', 'b', 'c']);
-// 出错自动回滚；可 db.transaction(...).deferred()/immediate() 控制锁时机</code></pre>
-  <div class="box ok"><span class="bt">资深：</span>批量写务必包进 transaction——不仅原子，还把多次 fsync 合并，性能翻倍。</div>
+insertMany([1,2,3]);   // 一个事务，原子且快</code></pre>
+  <div class="box ok"><span class="bt">资深：</span>批量写务必包事务，否则逐条 commit 极慢。</div>
 
-  <h2 id="s7">7. 查询</h2>
-  <ul>
-    <li><code>.run()</code> 写操作，返回 <code>{changes, lastInsertRowid}</code>。</li>
-    <li><code>.get()</code> 取单行、<code>.all()</code> 取全部、<code>.iterate()</code> 流式遍历（大结果集不爆内存）。</li>
-  </ul>
+  <h2 id="s6">6. 预处理</h2>
+  <p><code>prepare</code> 编译一次、多次执行，防 SQL 注入又提性能。参数化查询（<code>?</code>）天然免疫注入。</p>
 
-  <h2 id="s8">8. 性能与并发</h2>
-  <div class="box warn"><span class="bt">同步阻塞是核心约束：</span>better-sqlite3 是同步 API，一次写会<strong>阻塞 Node 事件循环</strong>。注意：① 单条都快（微秒级），别在请求里做超大事务；② 真正并发写由 SQLite 的文件锁串行化——本质“单写者”。</div>
-  <ul>
-    <li><b>WAL 模式</b>：读不阻塞写、写不阻塞读，提升并发读；但写仍串行。</li>
-    <li>提升吞吐：用事务批量、合理索引、避免 <code>SELECT *</code> 大行。</li>
-  </ul>
-
-  <h2 id="s9">9. 迁移</h2>
-  <p>自建迁移表记录版本，按顺序执行 up 脚本：</p>
-  <pre><code>db.exec(`CREATE TABLE IF NOT EXISTS _migrations (v INTEGER)`);
-const [{ v = 0 } = {}] = db.prepare('SELECT v FROM _migrations ORDER BY v DESC LIMIT 1').all();
-// if (v &lt; 2) { db.exec(...); db.prepare('INSERT INTO _migrations VALUES (2)').run(); }</code></pre>
-
-  <h2 id="s10">10. 索引优化</h2>
-  <ul>
-    <li>常查列加 <code>CREATE INDEX</code>；用 <code>EXPLAIN QUERY PLAN</code> 看是否走索引。</li>
-    <li>SQLite 也怕全表扫描；联合索引同样遵循“最左前缀”。</li>
-  </ul>
-
-  <h2 id="s11">11. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>同步写阻塞事件循环 → 大事务拆小、批量进事务。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>SQL 拼接 → 注入；用 <code>?</code> 参数。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>多进程写同文件互相锁 → 单写者或用 WAL + 应用层排队。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>相对路径导致工作目录不同生成多个 db → 用绝对路径。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>跨平台部署原生模块没重编译 → 部署机 rebuild。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>大表无索引 → 查询慢；用 EXPLAIN QUERY PLAN 查。</div>
-
-  <h2 id="s12">12. 调试</h2>
-  <ul>
-    <li>用 <code>sqlite3 app.db</code> CLI 直接查；<code>PRAGMA integrity_check</code> 查损坏。</li>
-    <li><code>PRAGMA table_info(user)</code> 看表结构。</li>
-  </ul>
-
-  <h2 id="s13">13. 成长路线</h2>
+  <h2 id="s7">7. 与 MySQL</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能建表、用预编译语句 CRUD</td></tr>
-    <tr><td>初级</td><td>会事务、参数绑定、迁移</td></tr>
-    <tr><td>中级</td><td>懂 WAL 并发、同步阻塞边界、索引</td></tr>
-    <tr><td>资深</td><td>跨平台部署、容量与备份、与 MySQL 选型</td></tr>
+    <tr><th></th><th>better-sqlite3</th><th>MySQL</th></tr>
+    <tr><td>部署</td><td>单文件，无服务</td><td>独立服务</td></tr>
+    <tr><td>并发写</td><td>单进程内</td><td>多连接</td></tr>
+    <tr><td>扩展</td><td>受限</td><td>主从/集群</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用事务批量插 1 万行并计时 ② 用 EXPLAIN QUERY PLAN 对比有/无索引 ③ 配 WAL 后开两进程读+写 ④ 写个迁移脚本加列 ⑤ 在 Linux 部署机 rebuild 原生模块。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解同步嵌入式 DB 的能力边界与部署陷阱，能在“轻量单机存储”与“大型服务端 DB”间正确选型——这是资深对存储的务实判断。</div>
+
+  <h2 id="s8">8. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 文件锁：</span>多进程同时写会锁，多实例场景慎用或加 WAL 模式。</div>
+  <div class="box warn"><span class="bt">坑 2 大库进仓库：</span>.db 文件别提交 Git，加 .gitignore。</div>
+  <div class="box warn"><span class="bt">坑 3 同步阻塞：</span>单次大查询会阻塞事件循环，拆小批量。</div>
+
+  <h2 id="s9">9. 资源与路线</h2>
+  <ol>
+    <li>GitHub <a href="https://github.com/WiseLibs/better-sqlite3" target="_blank" rel="noopener">better-sqlite3</a>。</li>
+    <li>配合 <a href="nodejs.html">Node</a>、作为 <a href="mysql.html">MySQL</a> 的本地替身。</li>
+    <li>练：用 better-sqlite3 做一个本地任务小应用。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能判断“单文件 SQLite 还是网络 MySQL”，并用事务 + 预处理把嵌入式存储用出性能。</div>
 </main>
 </div>
 <script>

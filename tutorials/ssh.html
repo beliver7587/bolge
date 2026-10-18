@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SSH · 从小白到资深</title>
+<title>SSH · 从小白到服务器登录</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,89 +15,62 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">SSH<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 协议与密钥</a>
-  <a href="#s3">3. 密钥认证</a>
-  <a href="#s4">4. 连接优化</a>
-  <a href="#s5">5. 文件传输</a>
+  <div class="tbrand">SSH<small>从小白到服务器登录</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 密钥登录</a>
+  <a href="#s4">4. 传文件</a>
+  <a href="#s5">5. 隧道</a>
   <a href="#s6">6. 安全加固</a>
-  <a href="#s7">7. 跳板与隧道</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 成长路线</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>SSH：从小白到资深</h1>
-  <p class="tsub"><strong>SSH（Secure Shell）</strong> 是加密的远程登录与命令执行协议（默认 22 端口）。它是运维的“远程遥控器”——登录服务器、传文件、做隧道。本教程讲透<strong>协议分层、密钥认证原理、连接优化、文件同步、安全加固、跳板机与端口转发</strong>——资深后端掌控服务器的必备能力。</p>
+  <h1>SSH：从小白到服务器登录</h1>
+  <p class="tsub"><a href="ssh.html">SSH</a> 是安全的远程登录协议，让你在本地操控远程服务器、传文件。部署 <a href="docker.html">Docker</a>、调 <a href="nginx.html">Nginx</a>、看日志都靠它。本教程讲清密钥登录与加固——这是上云的第一步。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>Telnet/rsh 明文传输密码；SSH 用加密通道保证机密性与完整性，并支持公钥认证免密登录、端口转发等。</p>
-  <div class="box"><span class="bt">协议分层：</span>传输层（加密/完整性）→ 认证层（密码/公钥）→ 连接层（多路复用通道，承载 shell/转发）。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>SSH 在客户端与服务器间建立加密通道，替代不安全的 telnet/明文密码。</p>
+  <div class="box"><span class="bt">一句话：</span>SSH = 加密的远程终端。登录、执行命令、传文件都走它。</div>
 
-  <h2 id="s2">2. 协议与密钥</h2>
-  <ul>
-    <li><b>对称加密</b>：握手后用协商出的会话密钥加密数据（AES 等）。</li>
-    <li><b>非对称</b>：服务器有 host key，首次连接指纹需你确认（防中间人）；客户端用自己密钥做认证。</li>
-    <li><b>已知主机</b>：<code>~/.ssh/known_hosts</code> 记录服务器指纹，变更会报警（可能重装/被劫持）。</li>
-  </ul>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>ssh user@1.2.3.4
+ssh -p 2222 user@host      # 非默认端口</code></pre>
 
-  <h2 id="s3">3. 密钥认证</h2>
-  <p>公钥放服务器、私钥留本地，登录时服务器用公钥挑战、你用私钥应答，无需密码且抗窃听。</p>
-  <pre><code>ssh-keygen -t ed25519 -C "me@host"      # 推荐 ed25519；RSA 至少 4096
-ssh-copy-id user@IP                     # 公钥追加到服务器 authorized_keys
-# 或手动：cat ~/.ssh/id_ed25519.pub | ssh user@IP 'cat &gt;&gt; ~/.ssh/authorized_keys'</code></pre>
-  <div class="box ok"><span class="bt">为何 ed25519 优于 RSA：</span>更短、更快、更安全（椭圆曲线）；老旧设备才需 RSA。</div>
+  <h2 id="s3">3. 密钥登录</h2>
+  <pre><code>ssh-keygen -t ed25519        # 生成密钥对
+ssh-copy-id user@host         # 把公钥传服务器</code></pre>
+  <div class="box ok"><span class="bt">务必：</span>用密钥替代密码登录，既安全又免输密码。私钥本地保管，别泄露。</div>
 
-  <h2 id="s4">4. 连接优化</h2>
-  <p>把常用配置写进 <code>~/.ssh/config</code>：别名、复用连接、保活，免重复输 IP/参数。</p>
-  <pre><code>Host my
-  HostName 49.235.163.168
-  User ubuntu
-  Port 22
-  ServerAliveInterval 60      # 防空闲断开
-  ControlMaster auto          # 连接复用，第二次秒连
-  ControlPath ~/.ssh/%r@%h:%p</code></pre>
-  <p>之后直接 <code>ssh my</code>。</p>
+  <h2 id="s4">4. 传文件</h2>
+  <pre><code>scp file.txt user@host:/path/
+scp -r ./dist user@host:/var/www/</code></pre>
+  <p>目录传用 <code>-r</code>；大文件可用 <code>rsync</code> 增量。</p>
 
-  <h2 id="s5">5. 文件传输</h2>
-  <pre><code>scp ./app.js my:/home/ubuntu/          # 本地→服务器
-scp my:/var/log/nginx/access.log ./     # 服务器→本地
-rsync -avz --delete ./dist/ my:/var/www/   # 增量同步，大目录首选</code></pre>
-  <div class="box ok"><span class="bt">rsync 优势：</span>只传差异块、可断点续、保留权限，部署更新远比 scp 高效。</div>
+  <h2 id="s5">5. 隧道</h2>
+  <pre><code>ssh -L 8080:localhost:3000 user@host   # 本地 8080 转发到远端 3000</code></pre>
+  <p>把远端服务映射到本地调试，不必对外暴露端口。</p>
 
   <h2 id="s6">6. 安全加固</h2>
   <ul>
-    <li><b>禁密码/root 登录</b>：<code>/etc/ssh/sshd_config</code> 设 <code>PasswordAuthentication no</code>、<code>PermitRootLogin no</code>。</li>
-    <li><b>改端口</b>：降低暴力扫描（非真正安全，但减噪）。</li>
-    <li><b>fail2ban</b>：多次失败封 IP，防爆破。</li>
-    <li><b>私钥保护</b>：<code>chmod 600 ~/.ssh/id_ed25519</code>；服务器 <code>authorized_keys</code> 600、<code>.ssh</code> 700。</li>
+    <li>禁用密码登录、只用密钥（<code>PasswordAuthentication no</code>）。</li>
+    <li>改默认 22 端口，降低被扫。</li>
+    <li>用 <a href="systemd.html">systemd</a> 管 sshd，配合 fail2ban 防爆破。</li>
   </ul>
 
-  <h2 id="s7">7. 跳板与隧道</h2>
-  <pre><code>ssh -J bastion my                      # ProxyJump：经跳板机访问内网
-ssh -L 8080:127.0.0.1:80 my           # 本地转发：把远端 80 映射到本地 8080
-ssh -R 9000:127.0.0.1:9000 my         # 远程转发：把本地服务暴露到远端
-ssh -D 1080 my                        # 动态转发：本地 SOCKS 代理</code></pre>
-  <div class="box ok"><span class="bt">实用：</span>本地转发可安全访问服务器上只绑 127.0.0.1 的数据库/管理后台（如 n8n、Redis）。</div>
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 权限过开：</span><code>~/.ssh</code> 权限不对会导致密钥失效，目录 700、文件 600。</div>
+  <div class="box warn"><span class="bt">坑 2 改端口后忘开防火墙：</span>登录被拒，需先在云控制台放行。</div>
+  <div class="box warn"><span class="bt">坑 3 known_hosts 冲突：</span>服务器重装后指纹变了，删对应行再连。</div>
 
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>文件权限太开放导致密钥不生效；按上面 600/700 修正。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>22 端口被安全组/防火墙拦截 → 云控制台放行。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>root 直登被禁 → 用普通用户 + sudo。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>私钥提交 git 泄露 → 加入 .gitignore，泄露即换密钥。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>known_hosts 变更报警 → 确认是重装还是被劫持，别盲目 yes。</div>
-
-  <h2 id="s9">9. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>会生成密钥、免密登录、scp 传文件</td></tr>
-    <tr><td>初级</td><td>ssh config 别名/复用、rsync 同步</td></tr>
-    <tr><td>中级</td><td>sshd 加固、fail2ban、端口转发</td></tr>
-    <tr><td>资深</td><td>跳板机/ProxyJump、密钥治理、bastion 架构</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 ed25519 免密登录 ② 写 ssh config 别名+复用 ③ rsync 部署一次 ④ 禁密码登录+fail2ban ⑤ 用 -L 安全访问远端数据库 ⑥ 用 -J 经跳板访问内网。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 SSH 不仅是登录，更是安全通道与隧道工具，能加固服务器、做文件同步与网络穿透——这是资深后端掌控基础设施的核心能力。</div>
+  <h2 id="s8">8. 资源与路线</h2>
+  <ol>
+    <li>OpenSSH 文档、各云厂商入门指南。</li>
+    <li>配合 <a href="systemd.html">systemd</a>、<a href="nginx.html">Nginx</a>、<a href="docker.html">Docker</a> 部署。</li>
+    <li>练：生成密钥、禁用密码登录、用 scp 部署一个静态站。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>用密钥 + 改端口 + 防爆破把 SSH 锁死，并熟练用隧道/rsync 做安全高效的运维。</div>
 </main>
 </div>
 <script>

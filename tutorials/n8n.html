@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>n8n · 从小白到资深</title>
+<title>n8n · 从小白到自动化工作流</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,101 +15,61 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">n8n<small>从小白到资深</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 部署</a>
-  <a href="#s3">3. 核心概念</a>
-  <a href="#s4">4. 触发器</a>
-  <a href="#s5">5. 常用节点</a>
-  <a href="#s6">6. 错误处理</a>
-  <a href="#s7">7. 凭据与成本</a>
-  <a href="#s8">8. 实战案例</a>
-  <a href="#s9">9. 何时不用</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 成长路线</a>
+  <div class="tbrand">n8n<small>从小白到自动化工作流</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 节点与连接</a>
+  <a href="#s4">4. 实战示例</a>
+  <a href="#s5">5. 与 AI</a>
+  <a href="#s6">6. 与运维</a>
+  <a href="#s7">7. 常见坑</a>
+  <a href="#s8">8. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>n8n：从小白到资深</h1>
-  <p class="tsub"><strong>n8n</strong> 是开源的可视化工作流自动化平台——拖拽节点把“触发→处理→动作”串成流水线，免写胶水代码，还能内嵌 <a href="llm.html">大模型</a> 节点。本教程讲透<strong>部署、JSON 数据流、触发器、常用节点、错误处理、凭据与成本控制，以及实战（每日热点推送企业微信）</strong>——把重复劳动交给自动化。</p>
+  <h1>n8n：从小白到自动化工作流</h1>
+  <p class="tsub"><a href="n8n.html">n8n</a> 是开源的可视化工作流自动化工具，拖节点连成流程，把“收到邮件→调接口→写库→发通知”这类重复活自动化。Memora 用它做流程编排。本教程讲清节点模型与实战。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>很多业务是“定时/事件 → 调接口 → 处理 → 通知”的胶水逻辑，纯写代码成本高、改起来慢。n8n 用可视化节点表达，非程序员也能改，且自带调度、重试、凭据管理。</p>
-  <div class="box"><span class="bt">对比：</span>Zapier/Make 是 SaaS（数据出公网、按次收费）；n8n 可自托管、数据不出内网、按执行节点计费免费。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>n8n 用“节点 + 连线”表达自动化流程，每个节点完成一步（触发器、HTTP、代码、数据库）。</p>
+  <div class="box"><span class="bt">一句话：</span>n8n = 拖拽式自动化。不用写胶水代码，可视化编排多系统协作。</div>
+  <div class="box ok"><span class="bt">适合：</span>跨系统数据同步、告警、定时任务、AI 流程。<span class="box warn">不适合：</span>超高性能/超复杂逻辑（用代码更可控）。</div>
 
-  <h2 id="s2">2. 部署</h2>
-  <pre><code>docker run -d --name n8n -p 5678:5678 \
-  -e N8N_SECURE_COOKIE=false \
-  -e N8N_BASIC_AUTH_ACTIVE=true -e N8N_BASIC_AUTH_USER=admin -e N8N_BASIC_AUTH_PASSWORD=xxx \
-  -v n8n_data:/home/node/.n8n \
-  n8nio/n8n</code></pre>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>docker run -it -p 5678:5678 n8nio/n8n    # Docker 起，浏览器开 5678</code></pre>
+
+  <h2 id="s3">3. 节点与连接</h2>
   <ul>
-    <li><b>数据持久化</b>：挂卷存 <code>.n8n</code>，否则容器删了工作流全没。</li>
-    <li><b>对外暴露</b>：经 <a href="nginx.html">Nginx</a> 反代 + <a href="https.html">HTTPS</a> + Basic Auth（Memora 即如此：<code>n8n.ai应用.wylab.asia</code>）。</li>
+    <li><b>触发器</b>：Schedule（定时）、Webhook（外部调用）。</li>
+    <li><b>动作</b>：HTTP Request、Function（写 JS）、数据库节点。</li>
+    <li>节点用连线传递数据（JSON），支持多分支。</li>
   </ul>
 
-  <h2 id="s3">3. 核心概念</h2>
-  <ul>
-    <li><b>节点</b>：一个动作（HTTP、函数、数据库、LLM）。</li>
-    <li><b>连接</b>：数据以 JSON items 在节点间流动；上节点输出即下节点输入。</li>
-    <li><b>表达式</b>：<code>{{ $json.field }}</code> 取上一步字段；<code>$node["x"].json.y</code> 取指定节点。</li>
-  </ul>
-  <pre><code>// Function 节点：规范输出为数组
-return [{ json: { msg: '你好 ' + $json.name } }];</code></pre>
+  <h2 id="s4">4. 实战示例</h2>
+  <pre><code>Schedule(每天9点) → HTTP(拉数据) → Function(清洗) → MySQL(入库) → Slack(通知)</code></pre>
+  <div class="box ok"><span class="bt">价值：</span>原本要写脚本 + 定时任务 + 监控，n8n 一个画布搞定，还能实时看执行流。</div>
 
-  <h2 id="s4">4. 触发器</h2>
+  <h2 id="s5">5. 与 AI</h2>
+  <p>n8n 内置 LangChain 节点：接 <a href="llm.html">LLM</a>、向量库做 RAG、用 <a href="functioncalling.html">Function Calling</a> 调工具，快速搭 AI Agent 流程。</p>
+
+  <h2 id="s6">6. 与运维</h2>
   <ul>
-    <li><b>Manual</b>：手动点跑，调试用。</li>
-    <li><b>Schedule / Cron</b>：定时（如每天 20:00）。</li>
-    <li><b>Webhook</b>：暴露 URL，外部 POST 即触发。</li>
-    <li><b>其他</b>：邮件、表单、数据库轮询等。</li>
+    <li>和 <a href="systemd.html">systemd</a>/<a href="docker.html">Docker</a> 部署，配反向代理（<a href="nginx.html">Nginx</a>）。</li>
+    <li>敏感凭据存 n8n 凭据库，别硬编码在节点里。</li>
   </ul>
 
-  <h2 id="s5">5. 常用节点</h2>
-  <ul>
-    <li><b>HTTP Request</b>：调任意 REST API（如 <a href="express.html">Express</a> 后端、新闻接口）。</li>
-    <li><b>Function / Code</b>：写 JS 处理/转换数据。</li>
-    <li><b>数据库节点</b>：MySQL/Postgres/Redis 直接读写。</li>
-    <li><b>AI 节点</b>：OpenAI/国产模型，做“收文本→大模型→存库”。</li>
-  </ul>
+  <h2 id="s7">7. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 数据量过大：</span>单节点内存装不下大批量，分批/流式处理。</div>
+  <div class="box warn"><span class="bt">坑 2 凭据泄露：</span>环境变量与凭据用 n8n 内置加密凭据，别明文。</div>
+  <div class="box warn"><span class="bt">坑 3 自托管升级：</span>数据目录要持久化（挂卷），否则升级丢流程。</div>
 
-  <h2 id="s6">6. 错误处理</h2>
-  <ul>
-    <li><b>Continue On Fail</b>：单节点失败不中断整条流。</li>
-    <li><b>错误分支</b>：用 IF/Error Trigger 节点做降级或告警。</li>
-    <li><b>重试</b>：节点设 Retry On Fail（指数退避），应对 429/5xx。</li>
-  </ul>
-
-  <h2 id="s7">7. 凭据与成本</h2>
-  <ul>
-    <li><b>凭据</b>：用 n8n Credentials 加密存储 API Key，绝不硬编码在节点表达式里。</li>
-    <li><b>执行数据</b>：可配置“存执行数据 N 天”便于调试，但占空间；生产可缩短或关闭。</li>
-    <li><b>成本</b>：循环/批量要设上限，避免产生海量执行把内存吃满。</li>
-  </ul>
-
-  <h2 id="s8">8. 实战案例</h2>
-  <div class="box ok"><span class="bt">Memora 每日热点推送：</span>Timer(每天20:00) → HTTP Request 调 <code>/api/hotnews/fetch</code> 抓新闻 → LLM 节点摘要 → HTTP Request 推企业微信 webhook。注意 n8n v2.8 发布模型：导入工作流仅 <code>active=1</code> 不够，必须把 <code>workflow_entity.activeVersionId</code> 设为 versionId 才会真正注册定时触发器。</div>
-
-  <h2 id="s9">9. 何时不用 n8n</h2>
-  <p>复杂分支逻辑、高性能流处理、需强类型/单测的场景，还是写代码更可控。n8n 适合“中等复杂度、常变更、非程序员也需改”的胶水自动化。</p>
-
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>节点数据格式不匹配（期望数组给对象）→ Function 节点用 <code>return [{json:{...}}]</code> 规范。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>Webhook 公网暴露无鉴权 → 经 Nginx + Basic Auth/HTTPS。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>循环产生海量执行吃满内存 → 设批量上限。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>凭据硬编码 → 用 Credentials 管理。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>定时没生效（v2.8 的 activeVersionId 坑）→ 检查触发器确实注册。</div>
-
-  <h2 id="s11">11. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>会拖节点连线、跑手动流</td></tr>
-    <tr><td>初级</td><td>Webhook/HTTP/AI 节点、表达式</td></tr>
-    <tr><td>中级</td><td>错误处理、凭据、定时生产</td></tr>
-    <tr><td>资深</td><td>成本控制、与代码/系统协同、可观测</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① Docker 自托管并挂卷 ② 做“定时拉接口→存表→发通知” ③ 用 AI 节点摘要 ④ 配错误重试与凭据 ⑤ Nginx+HTTPS 暴露 Webhook ⑥ 复现 Memora 每日热点推送。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解用可视化编排替代胶水代码，能设计可靠、安全、低成本的自动化流水线——这是资深后端做效率工程的利器。</div>
+  <h2 id="s8">8. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://docs.n8n.io" target="_blank" rel="noopener">docs.n8n.io</a>、模板库。</li>
+    <li>配合 <a href="docker.html">Docker</a>、<a href="llm.html">LLM</a>。</li>
+    <li>练：做一个“定时拉接口→入库→发通知”的工作流。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能用 n8n 把跨系统流程可视化落地，并把凭据/持久化/批量处理当成部署前提，而不是画完就跑。</div>
 </main>
 </div>
 <script>

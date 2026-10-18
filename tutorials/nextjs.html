@@ -18,179 +18,234 @@
   <div class="tbrand">Next.js<small>从小白到资深全栈</small></div>
   <a href="#s1">1. 它解决什么问题</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 渲染策略全景</a>
-  <a href="#s4">4. App Router 路由</a>
-  <a href="#s5">5. 数据获取</a>
-  <a href="#s6">6. Server/Client 边界</a>
-  <a href="#s7">7. Server Actions 与表单</a>
-  <a href="#s8">8. 缓存与重验证</a>
-  <a href="#s9">9. 样式</a>
-  <a href="#s10">10. 性能优化</a>
-  <a href="#s11">11. 鉴权与中间件</a>
-  <a href="#s12">12. 部署</a>
-  <a href="#s13">13. 安全</a>
-  <a href="#s14">14. 常见坑</a>
-  <a href="#s15">15. 调试与监控</a>
-  <a href="#s16">16. 成长路线</a>
+  <a href="#s3">3. App Router 路由</a>
+  <a href="#s4">4. 渲染策略全景</a>
+  <a href="#s5">5. RSC 深入</a>
+  <a href="#s6">6. 数据获取</a>
+  <a href="#s7">7. Server Actions</a>
+  <a href="#s8">8. 客户端边界</a>
+  <a href="#s9">9. 缓存与重验证</a>
+  <a href="#s10">10. 样式方案</a>
+  <a href="#s11">11. 中间件</a>
+  <a href="#s12">12. Route Handlers</a>
+  <a href="#s13">13. 鉴权与安全</a>
+  <a href="#s14">14. 图片与字体</a>
+  <a href="#s15">15. 性能优化</a>
+  <a href="#s16">16. 部署</a>
+  <a href="#s17">17. 常见坑</a>
+  <a href="#s18">18. 何时不用</a>
+  <a href="#s19">19. 调试监控</a>
+  <a href="#s20">20. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
   <h1>Next.js：从小白到资深全栈</h1>
-  <p class="tsub">Next.js 是 React 的<strong>生产级框架</strong>：约定式路由、混合渲染、API 路由、构建优化一应俱全。本教程带你从“能跑起来”走到“能设计可扩展的全栈架构”，理解它每个默认行为背后的权衡。</p>
+  <p class="tsub">Next.js 是 React 的<strong>生产级框架</strong>：约定式路由、混合渲染、API 路由、构建优化一应俱全。本教程带你从“能跑起来”走到“能设计可扩展的全栈架构”，理解它每个默认行为背后的权衡，而不只是背命令。</p>
 
   <h2 id="s1">1. 它解决什么问题</h2>
   <p>纯 <a href="react.html">React</a> + <a href="vite.html">Vite</a> 是 CSR（客户端渲染）：浏览器先下载空 HTML 再拉 JS 画页面——首屏慢、SEO 差、要自己接路由/SSR/API。<strong>Next.js 把这些“生产必备但重复造轮子”的事收进框架。</strong></p>
   <div class="box"><span class="bt">一句话：</span>Next.js = React + 路由 + 混合渲染 + API + 构建优化 + 部署约定。让你专注业务，不必在“怎么把 React 做成网站”上耗散。</div>
+  <ul>
+    <li><b>约定优于配置</b>：<code>app/page.tsx</code> 就是一个路由，少写胶水代码。</li>
+    <li><b>渲染策略可选</b>：同一项目里，营销页用 SSG、仪表盘用 SSR、后台用 CSR，按需取。</li>
+    <li><b>全栈一体</b>：页面里能直接写 Server 逻辑、Server Actions、Route Handlers，前后端同一仓库。</li>
+  </ul>
   <div class="box ok"><span class="bt">适合：</span>需要 SEO 的内容站、带后端的全栈应用、电商/营销页、SaaS 控制台。<br><span class="box warn">不适合：</span>纯内部后台（CSR + Vite 更轻）、超简单静态页。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
   <div class="step"><div class="n">1</div><div class="b"><h4>创建项目</h4>
-  <pre><code>pnpm create next-app@latest my-app --typescript --app --tailwind --eslint
-cd my-app &amp;&amp; pnpm dev</code></pre>
-  <p>关键选项：<code>--app</code> 选 <b>App Router</b>（新版，推荐）；<code>--src-dir</code> 把代码收进 <code>src/</code>。</p></div></div>
-  <div class="step"><div class="n">2</div><div class="b"><h4>理解目录</h4>
+  <pre><code>npx create-next-app@latest myapp --ts --app --tailwind --eslint
+cd myapp &amp;&amp; npm run dev</code></pre>
+  <p>选项含义：<code>--ts</code> 用 <a href="typescript.html">TypeScript</a>；<code>--app</code> 用 App Router（新项目默认）；<code>--tailwind</code> 接 <a href="tailwind.html">Tailwind</a>；<code>--src-dir</code> 把代码收进 <code>src/</code>。</p></div></div>
+  <div class="step"><div class="n">2</div><div class="b"><h4>目录约定</h4>
   <pre><code>app/
-├─ layout.tsx     # 根布局（html/body、全局 Provider）
-├─ page.tsx       # 路由 “/”
-├─ dashboard/
-│  ├─ page.tsx     # “/dashboard”
-│  └─ loading.tsx  # 该路由的加载态
-├─ api/            # Route Handlers（后端接口）
-└─ globals.css
-next.config.js</code></pre>
-  <p>App Router 里<strong>文件夹即路由</strong>，<code>page.tsx</code> 是页面，<code>layout.tsx</code> 是包裹层。</p></div></div>
-  <div class="step"><div class="n">3</div><div class="b"><h4>质量门</h4><p>同 React：ESLint + Prettier + <code>tsconfig</code> 严格模式。Next 自带 <code>next lint</code>。</p></div></div>
+├─ layout.tsx        # 根布局（HTML/全局Provider）
+├─ page.tsx          # 首页路由
+├─ about/page.tsx    # /about
+├─ blog/[slug]/page.tsx  # 动态路由
+├─ api/              # Route Handlers（可选）
+└─ globals.css</code></pre>
+  <p><code>app/</code> 下的文件夹即路由段；<code>page.tsx</code> 是可视页，<code>layout.tsx</code> 是包裹它的外壳。</p></div></div>
+  <div class="step"><div class="n">3</div><div class="b"><h4>跑起来看三个信号</h4><p>① 控制台打印编译耗时（Rust 编译器很快）② 页面源码里能看到<strong>服务端已经渲染好的 HTML</strong>（右键“查看网页源代码”不是空壳）③ 改文件热更新。</p></div></div>
+  <div class="box warn"><span class="bt">版本号：</span>App Router 自 Next 13.4 稳定，13 之前是 Pages Router（<code>pages/</code>）。本教程只讲 App Router；老项目迁移见官方 codemod。</div>
 
-  <h2 id="s3">3. 渲染策略全景</h2>
-  <p>这是 Next 最该懂、也最容易被讲错的部分。四种渲染，各有成本与适用：</p>
-  <table>
-    <tr><th>策略</th><th>何时渲染</th><th>适用</th></tr>
-    <tr><td>CSR</td><td>浏览器</td><td>已登录控制台（无需 SEO）</td></tr>
-    <tr><td>SSR</td><td>每次请求</td><td>个性化、实时、SEO 都要（首屏慢一点）</td></tr>
-    <tr><td>SSG</td><td>构建时</td><td>博客/文档（内容固定、极快）</td></tr>
-    <tr><td>ISR</td><td>构建 + 定时重生成</td><td>电商商品页（海量、偶尔变）</td></tr>
-  </table>
-  <div class="box"><span class="bt">RSC（React Server Components）：</span>组件默认在服务端运行、<strong>不进客户端 JS 包</strong>。可以直连数据库、读文件，零体积发给浏览器。这是 Next 当前的核心范式。</div>
-  <div class="box warn"><span class="bt">资深权衡：</span>SSR 每次都算，贵；SSG 快但内容陈旧；ISR 折中。选错策略=要么烧钱要么数据旧。按“数据多久变一次 + 要不要 SEO”决策。</div>
-
-  <h2 id="s4">4. App Router 路由</h2>
+  <h2 id="s3">3. App Router 路由</h2>
+  <p>路由即文件系统，URL 路径 = 文件夹路径。</p>
   <ul>
-    <li><b>嵌套布局</b>：<code>layout.tsx</code> 用 <code>&lt;Children /&gt;</code> 包子路由，父布局<strong>不重挂载</strong>——侧边栏/顶栏稳定，只换内容。</li>
-    <li><b>动态路由</b>：<code>app/post/[id]/page.tsx</code>，用 <code>params.id</code> 取。</li>
-    <li><b>文件约定</b>：<code>loading.tsx</code>（Suspense 兜底）、<code>error.tsx</code>（错误边界）、<code>not-found.tsx</code>（404）、<code>route.ts</code>（API）。</li>
-    <li><b>路由组</b>：<code>(marketing)/</code> 括号不进 URL，用于分组布局。</li>
+    <li><b>静态段</b>：<code>app/dashboard/page.tsx</code> → <code>/dashboard</code>。</li>
+    <li><b>动态段</b>：<code>app/blog/[slug]/page.tsx</code>，组件中通过 <code>params.slug</code> 取；多个用 <code>[...slug]</code> 捕获剩余。</li>
+    <li><b>布局嵌套</b>：每个文件夹都能有 <code>layout.tsx</code>，它包裹该段下所有页面。<code>&lt;Outlet/&gt;</code> 的等价物是“直接渲染 children”，父布局在切子页时不重挂载。</li>
+    <li><b>loading / error / not-found</b>：同名文件自动变成 Suspense 骨架屏、错误边界、404 页。</li>
   </ul>
-  <pre><code">// app/post/[id]/page.tsx
-export default async function Post({ params }: { params: { id: string } }) {
-  const post = await db.post.find(params.id);
+  <pre><code>// app/blog/[slug]/page.tsx
+export default async function Page({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);   // 直接在 Server Component 取数
   return &lt;article&gt;{post.title}&lt;/article&gt;;
 }</code></pre>
+  <div class="box ok"><span class="bt">资深用法：</span>把“侧边栏/顶栏”放 <code>layout.tsx</code>，“内容”放 <code>page.tsx</code>，切页时布局不闪、状态不丢；用并行路由 <code>@slot</code> 还能在同一布局里独立加载多块。</div>
 
-  <h2 id="s5">5. 数据获取</h2>
-  <p>App Router 下，Server Component 直接 <code>async/await</code> 取数，无需 <code>useEffect</code>：</p>
-  <pre><code">// 服务端组件：直接查库，结果随 HTML 一起到浏览器
-async function Users() {
-  const users = await db.user.list();
-  return &lt;ul&gt;{users.map(u =&gt; &lt;li key={u.id}&gt;{u.name}&lt;/li&gt;)}&lt;/ul&gt;;
-}</code></pre>
-  <p>需要写后端接口时，用 Route Handler：</p>
-  <pre><code">// app/api/users/route.ts
-export async function GET() {
-  return Response.json(await db.user.list());
-}</code></pre>
-  <div class="box ok"><span class="bt">对比：</span>传统 SPA 要在前端 <code>useEffect</code> 里 fetch；Next 把“取数”放回服务端，首屏就有数据、还能缓存。</div>
+  <h2 id="s4">4. 渲染策略全景</h2>
+  <p>Next 的“强”在于按页面选渲染方式，而不是一刀切。</p>
+  <table>
+    <tr><th>策略</th><th>何时渲染</th><th>适合</th><th>SEO</th></tr>
+    <tr><td>SSG / 静态</td><td>构建时生成</td><td>博客、文档、营销页</td><td>优</td></tr>
+    <tr><td>SSR / 动态</td><td>每次请求</td><td>个性化、实时数据</td><td>优</td></tr>
+    <tr><td>CSR</td><td>浏览器端</td><td>登录后台、强交互</td><td>差（需额外处理）</td></tr>
+    <tr><td>ISR</td><td>静态 + 后台定时重生</td><td>电商商品页（量大但偶尔变）</td><td>优</td></tr>
+  </table>
+  <pre><code>// 静态：构建时取一次
+export const dynamic = 'force-static';
+// 动态：每次请求都跑
+export const dynamic = 'force-dynamic';
+// ISR：最多 60s 重生一次
+export const revalidate = 60;</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>没设 <code>dynamic</code> 时，Next 会“自动”推断——用到 <code>cookies()</code>/<code>headers()</code> 就变动态，否则尝试静态。这种隐式行为常让人困惑，<strong>关键页显式声明</strong>最稳。</div>
 
-  <h2 id="s6">6. Server / Client 边界</h2>
-  <p>默认所有组件是 <strong>Server Component</strong>（能读 secrets、直连 DB、零客户端体积）。只有用到<strong>事件/状态/浏览器 API</strong>才加 <code>'use client'</code>。</p>
-  <div class="box warn"><span class="bt">边界规则：</span>Server 组件可以渲染 Client 组件，但<strong>不能把 Server 专有函数作为参数传给 Client 组件</strong>（函数没法序列化）。状态/事件要上移到 Client 组件里。</div>
-  <pre><code">'use client';          // 这一行以下的组件跑在浏览器
-export function Like({ id }: { id: string }) {
-  const [n, setN] = useState(0);
-  return &lt;button onClick={() =&gt; setN(n + 1)}&gt;👍 {n}&lt;/button&gt;;
+  <h2 id="s5">5. RSC 深入</h2>
+  <p><strong>React Server Components（RSC）</strong>是 Next 的基石：组件默认在<strong>服务端</strong>运行，编译后<strong>不进客户端 JS 包</strong>。</p>
+  <ul>
+    <li><b>零客户端体积</b>：直接 <code>import</code> 服务端 SDK、读数据库、读文件，这些代码用户浏览器根本拿不到。</li>
+    <li><b>流式传输</b>：用 <code>&lt;Suspense&gt;</code> 把慢的部分“先挂起”，页面先吐出骨架，数据到了再补，首屏更快。</li>
+    <li><b>不是 SSR 的替代品</b>：SSR 是把客户端组件在服务端跑一遍字符串；RSC 是“组件根本不发给客户端”。两者常结合。</li>
+  </ul>
+  <div class="box ok"><span class="bt">心智模型：</span>Server Component = 在服务端执行的异步函数，返回的是“UI 描述”而不是 HTML 字符串；框架把它和客户端部分拼起来流式下发。</div>
+
+  <h2 id="s6">6. 数据获取</h2>
+  <p>在 Server Component 里直接 <code>async/await</code> 取数，不需要 <code>useEffect</code>：</p>
+  <pre><code>async function getUser(id: string) {
+  const res = await fetch(`https://api.x/u/${id}`, { next: { revalidate: 60 } });
+  return res.json();
+}
+export default async function Page() {
+  const user = await getUser('1');
+  return &lt;h1&gt;{user.name}&lt;/h1&gt;;
 }</code></pre>
+  <div class="box warn"><span class="bt">别混两层：</span>服务端数据用 <code>fetch</code> 缓存/重验证管理；客户端交互状态才用 <a href="zustand.html">Zustand</a> 之类。把服务端数据塞进全局 store 会导致缓存失控（见 <a href="react.html">React</a> 第 8 节）。</div>
 
   <h2 id="s7">7. Server Actions 与表单</h2>
-  <p>Next 13+ 的 <b>Server Actions</b> 让你“不写 API 也能写数据”：表单直接调服务端函数，且<strong>渐进增强</strong>（JS 没加载也能提交）。</p>
-  <pre><code">'use client';
-import { useState } from 'react';
-async function save(formData: FormData) {        // 标记为 action
-  'use server';
-  await db.post.create({ title: String(formData.get('title')) });
+  <p>Server Actions 让“提交表单 → 服务端改数据”无需手写 API：</p>
+  <pre><code>'use server';
+export async function createPost(formData: FormData) {
+  const title = formData.get('title');
+  await db.insert({ title });
+  revalidatePath('/blog');   // 刷新缓存
 }
-export function Form() {
-  const [pending, start] = useTransition();       // 乐观 UI
-  return &lt;form action={save}&gt;&lt;input name="title" /&gt;&lt;button&gt;保存&lt;/button&gt;&lt;/form&gt;;
-}</code></pre>
-  <div class="box ok"><span class="bt">资深用法：</span>Server Action + <code>revalidatePath</code> 刷新缓存，省掉一整套手写 API 与状态同步。</div>
+// 页面里
+&lt;form action={createPost}&gt;&lt;input name="title" /&gt;&lt;button&gt;提交&lt;/button&gt;&lt;/form&gt;</code></pre>
+  <div class="box ok"><span class="bt">好处：</span>少一层 API 胶水、自带序列化、自动复用同一个请求上下文。配合 <code>useFormState</code>/<code>useOptimistic</code> 还能做渐进增强与乐观更新。</div>
 
-  <h2 id="s8">8. 缓存与重验证</h2>
-  <p>Next 有多层缓存，资深必须理清，否则“改了数据页面不更新”：</p>
+  <h2 id="s8">8. 客户端边界</h2>
+  <p>需要用 <code>useState</code>、<code>onClick</code>、浏览器 API 时，把组件标 <code>'use client'</code>。这条边界决定代码跑在哪。</p>
   <ul>
-    <li><b>请求记忆（Request Memoization）</b>：同一次请求内重复 fetch 去重。</li>
-    <li><b>Data Cache</b>：<code>fetch</code> 默认缓存到文件系统/内存；用 <code>{ cache: 'no-store' }</code> 或 <code>revalidate: 60</code> 控制。</li>
-    <li><b>Full Route Cache</b>：静态路由缓存整页。</li>
-    <li><b>Router Cache</b>：客户端过渡缓存。</li>
+    <li><b>默认是 Server</b>：能不标 client 就不标，减少 JS 体积。</li>
+    <li><b>client 能 import server 吗？</b>不能反向。Server Component 可以渲染 Client Component，反之不行。</li>
+    <li><b>把 client 推到叶子</b>：尽量只在最内层交互组件标 client，外层保持 server，避免整页变客户端包。</li>
   </ul>
-  <pre><code">revalidatePath('/post/123');     // 数据变了，让该路由缓存失效
-revalidateTag('posts');          // 或用 tag 批量失效</code></pre>
+  <div class="box warn"><span class="bt">常见错：</span>在 Server Component 里写 <code>onClick</code> 直接报错。任何事件/状态都要下沉到 <code>'use client'</code> 组件。</div>
 
-  <h2 id="s9">9. 样式</h2>
-  <p>用 <a href="tailwind.html">Tailwind</a>（创建时已选）或 CSS Modules（<code>*.module.css</code>）。全局样式放 <code>app/globals.css</code>，布局级样式放 <code>layout.tsx</code> 引入。</p>
+  <h2 id="s9">9. 缓存与重验证</h2>
+  <p>Next 有四层缓存：请求记忆（同渲染内去重）、Data Cache（<code>fetch</code> 结果跨请求）、Full Route Cache（整页 HTML）、Router Cache（客户端导航）。理解它们才能不“改了不生效”。</p>
+  <table>
+    <tr><th>要做的</th><th>API</th></tr>
+    <tr><td>按 tag 失效一批</td><td><code>revalidateTag('posts')</code></td></tr>
+    <tr><td>按路径失效</td><td><code>revalidatePath('/blog')</code></td></tr>
+    <tr><td>关闭某请求缓存</td><td><code>fetch(url, { cache: 'no-store' })</code></td></tr>
+  </table>
+  <div class="box warn"><span class="bt">调试必记：</span>本地开发默认不缓存，部署后才缓存——所以“我本地改了没事，线上不更新”多半是缓存没失效。先在 Server Action / Route 里显式 <code>revalidate</code>。</div>
 
-  <h2 id="s10">10. 性能优化</h2>
-  <ul>
-    <li><b>流式渲染（Streaming）</b>：用 <code>&lt;Suspense&gt;</code> 把慢的部分先“挂起”，其余先到达——首屏更快。</li>
-    <li><b>next/image</b>：自动懒加载、响应式、WebP，替代原生 <code>&lt;img&gt;</code>。</li>
-    <li><b>部分预渲染（PPR，实验）</b>：静态壳 + 动态洞，兼顾快与实时。</li>
-    <li><b>打包分析</b>：<code>next build &amp;&amp; npx @next/bundle-analyzer</code> 找体积大户。</li>
-  </ul>
+  <h2 id="s10">10. 样式方案</h2>
+  <table>
+    <tr><th>方案</th><th>用法</th></tr>
+    <tr><td>CSS Modules</td><td><code>styles.xxx</code>，作用域隔离，默认就支持</td></tr>
+    <tr><td>Tailwind</td><td>全局 <code>globals.css</code> 引入，见 <a href="tailwind.html">Tailwind</a></td></tr>
+    <tr><td>CSS-in-JS</td><td>需改用支持 RSC 的方案（如 styled-components 的 App Router 兼容版），否则有运行时坑</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">建议：</span>全站用 design tokens（CSS 变量）+ 一套基础组件（或 <a href="antd.html">Ant Design</a>），改主题一处生效。</div>
 
-  <h2 id="s11">11. 鉴权与中间件</h2>
-  <pre><code">// middleware.ts：在请求进入页面前统一拦截
+  <h2 id="s11">11. 中间件</h2>
+  <p><code>middleware.ts</code> 在请求进入路由前运行，适合鉴权、重定向、A/B、地区路由：</p>
+  <pre><code>// middleware.ts
+import { NextResponse } from 'next/server';
 export function middleware(req: NextRequest) {
-  if (!req.cookies.get('token')) return NextResponse.redirect('/login');
+  const token = req.cookies.get('token');
+  if (!token) return NextResponse.redirect(new URL('/login', req.url));
+  return NextResponse.next();
 }
 export const config = { matcher: ['/dashboard/:path*'] };</code></pre>
-  <p>会话用 <a href="jwt.html">JWT</a> 或 Session；敏感逻辑放 Server Component/Action，token 不落客户端可见的 JS。</p>
+  <div class="box warn"><span class="bt">边界：</span>中间件跑在 Edge Runtime，<strong>不能用 Node 专属 API</strong>（如直接连某些 DB 驱动）。重型逻辑放 Route Handler / Server Action。</div>
 
-  <h2 id="s12">12. 部署</h2>
+  <h2 id="s12">12. Route Handlers</h2>
+  <p>需要传统 REST API 时，用 <code>app/api/.../route.ts</code>：</p>
+  <pre><code>export async function GET(req: Request) {
+  return Response.json({ ok: true });
+}
+export async function POST(req: Request) {
+  const body = await req.json();
+  return Response.json({ received: body }, { status: 201 });
+}</code></pre>
+  <div class="box ok"><span class="bt">选型：</span>页面数据用 Server Component 直取；只有“被第三方调用 / 非页面消费”的接口才写 Route Handler，别什么都拆成 API。</div>
+
+  <h2 id="s13">13. 鉴权与安全</h2>
   <ul>
-    <li><b>Vercel</b>：<code>git push</code> 即部署，自动按策略渲染，零配置。适合大多数。</li>
-    <li><b>自托管</b>：<code>next build &amp;&amp; next start</code> 跑 Node 服务，前面用 <a href="nginx.html">Nginx</a> 反代，用 <a href="pm2.html">PM2</a> 守护。</li>
-    <li><b>环境变量</b>：<code>.env.local</code>（本地）/ <code>.env</code>（提交，非机密），服务端变量别加 <code>NEXT_PUBLIC_</code> 否则进前端包。</li>
+    <li><b>会话</b>：用 <code>cookies()</code> 读写 HttpOnly cookie；敏感操作校验签名。</li>
+    <li><b>CSRF</b>：同站用 <code>sameSite: lax</code> 已基本挡住；跨站表单加 token。</li>
+    <li><b>头部加固</b>：在 <code>next.config</code> 配 CSP、X-Frame-Options 等。</li>
+    <li><b>不要泄露</b>：Server Component 里的密钥只在服务端，别传 props 给 client。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑：</span>把 <code>NEXT_PUBLIC_</code> 前缀的环境变量会打进客户端包——绝不能放密钥。</div>
+
+  <h2 id="s14">14. 图片与字体</h2>
+  <ul>
+    <li><code>next/image</code>：自动压缩、懒加载、响应式 <code>srcset</code>，并防布局抖动（固定宽高）。</li>
+    <li><code>next/font</code>：字体在构建期自托管，避免阻塞渲染、无布局抖动、无隐私外泄。</li>
+  </ul>
+  <div class="box ok"><span class="bt">性能信号：</span>Lighthouse 的 CLS（布局抖动）几乎全靠这两件解决。</div>
+
+  <h2 id="s15">15. 性能优化</h2>
+  <ul>
+    <li><b>减少 client 边界</b>：Server 默认最省 JS。</li>
+    <li><b>流式 + Suspense</b>：慢数据不阻塞首屏。</li>
+    <li><b>动静分离</b>：能静态的页用 SSG/ISR，别全 SSR。</li>
+    <li><b>包分析</b>：<code>@next/bundle-analyzer</code> 找出大依赖；能用 server 处理的就别发到 client。</li>
   </ul>
 
-  <h2 id="s13">13. 安全</h2>
+  <h2 id="s16">16. 部署</h2>
   <ul>
-    <li><b>别泄露 secrets</b>：只在 Server 组件/路由读密钥，误加 <code>NEXT_PUBLIC_</code> 会进浏览器。</li>
-    <li><b>Server Action 也要校验</b>：客户端能直接构造请求调 action，别信前端传来的任何东西。</li>
-    <li><b>SSRF</b>：若按用户 URL 服务端取资源，要白名单校验，防内网探测。</li>
-    <li><b>CSP</b>：配置内容安全策略，配合框架默认转义防 XSS。</li>
+    <li><b>Vercel</b>：零配置，自动识别 Next，推荐新手。</li>
+    <li><b>自托管</b>：<code>output: 'standalone'</code> 产出极小运行时，配合 <a href="docker.html">Docker</a> + <a href="nginx.html">Nginx</a> 反代。</li>
+    <li><b>Node 服务</b>：<code>next start</code> 用 <a href="pm2.html">PM2</a> 守护。</li>
+  </ul>
+  <div class="box warn"><span class="bt">自托管注意：</span>中间件/Edge、ISR 磁盘缓存路径要在容器里正确挂载，否则缓存“丢了”。</div>
+
+  <h2 id="s17">17. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 水合不一致：</span>Server 与 Client 首渲 HTML 不同（如用了 <code>Date.now()</code>、随机数）会报警。固定输入或用 <code>useEffect</code> 补。</div>
+  <div class="box warn"><span class="bt">坑 2 误用 client：</span>把整个页面标 <code>'use client'</code>，RSC 优势全无。只在交互叶子标。</div>
+  <div class="box warn"><span class="bt">坑 3 缓存不失效：</span>改了数据页面不更新——忘了 <code>revalidateTag/Path</code>。</div>
+  <div class="box warn"><span class="bt">坑 4 在 Server 用浏览器 API：</span><code>window</code>/<code>localStorage</code> 在服务端是 undefined，必崩。</div>
+
+  <h2 id="s18">18. 何时不用</h2>
+  <p>Next 有“框架税”：约定、缓存心智、构建复杂度。以下情况别上：</p>
+  <ul>
+    <li>纯内部工具后台，CSR + <a href="vite.html">Vite</a> 更轻更快。</li>
+    <li>团队完全不懂 SSR/缓存，强行用会天天踩坑。</li>
+    <li>超简单静态站，直接用静态生成或纯 HTML。</li>
   </ul>
 
-  <h2 id="s14">14. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span><b>水合不匹配（Hydration mismatch）</b>：服务端和客户端首渲 HTML 不一致（如 <code>new Date()</code>、随机值、读取 <code>localStorage</code>），浏览器报 mismatch 并可能错乱。用 <code>suppressHydrationWarning</code> 或把客户端特有逻辑放 effect。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>在 Server 组件里 <code>import</code> 了含 <code>'use client'</code> 依赖、却还想传函数，序列化失败。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>过度用 <code>'use client'</code>，把本可在服务端的组件全搬前端，首屏体积暴涨、DB 逻辑暴露。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>缓存导致“改了不生效”，不理清四类缓存与 revalidate。</div>
-
-  <h2 id="s15">15. 调试与监控</h2>
+  <h2 id="s19">19. 调试与监控</h2>
   <ul>
-    <li><code>next build</code> 输出路由表，标明每个路由是静态(S)/动态(ƒ)/ISR。</li>
-    <li>React DevTools + Next 内置错误覆盖层。</li>
-    <li>生产接 OpenTelemetry / Sentry 看慢路由与水合错误。</li>
+    <li><b>React DevTools</b> + Next Devtools 看 RSC 边界。</li>
+    <li><b>Build 日志</b>：看每个路由是 static / dynamic / SSR。</li>
+    <li><b>监控</b>：Vercel Analytics / Web Vitals，关注 TTFB、CLS。</li>
   </ul>
 
-  <h2 id="s16">16. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能 create 项目、写 page、跑起来</td></tr>
-    <tr><td>初级</td><td>会路由、表单、基础数据获取</td></tr>
-    <tr><td>中级</td><td>分清 SSR/SSG/ISR、Server/Client 边界、会优化首屏</td></tr>
-    <tr><td>资深</td><td>设计缓存策略、性能达标、鉴权与安全闭环、能自托管部署</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 Server Component + DB 做一个博客（SSR/SSG 各一版）② 用 Server Action 做带校验的表单 ③ 用 middleware 做鉴权路由 ④ 用 next/image 优化图 ⑤ 部署到 Vercel 并测首屏。</div>
-  <div class="box ok"><span class="bt">你已跨过全栈门槛：</span>能设计渲染策略、分清边界、做缓存与安全——这是资深 Next.js 工程师的核心判断力。</div>
+  <h2 id="s20">20. 资源与路线</h2>
+  <ol>
+    <li>官方文档 <a href="https://nextjs.org/docs" target="_blank" rel="noopener">nextjs.org/docs</a>（App Router 优先）。</li>
+    <li>先补 <a href="react.html">React</a> 心智模型与 <a href="typescript.html">TypeScript</a>。</li>
+    <li>练：用 SSG 做博客 + Server Actions 做评论 + <code>revalidateTag</code> 刷新。</li>
+    <li>进阶：RSC 流式、中间件鉴权、standalone 自托管。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能为每个页面<strong>明确选择渲染策略并说清理由</strong>，理解四层缓存与 client/server 边界——而不是“create-next-app 一把梭”。</div>
 </main>
 </div>
 <script>

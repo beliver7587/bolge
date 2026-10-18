@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C 语言 · 从小白到资深底层工程师</title>
+<title>C 语言 · 从小白到理解计算机底层</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,131 +15,93 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">C 语言<small>从小白到资深底层</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 内存模型</a>
-  <a href="#s4">4. 指针本质</a>
-  <a href="#s5">5. 内存管理</a>
-  <a href="#s6">6. 字符串与数组</a>
-  <a href="#s7">7. 结构体与对齐</a>
-  <a href="#s8">8. 预处理与宏</a>
-  <a href="#s9">9. 模块化与构建</a>
-  <a href="#s10">10. 未定义行为</a>
-  <a href="#s11">11. 性能</a>
-  <a href="#s12">12. 与高层语言</a>
-  <a href="#s13">13. 常见坑</a>
-  <a href="#s14">14. 调试</a>
-  <a href="#s15">15. 成长路线</a>
+  <div class="tbrand">C 语言<small>从小白到理解底层</small></div>
+  <a href="#s1">1. 它为什么重要</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 数据类型</a>
+  <a href="#s4">4. 指针</a>
+  <a href="#s5">5. 数组与字符串</a>
+  <a href="#s6">6. 内存管理</a>
+  <a href="#s7">7. 结构体</a>
+  <a href="#s8">8. 函数与多文件</a>
+  <a href="#s9">9. 常见坑</a>
+  <a href="#s10">10. 与高级语言</a>
+  <a href="#s11">11. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>C 语言：从小白到资深底层工程师</h1>
-  <p class="tsub">C 是贴近硬件的系统级语言，操作系统（Linux/Windows 内核）、编译器、嵌入式、数据库引擎的基石。本教程从“能编译运行”讲到<strong>内存模型、指针本质、手动内存管理、未定义行为、构建链接与调试</strong>——这是理解一切上层语言与计算机系统的底层功力。</p>
+  <h1>C 语言：从小白到理解计算机底层</h1>
+  <p class="tsub">C 是贴近硬件的系统级语言，操作系统、数据库、编译器大多由它或它的子孙写成。本教程讲清指针与内存——这是理解“程序到底怎么跑”的钥匙。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>高层语言（<a href="python.html">Python</a>/<a href="java.html">Java</a>）替你管内存、有垃圾回收，但离硬件远、开销大。C 让你<strong>直接操作内存与地址</strong>，零抽象、极快、可移植，适合写需要榨干硬件的系统软件。</p>
-  <div class="box"><span class="bt">一句话：</span>C 给你“接近汇编的控制力 + 接近高级语言的可读性”，代价是内存与生命周期要自己负责。</div>
-  <div class="box ok"><span class="bt">适合：</span>操作系统、嵌入式、编译器、数据库/网络引擎、对性能/体积敏感的场景。<br><span class="box warn">不适合：</span>业务 CRUD、快速原型（用 Python/JS 更省心）。</div>
+  <h2 id="s1">1. 它为什么重要</h2>
+  <p>学 C 不是要写业务，而是理解：内存怎么排布、指针怎么寻址、堆栈怎么工作。这些概念是 <a href="java.html">Java</a>、<a href="python.html">Python</a>、甚至 <a href="react.html">前端</a> 性能优化的底层基础。</p>
+  <div class="box"><span class="bt">一句话：</span>C = 离机器最近的高级语言。手动管内存，零抽象开销。</div>
 
-  <h2 id="s2">2. 工程化起步</h2>
-  <pre><code># 编译器：gcc（或 clang）
-gcc hello.c -o hello &amp;&amp; ./hello
-# 调试符号 + 地址 sanitizer（抓内存错误）
-gcc -g -fsanitize=address hello.c -o hello</code></pre>
-  <p>构建用 <code>make</code> / <code>cmake</code> 管理多文件；编辑器 VS Code + C/C++ 插件；调试用 <code>gdb</code>；内存检测用 <code>valgrind</code> 或 ASan。</p>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>#include &lt;stdio.h&gt;
+int main() {
+  printf("hello\n");
+  return 0;
+}</code></pre>
+  <p>编译：<code>gcc main.c -o main &amp;&amp; ./main</code>。没有运行时/虚拟机，编译出机器码直接跑。</p>
 
-  <h2 id="s3">3. 内存模型</h2>
-  <p>程序运行时有几块内存：</p>
-  <ul>
-    <li><b>栈（stack）</b>：局部变量，自动分配/释放，快但容量小。</li>
-    <li><b>堆（heap）</b>：<code>malloc</code> 手动申请，需 <code>free</code>，容量大但要自己管。</li>
-    <li><b>静态/全局区</b>：全局与 <code>static</code> 变量，生命周期贯穿程序。</li>
-    <li><b>代码段</b>：只读的程序指令。</li>
-  </ul>
-  <div class="box ok"><span class="bt">资深：</span>理解“变量在哪块内存、生命周期多长”，才能避免返回栈地址、内存泄漏等问题。</div>
-
-  <h2 id="s4">4. 指针本质</h2>
-  <p>指针就是“内存地址”。这是 C 的灵魂。</p>
-  <pre><code>int x = 10;
-int *p = &amp;x;        // p 存 x 的地址
-printf("%d", *p);  // 解引用 *p 得到 10</code></pre>
-  <ul>
-    <li><code>&amp;</code> 取地址；<code>*</code> 解引用。指针运算按“指向类型的大小”步进。</li>
-    <li><b>数组即指针</b>：<code>arr[i]</code> 等价于 <code>*(arr+i)</code>；数组名是首元素地址。</li>
-    <li><b>函数指针</b>：把函数当变量传，实现回调（如 <code>qsort</code> 的比较器）。</li>
-  </ul>
-
-  <h2 id="s5">5. 内存管理</h2>
-  <pre><code>int *buf = malloc(10 * sizeof(int));
-if (!buf) return -1;     // 务必判空
-// ... 使用 buf ...
-free(buf);               // 用完释放
-buf = NULL;              // 置空，防野指针</code></pre>
-  <div class="box warn"><span class="bt">三大内存病：</span>① 泄漏（malloc 不 free）② 野指针（free 后还用）③ 悬垂（返回栈变量地址）。用 ASan/valgrind 抓。</div>
-
-  <h2 id="s6">6. 字符串与数组</h2>
-  <ul>
-    <li>C 字符串是<strong>以 <code>\0</code> 结尾的字符数组</strong>；长度靠扫到 <code>\0</code> 而定。</li>
-    <li><b>缓冲区溢出</b>：<code>strcpy/gets</code> 不检查长度 → 用 <code>strncpy/snprintf</code> 等带长度的安全版本。</li>
-  </ul>
-
-  <h2 id="s7">7. 结构体与对齐</h2>
-  <pre><code>struct Point { char tag; int x; int y; };  // 实际占用可能 &gt; 1+4+4，因对齐填充</code></pre>
-  <ul>
-    <li>编译器会按对齐规则<strong>填充（padding）</strong>，结构体大小常大于字段之和——网络/文件序列化要注意。</li>
-    <li><code>#pragma pack</code> 可改对齐；位域 <code>unsigned int f:1</code> 省空间。</li>
-  </ul>
-
-  <h2 id="s8">8. 预处理与宏</h2>
-  <pre><code>#ifndef FOO_H
-#define FOO_H
-// 头文件内容
-#endif   // 头文件守卫，防重复包含</code></pre>
-  <div class="box warn"><span class="bt">宏陷阱：</span><code>#define SQR(x) x*x</code> 在 <code>SQR(a+1)</code> 展开成 <code>a+1*a+1</code> 出错——宏体/参数要加括号，或改用 <code>static inline</code> 函数。</div>
-
-  <h2 id="s9">9. 模块化与构建</h2>
-  <ul>
-    <li><b>头文件（.h）</b>声明接口，<b>源文件（.c）</b>实现；多文件分别编译成 .o 再链接。</li>
-    <li><code>make</code> 按依赖增量编译；<code>cmake</code> 跨平台生成构建脚本。</li>
-  </ul>
-
-  <h2 id="s10">10. 未定义行为（UB）</h2>
-  <p>C 标准里很多操作是 UB（结果不可预测）：数组越界、有符号溢出、解引用空指针、读写已释放内存。UB 是大量安全漏洞根源，<strong>永远不要依赖 UB 的表现</strong>。</p>
-
-  <h2 id="s11">11. 性能</h2>
-  <ul>
-    <li>无 GC、无运行时，调用开销极小；<code>inline</code> 消除函数调用。</li>
-    <li>缓存友好（连续内存访问）远胜随机指针跳转；数据结构布局影响巨大。</li>
-  </ul>
-
-  <h2 id="s12">12. 与高层语言</h2>
-  <p>C 是很多语言的“底座”：<a href="python.html">Python</a>/<a href="java.html">Java</a> 的解释器/VM 用 C 写；它们通过 FFI（如 ctypes/JNI）调用 C 库做高性能模块。懂 C 才能写底层扩展或排查性能/崩溃根因。</p>
-
-  <h2 id="s13">13. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>数组越界不报错，悄悄改坏别的数据 → 用 ASan。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>malloc 不 free → 泄漏；free 后继续用 → 野指针。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>返回局部变量地址 → 悬垂指针。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>字符串忘 <code>\0</code> 或缓冲区溢出 → 用安全函数。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>宏不加括号导致运算符优先级错误。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>scanf 漏写 <code>&amp;</code> 读不入变量。</div>
-
-  <h2 id="s14">14. 调试</h2>
-  <ul>
-    <li><code>gdb</code> 断点/单步/看内存；<code>-fsanitize=address</code> 抓越界/泄漏；valgrind 全面查内存。</li>
-    <li>编译加 <code>-Wall -Wextra</code> 开更多警告，把警告当错误处理。</li>
-  </ul>
-
-  <h2 id="s15">15. 成长路线</h2>
+  <h2 id="s3">3. 数据类型</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能编译运行、用变量与指针</td></tr>
-    <tr><td>初级</td><td>会结构体、多文件、基本内存管理</td></tr>
-    <tr><td>中级</td><td>懂内存模型、UB、对齐、构建链接</td></tr>
-    <tr><td>资深</td><td>写无泄漏无 UB 的代码、用 sanitizer、能读内核/引擎源码</td></tr>
+    <tr><th>类型</th><th>典型字节</th></tr>
+    <tr><td><code>char</code></td><td>1</td></tr>
+    <tr><td><code>int</code></td><td>4</td></tr>
+    <tr><td><code>float/double</code></td><td>4 / 8</td></tr>
+    <tr><td><code>long</code></td><td>8（64 位）</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 malloc/free 实现一个动态数组 ② 用 ASan 抓一个故意的越界 ③ 写一个头文件+源文件的多文件项目并用 make 构建 ④ 解释“为什么结构体大小可能大于字段之和”。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解内存与指针的本质、能写出无泄漏无 UB 的 C 代码，并读懂系统软件——这是资深底层工程师的硬功夫。</div>
+
+  <h2 id="s4">4. 指针</h2>
+  <p>指针是<strong>存内存地址</strong>的变量，是 C 的灵魂也是最大难点。</p>
+  <pre><code>int x = 10;
+int *p = &amp;x;        // p 指向 x 的地址
+printf("%d", *p);   // 解引用，得到 10
+*p = 20;            // 通过指针改 x</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>未初始化/已释放的指针是“野指针”，解引用会崩溃或破坏内存。务必初始化为 <code>NULL</code>。</div>
+
+  <h2 id="s5">5. 数组与字符串</h2>
+  <pre><code>int a[3] = {1,2,3};
+char s[] = "hi";     // 字符串是 char 数组，末尾 '\0' 结束</code></pre>
+  <ul>
+    <li>数组名在很多语境下退化成指针，<code>a[i]</code> 等价于 <code>*(a+i)</code>。</li>
+    <li>字符串靠 <code>'\0'</code> 判断结束，忘写会越界读。</li>
+  </ul>
+
+  <h2 id="s6">6. 内存管理</h2>
+  <pre><code>int *p = malloc(sizeof(int) * 10);  // 堆上分配
+free(p);                            // 用完必须释放</code></pre>
+  <div class="box warn"><span class="bt">两大坑：</span>① 忘记 <code>free</code> → 内存泄漏；② 释放后再用 / 重复释放 → 悬空指针崩溃。</div>
+
+  <h2 id="s7">7. 结构体</h2>
+  <pre><code>struct User { int id; char name[32]; };
+struct User u = {1, "王越"};
+struct User *p = &amp;u; printf("%d", p-&gt;id);</code></pre>
+  <p>结构体把相关数据打包，指针用 <code>-&gt;</code> 访问成员。</p>
+
+  <h2 id="s8">8. 函数与多文件</h2>
+  <ul>
+    <li>函数先声明后使用；多文件用 <code>.h</code> 头文件声明、<code>.c</code> 实现。</li>
+    <li><code>static</code> 限制作用域；<code>extern</code> 跨文件引用。</li>
+  </ul>
+
+  <h2 id="s9">9. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 缓冲区溢出：</span><code>strcpy</code> 不检查长度，超了就覆盖别的内存；用 <code>strncpy</code>/边界判断。</div>
+  <div class="box warn"><span class="bt">坑 2 数组越界：</span>C 不帮你检查，越界是未定义行为。</div>
+  <div class="box warn"><span class="bt">坑 3 内存泄漏/悬空：</span>见第 6 节，配对 malloc/free，释放后置 NULL。</div>
+
+  <h2 id="s10">10. 与高级语言</h2>
+  <p>高级语言（<a href="java.html">Java</a>、<a href="python.html">Python</a>、<a href="javascript">JS</a>）有 GC 和边界检查，省心但慢一点。理解 C 后能看懂它们底层的“代价”在哪。</p>
+
+  <h2 id="s11">11. 资源与路线</h2>
+  <ol>
+    <li>《C 程序设计语言》（K&amp;R）经典。</li>
+    <li>练：写一个含动态数组与结构体的小工具，体会 malloc/free。</li>
+    <li>进而学操作系统/数据结构，理解底层。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>把指针与内存当成直觉，能分析“这段 C 为什么崩/漏”，并理解高级语言 GC 背后的取舍。</div>
 </main>
 </div>
 <script>

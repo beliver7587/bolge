@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixiJS · 从小白到资深前端</title>
+<title>PixiJS / WebGL · 从小白到 GPU 渲染</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,114 +15,101 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">PixiJS<small>从小白到资深前端</small></div>
+  <div class="tbrand">PixiJS<small>从小白到 GPU 渲染</small></div>
   <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 场景图与核心</a>
-  <a href="#s4">4. 渲染原理</a>
-  <a href="#s5">5. 资源与精灵</a>
-  <a href="#s6">6. 交互</a>
-  <a href="#s7">7. Ticker 与动画</a>
-  <a href="#s8">8. 性能优化</a>
-  <a href="#s9">9. 与 Canvas2D 边界</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试</a>
-  <a href="#s12">12. 成长路线</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 核心概念</a>
+  <a href="#s4">4. 渲染循环</a>
+  <a href="#s5">5. 精灵与图集</a>
+  <a href="#s6">6. 文本与图形</a>
+  <a href="#s7">7. 交互</a>
+  <a href="#s8">8. 滤镜特效</a>
+  <a href="#s9">9. 性能</a>
+  <a href="#s10">10. 与 Canvas2D</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>PixiJS：从小白到资深前端</h1>
-  <p class="tsub">PixiJS 是基于 WebGL 的高性能 2D 渲染库，用来做游戏、粒子、数据可视化、互动动画。本教程讲透它的<strong>场景图、批渲染原理、资源/精灵管理、Ticker 循环与性能优化</strong>——这是资深做“高性能 2D 画面”的硬核能力。</p>
+  <h1>PixiJS / WebGL：从小白到 GPU 渲染</h1>
+  <p class="tsub"><a href="pixijs.html">PixiJS</a> 是基于 <a href="canvas2d.html">WebGL</a> 的 2D 渲染库：把图形/精灵批处理交给 GPU，能轻松渲染成千上万个对象。本教程讲清它的场景图模型、渲染循环与性能要点——这是网页游戏画面的引擎。</p>
 
   <h2 id="s1">1. 它解决什么问题</h2>
-  <p>原生 <a href="canvas.html">Canvas 2D</a> 是<strong>软件渲染</strong>，几千个图形就掉帧；DOM 更扛不住。PixiJS 用 WebGL 把大量图形<strong>批处理</strong>成少数 GPU 绘制调用，轻松渲染上万个精灵。</p>
-  <div class="box"><span class="bt">一句话：</span>PixiJS 把“画 2D 图形”交给 GPU，用场景图（树）组织对象，批渲染压低开销，适合高性能互动画面。</div>
-  <div class="box ok"><span class="bt">适合：</span>2D 游戏、粒子特效、可视化大屏、互动广告。<br><span class="box warn">不适合：</span>简单静态图（用 CSS/Canvas 即可）、3D（用 Three.js）。</div>
+  <p>原生 <a href="canvas2d.html">Canvas 2D</a> 靠 CPU 逐帧画，对象一多（几百个精灵 + 特效）就掉帧。PixiJS 用 <strong>WebGL 批处理</strong>，把同类绘制合并成少量 GPU 调用，性能数量级提升。</p>
+  <div class="box"><span class="bt">一句话：</span>PixiJS = WebGL 的“友好封装”，让你用“场景图”而非裸 GL 写高性能 2D。</div>
+  <div class="box ok"><span class="bt">适合：</span>2D 游戏、粒子、数据可视化大屏。<span class="box warn">不适合：</span>简单静态图（直接用 Canvas/图片即可）。</div>
 
-  <h2 id="s2">2. 工程化起步</h2>
-  <pre><code">'use client';
-import { Application, Sprite, Assets } from 'pixi.js';
-
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>import { Application, Sprite, Assets } from 'pixi.js';
 const app = new Application();
-await app.init({ width: 800, height: 600, background: '#0f1424' });
+await app.init({ width: 800, height: 600, background: '#0a0e17' });
 document.body.appendChild(app.canvas);</code></pre>
-  <p>v8 用 <code>app.init()</code> 异步初始化；<code>app.canvas</code> 是真实 <code>&lt;canvas&gt;</code>。可嵌入 <a href="react.html">React</a> 的 ref 容器。</p>
+  <p>PixiJS v8 用 <code>await app.init()</code> 异步初始化（WebGL 上下文）。</p>
 
-  <h2 id="s3">3. 场景图与核心</h2>
+  <h2 id="s3">3. 核心概念</h2>
   <ul>
-    <li><b>Stage</b>：根容器，所有对象挂在它下面。</li>
-    <li><b>Container</b>：分组容器（可嵌套），统一管理位置/缩放/可见。</li>
-    <li><b>Sprite</b>：基于纹理的显示对象（图）。<b>Graphics</b>：用代码画的矢量图形。<b>Text</b>：文本。</li>
+    <li><b>Stage</b>：根容器，所有可见对象挂在它下面。</li>
+    <li><b>Container</b>：分组容器，可嵌套，便于整体移动/隐藏。</li>
+    <li><b>Sprite</b>：精灵，贴一张纹理（Texture）。</li>
+    <li><b>Texture</b>：纹理，图片在 GPU 上的表示。</li>
   </ul>
-  <pre><code">import { Container, Graphics } from 'pixi.js';
-const layer = new Container();
-const g = new Graphics().circle(0, 0, 50).fill('#6366f1');
-layer.addChild(g);
-app.stage.addChild(layer);</code></pre>
+  <pre><code>const sprite = Sprite.from('hero.png');
+sprite.x = 100; sprite.anchor.set(0.5);  // 锚点居中
+app.stage.addChild(sprite);</code></pre>
 
-  <h2 id="s4">4. 渲染原理</h2>
-  <p>关键在<strong>批渲染（batching）</strong>：WebGL 一次 draw call 能画很多个“用同一纹理/同材质的精灵”。Pixi 自动把可合并的对象合并成批量，draw call 从“每对象一次”降到“每批一次”。</p>
-  <div class="box warn"><span class="bt">资深视角：</span>性能瓶颈常不在“对象多”，而在“批被打断”（不同纹理穿插）。把同纹理精灵连续绘制、用图集，批才不会断。</div>
-
-  <h2 id="s5">5. 资源与精灵</h2>
-  <pre><code">const texture = await Assets.load('/hero.png');
-const hero = new Sprite(texture);
-hero.anchor.set(0.5);          // 锚点居中，旋转/缩放绕中心
-hero.position.set(400, 300);
-app.stage.addChild(hero);</code></pre>
-  <ul>
-    <li><code>anchor</code>：锚点（0~1），决定旋转/缩放中心。</li>
-    <li><b>纹理图集（atlas）</b>：把多张小图拼一张大图，减少纹理切换、提升批渲染。</li>
-  </ul>
-
-  <h2 id="s6">6. 交互</h2>
-  <pre><code">hero.eventMode = 'static';     // 开启交互
-hero.cursor = 'pointer';
-hero.on('pointerdown', () =&gt; console.log('点到了'));</code></pre>
-  <p>用 <code>hitArea</code> 自定义点击区域；支持拖拽（监听 pointermove + 全局坐标）。</p>
-
-  <h2 id="s7">7. Ticker 与动画</h2>
-  <pre><code">app.ticker.add((ticker) =&gt; {
-  hero.rotation += 0.02 * ticker.deltaTime;   // 帧率无关推进
+  <h2 id="s4">4. 渲染循环</h2>
+  <pre><code>app.ticker.add((ticker) =&gt; {
+  sprite.x += ticker.deltaTime * 2;  // 与帧率无关的移动
 });</code></pre>
+  <div class="box ok"><span class="bt">资深：</span>用 <code>deltaTime</code> 而非固定步长，保证不同帧率下速度一致（高刷屏不会变快）。</div>
+
+  <h2 id="s5">5. 精灵与图集</h2>
   <ul>
-    <li><code>Ticker</code> 是游戏主循环，每帧回调。用 <code>deltaTime</code> 让动画与帧率无关（高刷/低刷速度一致）。</li>
-    <li>粒子、缓动可用社区库或自写。</li>
+    <li><b>图集（Atlas）</b>：把多张小图拼成一张大图 + JSON，减少纹理切换，提升批处理率。</li>
+    <li><b>AnimatedSprite</b>：多帧纹理播放动画（行走、爆炸）。</li>
   </ul>
 
-  <h2 id="s8">8. 性能优化</h2>
+  <h2 id="s6">6. 文本与图形</h2>
+  <pre><code>import { Text, Graphics } from 'pixi.js';
+const t = new Text({ text: '得分', style: { fill: 0xffffff } });
+const g = new Graphics().circle(0,0,30).fill(0x4ade80);</code></pre>
+  <p><code>Graphics</code> 画矢量（圆/矩形/线），<code>Text</code> 渲染文本。</p>
+
+  <h2 id="s7">7. 交互</h2>
+  <pre><code>sprite.eventMode = 'static';   // 开启交互
+sprite.on('pointerdown', () =&gt; { /* 点击 */ });</code></pre>
+  <p>用 <code>eventMode</code> 替代旧版 <code>interactive</code>，按需开启以保证性能。</p>
+
+  <h2 id="s8">8. 滤镜特效</h2>
+  <p>Pixi 内置/社区滤镜：模糊、发光、位移贴图、颜色矩阵。特效很炫但要算 GPU，别给全屏每帧加重滤镜。</p>
+
+  <h2 id="s9">9. 性能</h2>
   <ul>
-    <li><b>纹理图集</b>：合并小图，连续绘制保批。</li>
-    <li><b>对象池</b>：子弹/粒子复用，别每帧 <code>new</code> + 销毁（GC 抖动）。</li>
-    <li><b>避免每帧创建对象</b>：在循环外建好、循环内改属性。</li>
-    <li><b>视口裁剪</b>：屏幕外的精灵设 <code>cullable</code> 让其不被送 GPU。</li>
+    <li><b>批处理</b>：同纹理、同 blend 才能合并绘制调用，尽量用图集。</li>
+    <li><b>避免每帧 new</b>：对象/纹理复用，别在 ticker 里创建。</li>
+    <li><b>对象池</b>：子弹/粒子用池复用，减少 GC。</li>
   </ul>
 
-  <h2 id="s9">9. 与 Canvas2D 边界</h2>
-  <div class="box ok"><span class="bt">选型：</span>少量静态图形/图表 → 原生 Canvas2D 更轻；<strong>大量动态对象、粒子、游戏</strong> → PixiJS。两者都不是 DOM，复杂 UI 仍用 DOM/React 叠加。</div>
-
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>对象不销毁 → 内存泄漏。移除时 <code>destroy({ children: true })</code> 并释放纹理。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>Ticker 回调不移除 → 页面切走仍在跑，耗电；组件卸载时 <code>ticker.remove</code>。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>高分屏模糊 → 设 <code>resolution: window.devicePixelRatio</code> 并 <code>autoDensity</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>纹理穿插打乱批渲染，draw call 暴涨。</div>
-
-  <h2 id="s11">11. 调试</h2>
-  <ul>
-    <li>Pixi 官方 <b>Pixi Inspector</b>（浏览器扩展）看场景图。</li>
-    <li>DevTools Performance 看帧时间；关注 draw call 数量。</li>
-  </ul>
-
-  <h2 id="s12">12. 成长路线</h2>
+  <h2 id="s10">10. 与 Canvas2D</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能加载图、画个会动精灵</td></tr>
-    <tr><td>初级</td><td>会交互、Ticker 动画、文本</td></tr>
-    <tr><td>中级</td><td>懂批渲染、图集、对象池优化</td></tr>
-    <tr><td>资深</td><td>设计渲染架构、压 draw call、控内存与帧率</td></tr>
+    <tr><th></th><th>PixiJS/WebGL</th><th>Canvas 2D</th></tr>
+    <tr><td>绘制</td><td>GPU 批处理</td><td>CPU 逐帧</td></tr>
+    <tr><td>规模</td><td>千级对象流畅</td><td>数百即吃力</td></tr>
+    <tr><td>上手</td><td>概念多</td><td>简单直接</td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 Pixi 做一个弹球/粒子效果 ② 用图集批量渲染 1000 个精灵并看 draw call ③ 实现一个对象池的子弹系统 ④ 在 React 里挂载并在卸载时清理 Ticker。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解 GPU 批渲染与场景图，能做出稳定高帧率的 2D 画面——这是资深互动/游戏前端的分水岭。</div>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 内存：</span>纹理不销毁会显存泄漏，用 <code>texture.destroy()</code> 释放。</div>
+  <div class="box warn"><span class="bt">坑 2 全开交互：</span>给所有对象开 <code>eventMode</code> 会变慢，只在需要的对象上开。</div>
+  <div class="box warn"><span class="bt">坑 3 分辨率：</span>高 DPI 下设 <code>resolution: devicePixelRatio</code> 保持清晰。</div>
+
+  <h2 id="s12">12. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://pixijs.com" target="_blank" rel="noopener">pixijs.com</a> 示例。</li>
+    <li>先懂 <a href="canvas2d.html">Canvas 2D</a> 与 <a href="javascript">JavaScript</a> 异步。</li>
+    <li>练：做“精灵移动 + 点击 + 对象池子弹”的小游戏原型。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>懂得用图集/批处理把绘制调用压到最低、用对象池避免 GC 卡顿，并知道何时 Pixi 也扛不住要上 WebGL 自定义 shader。</div>
 </main>
 </div>
 <script>

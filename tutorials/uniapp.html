@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>uni-app · 从小白到资深前端</title>
+<title>uni-app · 从小白到跨端开发</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,116 +15,100 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">uni-app<small>从小白到资深前端</small></div>
+  <div class="tbrand">uni-app<small>从小白到跨端开发</small></div>
   <a href="#s1">1. 它解决什么问题</a>
   <a href="#s2">2. 工程化起步</a>
-  <a href="#s3">3. 核心机制</a>
-  <a href="#s4">4. 跨端原理</a>
-  <a href="#s5">5. 组件与 API</a>
-  <a href="#s6">6. 路由与页面</a>
-  <a href="#s7">7. 状态与样式</a>
-  <a href="#s8">8. 原生能力</a>
-  <a href="#s9">9. 性能与分包</a>
-  <a href="#s10">10. 常见坑</a>
-  <a href="#s11">11. 调试</a>
-  <a href="#s12">12. 成长路线</a>
+  <a href="#s3">3. 语法</a>
+  <a href="#s4">4. 页面与路由</a>
+  <a href="#s5">5. 生命周期</a>
+  <a href="#s6">6. 跨端 API</a>
+  <a href="#s7">7. 条件编译</a>
+  <a href="#s8">8. 状态管理</a>
+  <a href="#s9">9. 打包发行</a>
+  <a href="#s10">10. 与 Vue</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>uni-app：从小白到资深前端</h1>
-  <p class="tsub">uni-app 用 <a href="vue3.html">Vue</a> 语法写一套代码，编译到 H5、微信/支付宝等小程序、App（iOS/Android）。本教程讲透<strong>跨端编译原理、条件编译、pages.json 路由、平台差异与原生能力</strong>——这是资深做跨端工程的实战认知。</p>
+  <h1>uni-app：从小白到跨端开发</h1>
+  <p class="tsub"><a href="uniapp.html">uni-app</a> 用 <a href="vue3.html">Vue</a> 语法一套代码发布到 H5、微信/支付宝小程序、App（iOS/Android）。本教程讲清它怎么消弭多端差异、配置怎么写、以及跨端开发的真实取舍。</p>
 
   <h2 id="s1">1. 它解决什么问题</h2>
-  <p>一套业务要在 H5、多个小程序、App 上跑，各端语法/API 不同，重复开发成本高。uni-app 用统一的 Vue 代码 + 编译转换，<strong>一次编写多端发布</strong>。</p>
-  <div class="box"><span class="bt">一句话：</span>uni-app 把 Vue 代码编译成各端的原生形态（小程序 WXML/微信 API、H5 的 Web、App 的 Weex/native），兼顾开发效率与覆盖。</div>
-  <div class="box ok"><span class="bt">对比：</span>纯原生（每端一套，体验最好但成本高）；Flutter/RN（跨 App 强，但小程序支持弱）；uni-app（小程序 + H5 + App 全覆盖，国内生态好）。</div>
+  <p>同一业务要维护 Web、微信小程序、App 三套代码，人力三倍。uni-app 让你的 Vue 代码“编译”到各端运行时，大幅复用。</p>
+  <div class="box"><span class="bt">一句话：</span>uni-app = Vue 语法 + 跨端编译 + 统一 API。写一次，发多端。</div>
+  <div class="box ok"><span class="bt">适合：</span>需要同时覆盖 H5/小程序/App 的业务。<span class="box warn">不适合：</span>只做 Web 的项目（直接用 Vue 更轻，何必跨端抽象）。</div>
 
   <h2 id="s2">2. 工程化起步</h2>
-  <pre><code">npm install -g @vue/cli
-vue create -p dcloudio/uni-preset-vue my-uniapp
-cd my-uniapp &amp;&amp; npm install
-npm run dev:h5          # 跑 H5
-npm run dev:mp-weixin   # 跑微信小程序（用微信开发者工具打开 dist）</code></pre>
-  <p>也可用官方 HBuilderX（可视化、真机调试方便）。</p>
+  <pre><code>npx degit dcloudio/uni-preset-vue#vite-ts myapp
+cd myapp &amp;&amp; pnpm i
+# 用 HBuilderX 或 CLI 运行到各端</code></pre>
+  <p>底层可走 <a href="vite.html">Vite</a>，开发体验和 Vue 项目一致。</p>
 
-  <h2 id="s3">3. 核心机制</h2>
-  <pre><code">&lt;template&gt;
-  &lt;view class="content"&gt;{{ title }}&lt;/view&gt;   &lt;!-- 用 view 而非 div（小程序生效） --&gt;
-&lt;/template&gt;
-&lt;script setup&gt;
-const title = '你好 uni-app';
-&lt;/script&gt;</code></pre>
-  <ul>
-    <li>语法是 Vue，但<strong>组件要用 uni 内置标签</strong>（<code>view/text/image</code>），它们在各端映射到原生组件。</li>
-    <li><b>生命周期</b>：应用级 <code>onLaunch</code>、页面级 <code>onLoad/onShow</code>（兼容 Vue 的 <code>onMounted</code>）。</li>
-  </ul>
+  <h2 id="s3">3. 语法</h2>
+  <p>基本就是 <a href="vue3.html">Vue 3</a>：<code>&lt;script setup&gt;</code>、<code>ref</code>/<code>reactive</code>、模板指令通用。只是要把浏览器专属 API 换成 uni 的跨端 API。</p>
+  <pre><code>&lt;template&gt;&lt;view class="card"&gt;{{ msg }}&lt;/view&gt;&lt;/template&gt;
+&lt;script setup&gt;const msg = ref('hi')&lt;/script&gt;</code></pre>
+  <div class="box warn"><span class="bt">注意：</span>标签用 <code>&lt;view&gt;</code> 而非 <code>&lt;div&gt;</code>（小程序无 div），uni 会按端映射。</div>
 
-  <h2 id="s4">4. 跨端原理</h2>
-  <p>uni-app 在编译期把 Vue SFC 转成目标平台代码：小程序端生成 <code>.wxml/.wxss/.js</code> 并调用微信 API；H5 端生成标准 Web；App 端走原生渲染。因此<strong>运行时不依赖 Vue 运行时解释</strong>，而是真编译。</p>
-  <div class="box warn"><span class="bt">坑底：</span>不是“运行时兼容层”，所以各端能力差异要在<strong>编译期/代码里</strong>处理（见条件编译）。</div>
-
-  <h2 id="s5">5. 组件与 API</h2>
-  <ul>
-    <li>UI 用 uni 组件（<code>view/text/scroll-view/swiper</code>），别用 HTML 标签（小程序不认）。</li>
-    <li>设备/网络 API 用 <code>uni.xxx</code>：<code>uni.request</code>、<code>uni.navigateTo</code>、<code>uni.getSystemInfo</code>。</li>
-  </ul>
-  <pre><code">uni.request({ url: '/api/user', success: (res) =&gt; console.log(res.data) });</code></pre>
-
-  <h2 id="s6">6. 路由与页面</h2>
-  <p>路由在 <code>pages.json</code> 声明（不是写路由文件）：</p>
-  <pre><code">{
+  <h2 id="s4">4. 页面与路由</h2>
+  <p>路由在 <code>pages.json</code> 里声明：</p>
+  <pre><code>{
   "pages": [
-    { "path": "pages/index/index", "style": { "navigationBarTitleText": "首页" } },
-    { "path": "pages/user/user" }
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "首页" } }
   ],
-  "tabBar": { "list": [{ "pagePath": "pages/index/index", "text": "首页" }] }
+  "tabBar": { "list": [ { "pagePath": "pages/index/index", "text": "首页" } ] }
 }</code></pre>
-  <div class="box ok"><span class="bt">要点：</span>新页面要在 <code>pages</code> 数组登记，否则编译不到；<code>tabBar</code> 做底部导航。</div>
-
-  <h2 id="s7">7. 状态与样式</h2>
   <ul>
-    <li>状态管理同 Vue：<a href="vue3.html">Pinia</a> 可用。</li>
-    <li>尺寸用 <code>rpx</code>（响应式像素，750rpx = 屏宽），自动适配不同屏幕；H5 也可用 px。</li>
+    <li>页面即文件夹，新增页要在 <code>pages</code> 注册。</li>
+    <li>跳转用 <code>uni.navigateTo</code>，替代 <code>router.push</code>。</li>
   </ul>
 
-  <h2 id="s8">8. 原生能力</h2>
+  <h2 id="s5">5. 生命周期</h2>
   <ul>
-    <li><b>插件市场</b>：DCloud 插件市场有大量原生扩展（支付、地图、推送）。</li>
-    <li><b>原生模块 / 离线打包</b>：需要深度原生能力时用原生插件或 App 离线打包。</li>
-    <li>条件编译调用平台 API：<code>// #ifdef MP-WEIXIN ... // #endif</code>。</li>
+    <li>组件生命周期同 Vue（<code>onMounted</code> 等）。</li>
+    <li>页面级多了 <code>onLoad/onShow/onPullDownRefresh</code> 等，对应小程序规范。</li>
   </ul>
 
-  <h2 id="s9">9. 性能与分包</h2>
+  <h2 id="s6">6. 跨端 API</h2>
+  <pre><code>uni.request({ url, success: (res) =&gt; {} });   // 替代 fetch（小程序无 fetch）
+uni.showToast({ title: 'ok' });                  // 替代 alert</code></pre>
+  <div class="box ok"><span class="bt">统一：</span>网络、存储、导航、弹窗都走 <code>uni.*</code>，uni 负责按端翻译成对应实现。</div>
+
+  <h2 id="s7">7. 条件编译</h2>
+  <p>端差异用注释条件编译隔离：</p>
+  <pre><code>// #ifdef MP-WEIXIN
+console.log('只在微信小程序执行');
+// #endif
+// #ifdef H5
+console.log('只在 H5 执行');
+// #endif</code></pre>
+
+  <h2 id="s8">8. 状态管理</h2>
+  <p>可用 Pinia（见 <a href="zustand.html">状态管理</a> 思路，Vue 版即 Pinia）或 Vuex 管理全局状态，跨端通用。</p>
+
+  <h2 id="s9">9. 打包发行</h2>
   <ul>
-    <li><b>小程序分包</b>：主包超限（如微信 2MB）要拆 <code>subPackages</code>，首屏只下主包。</li>
-    <li>长列表用 <code>scroll-view</code> 或虚拟列表，避免一次性渲染。</li>
-    <li>H5 端按需引入，减包。</li>
+    <li><b>H5</b>：编译成普通 Web 包。</li>
+    <li><b>小程序</b>：编译成各平台小程序代码，再进各自开发者工具上传。</li>
+    <li><b>App</b>：云打包或本地打包成 iOS/Android 安装包。</li>
   </ul>
 
-  <h2 id="s10">10. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>用 <code>div/span</code> 而非 <code>view/text</code> → 小程序端不渲染或异常。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>平台 API 差异（如 H5 有 window、小程序没有）→ 必须用条件编译，否则某端崩。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>条件编译散落各处，代码可读性差；集中抽“平台适配层”。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>小程序主包超体积 → 不分包无法上传。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>V3/Vue3 模式下部分旧 API 不支持，要查兼容表。</div>
+  <h2 id="s10">10. 与 Vue</h2>
+  <p>uni-app 的语法是 Vue 的子集/超集：会 <a href="vue3.html">Vue 3</a> 几乎零成本上手，只是要避开浏览器专属 API 与 DOM 操作（小程序没有 DOM）。</p>
 
-  <h2 id="s11">11. 调试</h2>
-  <ul>
-    <li>H5：浏览器 DevTools。</li>
-    <li>小程序：对应平台开发者工具（微信/支付宝）。</li>
-    <li>App：HBuilderX 真机运行 / 模拟器。</li>
-  </ul>
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 DOM 操作：</span>小程序无 DOM，<code>document.querySelector</code> 不可用，要用 ref/data 驱动。</div>
+  <div class="box warn"><span class="bt">坑 2 平台差异：</span>某端特有 API 必须条件编译，否则其它端报错。</div>
+  <div class="box warn"><span class="bt">坑 3 体积：</span>App 端引入大 SDK 会显著增大包体，按需引入。</div>
 
-  <h2 id="s12">12. 成长路线</h2>
-  <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>能创建项目、写页面跑 H5/小程序</td></tr>
-    <tr><td>初级</td><td>会路由、API、条件编译</td></tr>
-    <tr><td>中级</td><td>分包、原生插件、平台适配层</td></tr>
-    <tr><td>资深</td><td>设计跨端架构、把控包体积与各端质量</td></tr>
-  </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 uni-app 写一个列表页并跑 H5 + 微信小程序 ② 用 pages.json 配 tabBar ③ 写一个只在微信端生效的功能（条件编译）④ 给小程序做分包。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解“编译到多端”的跨端范式，能在平台差异中设计出稳健的适配架构——这是资深跨端工程师的能力。</div>
+  <h2 id="s12">12. 资源与路线</h2>
+  <ol>
+    <li>官方 <a href="https://uniapp.dcloud.net.cn" target="_blank" rel="noopener">uni-app 文档</a>。</li>
+    <li>先学 <a href="vue3.html">Vue 3</a> 与 <a href="vite.html">Vite</a>。</li>
+    <li>练：做一个能跑在 H5 和小程序的待办，体验条件编译。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能清晰划分“跨端共用逻辑”与“端差异代码”，用条件编译把平台耦合降到最低，而不是满屏 <code>ifdef</code>。</div>
 </main>
 </div>
 <script>

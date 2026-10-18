@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canvas 2D · 小白通关教程</title>
+<title>Canvas 2D · 从小白到游戏渲染</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,92 +15,105 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">Canvas 2D<small>小白通关教程</small></div>
-  <a href="#s1">1. 这是什么</a>
-  <a href="#s2">2. 环境准备</a>
-  <a href="#s3">3. 第一个画布</a>
-  <a href="#s4">4. 画图形/文字</a>
-  <a href="#s5">5. 动画循环</a>
-  <a href="#s6">6. 鼠标交互</a>
-  <a href="#s7">7. 实战：弹球</a>
-  <a href="#s8">8. 常见坑</a>
-  <a href="#s9">9. 下一步</a>
+  <div class="tbrand">Canvas 2D<small>从小白到游戏渲染</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 起步</a>
+  <a href="#s3">3. 坐标系与状态</a>
+  <a href="#s4">4. 基本形状</a>
+  <a href="#s5">5. 颜色与样式</a>
+  <a href="#s6">6. 文本与图像</a>
+  <a href="#s7">7. 动画循环</a>
+  <a href="#s8">8. 变换</a>
+  <a href="#s9">9. 性能优化</a>
+  <a href="#s10">10. 与 WebGL</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 实战</a>
+  <a href="#s13">13. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>Canvas 2D</h1>
-  <p class="tsub">浏览器原生的“画布”绘图 API —— 不依赖任何库，画线、画图、做动画、做小游戏都行。学完你能脱离框架直接画 2D 画面。</p>
+  <h1>Canvas 2D：从小白到游戏渲染</h1>
+  <p class="tsub"><a href="canvas2d.html">Canvas 2D</a> 是浏览器原生的<strong>位图绘图 API</strong>：你拿到一块画布，用代码逐帧画点线面。它零依赖、上手快，是 2D 小游戏与可视化的好起点。本教程讲清坐标系、绘制、动画循环与性能陷阱。</p>
 
-  <h2 id="s1">1. 这是什么</h2>
-  <p><strong>Canvas</strong> 是 HTML 的一个 <code>&lt;canvas&gt;</code> 元素，配 JavaScript 的 2D 上下文（<code>getContext('2d')</code>），可以像素级地绘制图形、文字、图像。</p>
-  <div class="box"><span class="bt">一句话：</span>它是一个“画板”，你用 JS 命令在上面画点、线、矩形、圆，并一帧帧更新做成动画。</div>
-  <div class="box ok"><span class="bt">vs PixiJS：</span>Canvas 2D 是底层标准、零依赖、易上手；PixiJS 在其上封装、用 GPU 更快。新手先学 Canvas 2D 打基础。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>Canvas 是一块<strong>像素画布</strong>，所有内容由 JS 命令绘制，浏览器不保留“对象结构”（不像 DOM）。适合高频重绘的游戏、图表。</p>
+  <div class="box"><span class="bt">一句话：</span>Canvas = 一块像素板 + 一套绘图命令。你负责每一帧画什么。</div>
+  <div class="box ok"><span class="bt">适合：</span>游戏、粒子、图表、图像编辑。<span class="box warn">不适合：</span>需要点击某个“图形”并单独交互（要自己算命中），此时用 SVG/DOM 更省心。</div>
 
-  <h2 id="s2">2. 环境准备</h2>
-  <p>零依赖，只要一个浏览器 + 文本编辑器。新建 <code>index.html</code> 即可。</p>
+  <h2 id="s2">2. 起步</h2>
+  <pre><code>&lt;canvas id="c" width="800" height="600"&gt;&lt;/canvas&gt;
+const ctx = document.getElementById('c').getContext('2d');</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>canvas 的 <code>width/height</code> 是<strong>绘图分辨率</strong>，CSS 的 <code>width/height</code> 是显示尺寸，两者不一致会拉伸模糊。高清屏要按 <code>devicePixelRatio</code> 放大。</div>
 
-  <h2 id="s3">3. 第一个画布</h2>
-  <pre><code>&lt;canvas id="cv" width="400" height="300"&gt;&lt;/canvas&gt;
-&lt;script&gt;
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');      // 拿到画笔
-ctx.fillStyle = '#5b8cff';
-ctx.fillRect(50, 50, 120, 80);        // 画一个矩形
-&lt;/script&gt;</code></pre>
-  <div class="box ok"><span class="bt">提示：</span>canvas 的 <code>width/height</code> 属性才是真实像素尺寸；用 CSS 改大小会拉伸模糊，要用 <code>cv.width = ...</code>。</div>
+  <h2 id="s3">3. 坐标系与状态</h2>
+  <ul>
+    <li>原点在<strong>左上角</strong>，x 右、y 下。</li>
+    <li>绘图状态（颜色、线宽、变换）是“栈”，用 <code>save()/restore()</code> 包裹避免污染。</li>
+  </ul>
+  <pre><code>ctx.save();
+ctx.fillStyle = 'red'; ctx.fillRect(0,0,50,50);
+ctx.restore();  // 恢复之前状态</code></pre>
 
-  <h2 id="s4">4. 画图形/文字</h2>
-  <pre><code>ctx.fillStyle = '#39e0d0';  ctx.fillRect(0,0,40,40);   // 实心矩形
-ctx.strokeStyle = '#fff';  ctx.strokeRect(60,0,40,40); // 描边矩形
-ctx.beginPath(); ctx.arc(150, 40, 20, 0, Math.PI*2); ctx.fill(); // 圆
-ctx.fillStyle = '#fff'; ctx.font = '20px sans-serif';
-ctx.fillText('你好', 200, 45);</code></pre>
+  <h2 id="s4">4. 基本形状</h2>
+  <pre><code>ctx.fillRect(x,y,w,h);            // 填充矩形
+ctx.strokeRect(x,y,w,h);           // 描边矩形
+ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();  // 圆
+ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(100,100); ctx.stroke();  // 线</code></pre>
 
-  <h2 id="s5">5. 动画循环</h2>
+  <h2 id="s5">5. 颜色与样式</h2>
+  <ul>
+    <li><code>fillStyle</code> / <code>strokeStyle</code>：颜色、渐变、图案。</li>
+    <li><code>lineWidth</code>、<code>lineCap</code>、<code>globalAlpha</code> 透明度。</li>
+    <li>渐变：<code>createLinearGradient</code>。</li>
+  </ul>
+
+  <h2 id="s6">6. 文本与图像</h2>
+  <pre><code>ctx.font = '16px sans-serif';
+ctx.fillText('得分:10', 10, 20);
+const img = new Image(); img.src='s.png';
+img.onload = () =&gt; ctx.drawImage(img, x, y);  // 画精灵</code></pre>
+  <div class="box ok"><span class="bt">精灵：</span>游戏里角色/道具就是一张图，用 <code>drawImage</code> 按坐标贴上去。</div>
+
+  <h2 id="s7">7. 动画循环</h2>
   <pre><code>function loop() {
-  ctx.clearRect(0, 0, cv.width, cv.height);   // 清空上一帧
-  // ...在这里画新位置...
-  requestAnimationFrame(loop);                // 下一帧
+  ctx.clearRect(0,0,W,H);   // 清屏
+  update();                 // 更新逻辑（位置/速度）
+  draw();                   // 重绘
+  requestAnimationFrame(loop);  // 下一帧
 }
 loop();</code></pre>
+  <div class="box warn"><span class="bt">关键：</span>每帧先 <code>clearRect</code> 再画，否则旧画面会叠加残留。</div>
 
-  <h2 id="s6">6. 鼠标交互</h2>
-  <pre><code>cv.addEventListener('mousemove', (e) =&gt; {
-  const x = e.offsetX, y = e.offsetY;   // 相对画布坐标
-  console.log(x, y);
-});</code></pre>
+  <h2 id="s8">8. 变换</h2>
+  <pre><code>ctx.translate(x,y); ctx.rotate(angle); ctx.scale(s,s);
+// 之后绘制的坐标都相对新原点/角度</code></pre>
+  <p>配合 <code>save/restore</code> 做“围绕物体中心旋转”等效果。</p>
 
-  <h2 id="s7">7. 实战：弹球</h2>
-  <pre><code>const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-let x = 50, y = 50, vx = 3, vy = 2;
-function loop() {
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  x += vx; y += vy;
-  if (x &lt; 10 || x &gt; cv.width-10) vx *= -1;
-  if (y &lt; 10 || y &gt; cv.height-10) vy *= -1;
-  ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#facc15'; ctx.fill();
-  requestAnimationFrame(loop);
-}
-loop();</code></pre>
-  <div class="box ok"><span class="bt">运行：</span>在 <code>&lt;canvas id="cv" width="400" height="300"&gt;&lt;/canvas&gt;</code> 下方放这段脚本，黄小球会在框内反弹。</div>
+  <h2 id="s9">9. 性能优化</h2>
+  <ul>
+    <li><b>离屏 canvas</b>：把静态背景预渲染到离屏画布，每帧直接贴。</li>
+    <li><b>分层</b>：动的层与静的层分开。</li>
+    <li>避免每帧创建对象/路径过多；批量绘制。</li>
+  </ul>
 
-  <h2 id="s8">8. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>用 CSS 设宽高导致画面模糊——用 <code>cv.width/height</code> 属性设真实分辨率（高 DPI 屏乘以 devicePixelRatio）。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>忘记 <code>beginPath()</code>，多条路径连在一起乱画。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>动画不清除上一帧，画面糊成一片——每帧 <code>clearRect</code>。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>ctx 状态（fillStyle 等）会保留，连续画不同颜色要重新赋值。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>大量对象逐帧重画卡顿——考虑用 <a href="pixijs.html">PixiJS</a>/WebGL。</div>
+  <h2 id="s10">10. 与 WebGL</h2>
+  <p>Canvas 2D 是 CPU 绘制，元素多会卡；要渲染几千个精灵、特效，用 <a href="pixijs.html">PixiJS/WebGL</a> 走 GPU。</p>
 
-  <h2 id="s9">9. 下一步</h2>
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 清晰度：</span>没按 dpr 放大，画面发虚。</div>
+  <div class="box warn"><span class="bt">坑 2 状态污染：</span>忘了 restore，导致后续颜色/变换错乱。</div>
+  <div class="box warn"><span class="bt">坑 3 命中检测：</span>Canvas 不保留对象，点哪个图形要自己算距离/包围盒。</div>
+
+  <h2 id="s12">12. 实战</h2>
+  <p>“土豆勇士”这类小游戏：维护一个实体数组（位置/速度），每帧 update + draw；键盘/触摸改速度；分数用 <code>fillText</code> 画。逻辑与 <a href="pixijs.html">PixiJS</a> 版可复用，只是绘制 API 不同。</p>
+
+  <h2 id="s13">13. 资源与路线</h2>
   <ol>
-    <li>用 Canvas 做一个随鼠标移动的光标特效。</li>
-    <li>学 <a href="pixijs.html">PixiJS</a> 提升渲染性能。</li>
-    <li>学 <a href="socketio.html">Socket.IO</a> 把画布状态同步给多人。</li>
-    <li>看主页动态背景，就是 Canvas 粒子。</li>
+    <li>MDN <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API" target="_blank" rel="noopener">Canvas 教程</a>。</li>
+    <li>配套学 <a href="html.html">HTML</a>、<a href="css.html">CSS</a>、<a href="javascript">JavaScript</a>。</li>
+    <li>练：写一个“移动方块 + 键盘控制 + 计分”的小 demo。</li>
   </ol>
-  <div class="box ok"><span class="bt">毕业：</span>能拿画笔、画图形文字、做动画循环与交互——原生 2D 绘图你已掌握。</div>
+  <div class="box ok"><span class="bt">资深标志：</span>懂得用离屏/分层把帧率稳住、理解 Canvas 与 WebGL 的能力边界，并能把游戏逻辑与渲染解耦。</div>
 </main>
 </div>
 <script>

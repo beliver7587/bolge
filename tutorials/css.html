@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CSS · 从小白到资深前端</title>
+<title>CSS · 从小白到布局专家</title>
 <link rel="stylesheet" href="../assets/css/tech.css">
 </head><body>
 <canvas id="bg"></canvas>
@@ -15,128 +15,130 @@
 <nav class="tside" id="tside">
   <a class="tback-dt" href="../index.html">← 返回教程库</a>
 
-  <div class="tbrand">CSS<small>从小白到资深前端</small></div>
-  <a href="#s1">1. 它解决什么问题</a>
-  <a href="#s2">2. 基础与盒模型</a>
-  <a href="#s3">3. 层叠与优先级</a>
-  <a href="#s4">4. 布局：Flex / Grid</a>
-  <a href="#s5">5. 响应式</a>
-  <a href="#s6">6. 视觉与动画</a>
-  <a href="#s7">7. 架构与可维护性</a>
-  <a href="#s8">8. 现代特性</a>
-  <a href="#s9">9. 性能</a>
-  <a href="#s10">10. 与框架结合</a>
-  <a href="#s11">11. 常见坑</a>
-  <a href="#s12">12. 调试</a>
-  <a href="#s13">13. 成长路线</a>
+  <div class="tbrand">CSS<small>从小白到布局专家</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 引入与优先级</a>
+  <a href="#s3">3. 盒模型</a>
+  <a href="#s4">4. 选择器</a>
+  <a href="#s5">5. 布局总览</a>
+  <a href="#s6">6. Flexbox</a>
+  <a href="#s7">7. Grid</a>
+  <a href="#s8">8. 定位</a>
+  <a href="#s9">9. 响应式</a>
+  <a href="#s10">10. 单位</a>
+  <a href="#s11">11. 过渡与动画</a>
+  <a href="#s12">12. 变量</a>
+  <a href="#s13">13. 常见坑</a>
+  <a href="#s14">14. 与 Tailwind</a>
+  <a href="#s15">15. 资源与路线</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
-  <h1>CSS：从小白到资深前端</h1>
-  <p class="tsub"><a href="html.html">HTML</a> 管“结构”，CSS 管“表现”。本教程从“会改颜色”讲到“布局引擎原理、层叠优先级、响应式体系、CSS 架构与渲染性能”——这是资深前端在样式层必须掌握的判断力。</p>
+  <h1>CSS：从小白到布局专家</h1>
+  <p class="tsub">CSS 控制网页的<strong>外观与布局</strong>：颜色、间距、字体、定位、动画。本教程从盒模型讲到 Flex/Grid 与响应式，帮你建立“看见设计稿就能写出布局”的能力。</p>
 
-  <h2 id="s1">1. 它解决什么问题</h2>
-  <p>没有 CSS，网页只有默认黑字白底。CSS 用<strong>选择器</strong>把“样式规则”应用到元素上，实现布局、视觉与交互反馈。</p>
-  <div class="box"><span class="bt">一句话：</span>CSS 是<strong>声明式</strong>的：你描述“某类元素应该长什么样”，浏览器负责计算并绘制。难点在于“多条规则冲突时谁赢”（层叠）和“怎么高效布局”（布局引擎）。</div>
-  <div class="box ok"><span class="bt">资深视角：</span>CSS 不是“美化”，是<strong>布局系统 + 渲染性能 + 可维护架构</strong>。写得好，响应式/主题/性能都省心；写得烂，!important 满天飞、改一处崩一片。</div>
+  <h2 id="s1">1. 它是什么</h2>
+  <p>CSS（Cascading Style Sheets）用<strong>选择器</strong>选中 <a href="html.html">HTML</a> 元素并施加样式，且样式可“层叠”合并。</p>
+  <div class="box"><span class="bt">一句话：</span>HTML 给结构，CSS 给样子。层叠（Cascade）= 多条规则按优先级合并到同一元素。</div>
 
-  <h2 id="s2">2. 基础与盒模型</h2>
+  <h2 id="s2">2. 引入与优先级</h2>
   <ul>
-    <li><b>引入</b>：外链 <code>&lt;link&gt;</code>（推荐，可缓存）、<code>&lt;style&gt;</code> 内联、<code>style</code> 属性（最高优先级，尽量别用）。</li>
-    <li><b>盒模型</b>：每个元素是一个盒子，由 <code>content + padding + border + margin</code> 组成。默认 <code>width</code> 只算 content；设 <code>box-sizing: border-box</code> 让 width 含 padding/border——<strong>全局必设</strong>。</li>
-    <li><b>单位</b>：<code>px</code> 固定；<code>rem</code>（相对根字体，利于无障碍缩放）；<code>em</code>（相对父）；<code>vw/vh</code>（视口）；<code>%</code>（相对父）。</li>
+    <li>外部 <code>&lt;link&gt;</code>：最推荐，样式与结构分离。</li>
+    <li>内部 <code>&lt;style&gt;</code>：单页快但难复用。</li>
+    <li>内联 <code>style=""</code>：优先级最高但难维护。</li>
   </ul>
-  <pre><code">*, *::before, *::after { box-sizing: border-box; }  /* 行业标准重置 */</code></pre>
+  <div class="box warn"><span class="bt">优先级：</span>内联 &gt; ID &gt; 类/属性 &gt; 标签。重要但不滥用——多用类，少用 ID 与 <code>!important</code>。</div>
 
-  <h2 id="s3">3. 层叠与优先级</h2>
-  <p>当多条规则作用于同一属性，按“层叠”决定赢家：</p>
-  <ol>
-    <li><b>来源</b>：作者样式 &gt; 用户样式 &gt; 浏览器默认。</li>
-    <li><b>优先级（Specificity）</b>：<code>inline &gt; id &gt; class/属性/伪类 &gt; 元素/伪元素</code>。可用 <code>(a,b,c,d)</code> 记：行内(1,0,0,0) &gt; id 数 &gt; class 数 &gt; 元素数。</li>
-    <li><b>顺序</b>：优先级相同，后写的赢。</li>
-  </ol>
-  <div class="box warn"><span class="bt">坑：</span><code>!important</code> 能压一切，但会让优先级“失控”，后续难覆盖。把它当<strong>最后手段</strong>，用来覆盖第三方样式，而非日常写法。</div>
+  <h2 id="s3">3. 盒模型</h2>
+  <p>每个元素是个盒子：<code>content + padding + border + margin</code>。</p>
+  <pre><code>* { box-sizing: border-box; }  /* 推荐：width 含 padding+border */
+.box { width: 100px; padding: 10px; border: 1px; }  /* 实际宽=100，非 122 */</code></pre>
+  <div class="box ok"><span class="bt">务必：</span>全局 <code>border-box</code> 是资深前端的标准起手式，算宽高不再头疼。</div>
 
-  <h2 id="s4">4. 布局：Flex / Grid</h2>
-  <ul>
-    <li><b>Flexbox</b>：一维布局（横或纵排）。主轴 <code>justify-content</code>、交叉轴 <code>align-items</code>、<code>gap</code> 间距、<code>flex: 1</code> 占满剩余。<strong>居中最省事</strong>：<code>display:flex; align-items:center; justify-content:center</code>。</li>
-    <li><b>Grid</b>：二维布局（行列同时）。<code>grid-template-columns: repeat(3, 1fr)</code> 三列等宽；<code>grid-template-areas</code> 用“命名区域”画布局，语义极清晰。</li>
-    <li><b>定位</b>：<code>relative/absolute/fixed/sticky</code>。<code>sticky</code> 做吸顶导航；<code>absolute</code> 需父级 <code>relative</code> 兜底。</li>
-  </ul>
-  <pre><code">.layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; }  /* 侧栏+内容 */</code></pre>
-  <div class="box ok"><span class="bt">选型：</span>一维用 Flex，二维（尤其整体页面骨架）用 Grid。两者配合，几乎不需要浮动/定位 hack。</div>
-
-  <h2 id="s5">5. 响应式</h2>
-  <ul>
-    <li><b>移动优先</b>：先写小屏样式，再用 <code>min-width</code> 媒体查询往大屏加。</li>
-    <li><code>clamp(min, val, max)</code>：字体/间距随视口平滑缩放，少写媒体查询。</li>
-    <li><b>容器查询</b> <code>@container</code>：组件按“父容器宽度”而非视口响应——组件级响应式，比媒体查询更适合复用组件。</li>
-  </ul>
-
-  <h2 id="s6">6. 视觉与动画</h2>
-  <ul>
-    <li><code>transition</code>：属性变化加平滑过渡（如 hover 变色）。</li>
-    <li><code>@keyframes</code> + <code>animation</code>：复杂关键帧动画。</li>
-    <li><b>动画性能</b>：只动 <code>transform</code> 和 <code>opacity</code>，这两个走 GPU 合成层，不触发重排/重绘；避免动画 <code>width/height/top</code>（每帧重排，卡）。</li>
-    <li>阴影/渐变/圆角美化，但别滥用大模糊阴影（贵）。</li>
-  </ul>
-
-  <h2 id="s7">7. 架构与可维护性</h2>
-  <ul>
-    <li><b>设计令牌（Design Tokens）</b>：颜色/间距/字号定义成 CSS 变量（<code>--color-primary</code>），全站统一、换肤一处生效。</li>
-    <li><b>BEM 命名</b>：<code>block__element--modifier</code>，避免类名冲突、表达结构。</li>
-    <li><b>CSS Modules</b>（构建期哈希类名）或 <a href="tailwind.html">Tailwind</a>（原子类）——见第 10 节。</li>
-    <li><b>避免</b>：深层嵌套（如 Sass 里 <code>.a .b .c .d</code> 优先级爆炸）、!important、按页面写死样式。</li>
-  </ul>
-
-  <h2 id="s8">8. 现代特性</h2>
-  <ul>
-    <li><code>CSS 变量</code> <code>--x</code> + <code>var(--x)</code>：运行时可变、可继承、JS 能读改写（做主题）。</li>
-    <li><code>:has()</code>：父选择器（“包含某子元素时”），补齐了 CSS 长期缺失的能力。</li>
-    <li><code>aspect-ratio</code>：固定宽高比（视频/卡片）。<code>gap</code> 已可用于 flex。</li>
-  </ul>
-
-  <h2 id="s9">9. 性能</h2>
-  <ul>
-    <li><b>重排（Reflow）</b>改几何（增删、改尺寸）最贵；<b>重绘（Repaint）</b>改外观次之；<b>合成（Composite）</b>最便宜。</li>
-    <li>动画用 transform/opacity（只合成）；批量 DOM 改动减少重排。</li>
-    <li><b>关键 CSS</b>：首屏关键样式内联，其余异步加载，提速首屏。</li>
-    <li><code>will-change</code> 提示浏览器预优化，但别滥用（占内存）。</li>
-  </ul>
-
-  <h2 id="s10">10. 与框架结合</h2>
-  <ul>
-    <li><b>Tailwind</b>：原子类，快但 JSX 变长；适合快速一致地搭 UI（见 <a href="tailwind.html">Tailwind</a>）。</li>
-    <li><b>CSS-in-JS</b>（styled-components）：动态主题方便，但有运行时、SSR 需特殊处理。</li>
-    <li><b>CSS Modules</b>：零运行时、作用域隔离，适合通用组件库。</li>
-  </ul>
-  <div class="box ok"><span class="bt">资深选型：</span>设计系统用 CSS 变量 + Modules；业务快速开发用 Tailwind；需要运行时动态样式才上 CSS-in-JS。</div>
-
-  <h2 id="s11">11. 常见坑</h2>
-  <div class="box warn"><span class="bt">坑 1：</span>没设 <code>box-sizing: border-box</code>，width 含 padding 导致布局错位。</div>
-  <div class="box warn"><span class="bt">坑 2：</span>margin 塌陷/合并（相邻块级 margin 取大值），用 padding 或 BFC 解决。</div>
-  <div class="box warn"><span class="bt">坑 3：</span>百分比高度失效——父级没明确高度时 <code>height:100%</code> 不生效，需 <code>html,body{height:100%}</code> 或 flex。</div>
-  <div class="box warn"><span class="bt">坑 4：</span>z-index 不生效——它只在定位元素（relative/absolute/fixed）上有效，且受“层叠上下文”影响（父级创建了上下文，子级 z-index 只在内部比）。</div>
-  <div class="box warn"><span class="bt">坑 5：</span>flex 子项被压缩/溢出——用 <code>flex-shrink:0</code> 或 <code>min-width:0</code> 控制。</div>
-  <div class="box warn"><span class="bt">坑 6：</span>用 width/height 做动画导致卡顿，应改 transform。</div>
-
-  <h2 id="s12">12. 调试</h2>
-  <ul>
-    <li>DevTools Elements → 右侧 Computed 看最终生效样式与来源（哪条规则赢了）。</li>
-    <li>Layout 面板可视化 Flex/Grid 轨道、盒模型尺寸。</li>
-    <li>Rendering → Paint flashing 看重绘区域。</li>
-  </ul>
-
-  <h2 id="s13">13. 成长路线</h2>
+  <h2 id="s4">4. 选择器</h2>
   <table>
-    <tr><th>阶段</th><th>能力标志</th></tr>
-    <tr><td>小白</td><td>会改颜色、写简单样式</td></tr>
-    <tr><td>初级</td><td>会用 Flex/Grid 布局、响应式</td></tr>
-    <tr><td>中级</td><td>懂层叠优先级、能排查布局 bug、会用变量/令牌</td></tr>
-    <tr><td>资深</td><td>设计 CSS 架构、把控渲染性能、选对样式方案</td></tr>
+    <tr><th>选择器</th><th>例子</th></tr>
+    <tr><td>类</td><td><code>.card</code></td></tr>
+    <tr><td>ID</td><td><code>#app</code></td></tr>
+    <tr><td>属性</td><td><code>[type="text"]</code></td></tr>
+    <tr><td>后代</td><td><code>.nav a</code></td></tr>
+    <tr><td>子代</td><td><code>ul &gt; li</code></td></tr>
   </table>
-  <div class="box ok"><span class="bt">练习：</span>① 用 Grid 搭一个后台三栏布局 ② 用 CSS 变量做明暗主题切换 ③ 用 transform 写一个 60fps 的卡片悬浮动画 ④ 用 DevTools 找出一个页面的重绘热点。</div>
-  <div class="box ok"><span class="bt">你已进阶：</span>理解层叠、布局引擎与渲染管线，能写出可维护、高性能的样式——这是资深前端在 CSS 层的核心能力。</div>
+
+  <h2 id="s5">5. 布局总览</h2>
+  <ul>
+    <li><b>普通流</b>：块级换行、行内并排。</li>
+    <li><b>Flex</b>：一维（行或列）对齐神器。</li>
+    <li><b>Grid</b>：二维（行列）布局。</li>
+    <li><b>定位</b>：脱离文档流做叠加。</li>
+  </ul>
+
+  <h2 id="s6">6. Flexbox</h2>
+  <pre><code>.row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+/* 子项 .item { flex:1 } 等分剩余空间 */</code></pre>
+  <ul>
+    <li><code>justify-content</code>：主轴对齐；<code>align-items</code>：交叉轴对齐。</li>
+    <li><code>flex-wrap</code>：放不下换行。</li>
+  </ul>
+  <div class="box ok"><span class="bt">一句话：</span>想“一排东西怎么排”就用 Flex。</div>
+
+  <h2 id="s7">7. Grid</h2>
+  <pre><code>.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }</code></pre>
+  <p><code>1fr</code> 表示“一份剩余空间”，<code>repeat(3,1fr)</code> 即三等分。Grid 适合卡片墙、仪表盘。</p>
+  <div class="box warn"><span class="bt">选型：</span>二维用 Grid，一维用 Flex；二者常组合（Grid 套 Flex）。</div>
+
+  <h2 id="s8">8. 定位</h2>
+  <table>
+    <tr><th>值</th><th>行为</th></tr>
+    <tr><td><code>relative</code></td><td>相对原位，不脱离流</td></tr>
+    <tr><td><code>absolute</code></td><td>相对最近定位祖先，脱离流</td></tr>
+    <tr><td><code>fixed</code></td><td>相对视口，滚动不动</td></tr>
+    <tr><td><code>sticky</code></td><td>滚动到阈值变 fixed</td></tr>
+  </table>
+
+  <h2 id="s9">9. 响应式</h2>
+  <pre><code>@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }</code></pre>
+  <ul>
+    <li><b>移动优先</b>：先写小屏，再用 <code>min-width</code> 往上加。</li>
+    <li>单位用 <code>rem</code>（相对根字号）、<code>vw/vh</code>（相对视口）。</li>
+  </ul>
+
+  <h2 id="s10">10. 单位</h2>
+  <table>
+    <tr><th>单位</th><th>相对</th></tr>
+    <tr><td><code>px</code></td><td>绝对像素</td></tr>
+    <tr><td><code>rem</code></td><td>根元素字号</td></tr>
+    <tr><td><code>em</code></td><td>当前元素字号</td></tr>
+    <tr><td><code>vw/vh</code></td><td>视口宽/高</td></tr>
+  </table>
+
+  <h2 id="s11">11. 过渡与动画</h2>
+  <pre><code>.btn { transition: background .2s; }
+.btn:hover { background: #5b8cff; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader { animation: spin 1s linear infinite; }</code></pre>
+  <p><code>transform</code>（位移/旋转/缩放）走 GPU，性能好；别用 <code>top/left</code> 做动画。</p>
+
+  <h2 id="s12">12. 变量</h2>
+  <pre><code>:root { --brand: #5b8cff; }
+.card { color: var(--brand); }</code></pre>
+  <p>CSS 变量让主题一处改全局变，是 design token 的落地方式（见 <a href="tailwind.html">Tailwind</a>）。</p>
+
+  <h2 id="s13">13. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 margin 塌陷：</span>相邻块的上/下 margin 会合并；用 padding 或 flex 隔离。</div>
+  <div class="box warn"><span class="bt">坑 2 z-index 无效：</span>只对定位元素生效，且受 stacking context 影响。</div>
+  <div class="box warn"><span class="bt">坑 3 高度塌陷：</span>子元素 float 后父无高，用 <code>overflow:hidden</code> 或 flex。</div>
+
+  <h2 id="s14">14. 与 Tailwind</h2>
+  <p><a href="tailwind.html">Tailwind</a> 本质是“用工具类写这些 CSS”，底层还是盒模型/Flex/Grid。懂原生 CSS 才能看懂并调试 Tailwind 生成的样式。</p>
+
+  <h2 id="s15">15. 资源与路线</h2>
+  <ol>
+    <li>MDN <a href="https://developer.mozilla.org/zh-CN/docs/Web/CSS" target="_blank" rel="noopener">CSS 文档</a>。</li>
+    <li>练：用 Flex 做导航栏、用 Grid 做卡片墙、写一套响应式。</li>
+    <li>进阶：BEM 命名、CSS 架构、与 <a href="react.html">React</a> 的 CSS Modules。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>看到设计稿能立刻判断“Flex 还是 Grid”、预知塌陷/溢出风险，并用变量与架构让样式可维护。</div>
 </main>
 </div>
 <script>

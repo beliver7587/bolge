@@ -1,0 +1,19 @@
+{
+  "name": "王越 · 技术作品集与教程",
+  "short_name": "技术博客",
+  "description": "前端、后端、游戏与 AI 项目，以及面向小白的通关技术教程。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

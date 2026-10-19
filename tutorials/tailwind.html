@@ -30,6 +30,7 @@
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 最佳实践</a>
   <a href="#s13">13. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -129,6 +130,15 @@ theme: { extend: { colors: { brand: '#5b8cff' }, spacing: { '18': '4.5rem' } } }
     <li>练：用 Tailwind 还原一个卡片/表单页面，再抽成组件。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能建立团队的 Tailwind 主题规范，用 <code>@apply</code> 抽最小复用层，并把体积压在合理区间。</div>
+<h2 id="s-deep">完整流程：Tailwind CSS 原子化开发</h2>
+<div class="step"><span class="b">1. 安装</span><pre><code>npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p</code></pre></div>
+<div class="step"><span class="b">2. 配置与引入</span><pre><code>tailwind.config.js: content: ['./src/**/*.{js,jsx,ts,tsx}']
+CSS 入口：@tailwind base; @tailwind components; @tailwind utilities;</code></pre></div>
+<div class="step"><span class="b">3. 使用</span><pre><code>&lt;button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"&gt;
+  按钮
+&lt;/button&gt;</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>用 @apply 提取重复组合；生产环境会自动 purge 未用样式。</div>
 </main>
 </div>
 <script>

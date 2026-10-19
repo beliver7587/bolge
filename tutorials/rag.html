@@ -44,9 +44,18 @@
   </ul>
 
   <h2 id="s3">3. 完整流程</h2>
-  <pre><code>入库：文档 → 切片 → Embedding → 向量库
-提问：问题 → Embedding → 检索 TopK → 拼进 Prompt → LLM 作答</code></pre>
-  <p>检索到的片段作为上下文，约束模型“基于这些回答”，并可在答案里附引用。</p>
+  <div class="step"><span class="b">1. 文档入库</span><pre><code>读取文件（PDF / Word / txt / Markdown）→ 清洗（去页眉页脚、统一编码）
+→ 按语义/段落/固定长度切片（300~800 字，重叠 20%）
+→ 给每片打元数据：文件名、页码、章节、标题
+→ 调用 Embedding 接口把文本变成 1024/1536 维向量
+→ 写入向量库（pgvector / Milvus / Chroma / Qdrant），同时保留原文便于后续引用</code></pre></div>
+  <div class="step"><span class="b">2. 提问检索</span><pre><code>用户问题 → 问题也做 Embedding → 向量库 TopK 相似搜索
+→ 可选 BM25 关键词召回 → RRF 融合两路结果 → 取出 TopN 文本片段</code></pre></div>
+  <div class="step"><span class="b">3. 拼 Prompt 生成</span><pre><code>系统指令（"请基于以下资料回答，不要编造"）
++ 检索到的片段（带 source_id）
++ 用户问题
+→ 调用 LLM → 得到带引用的答案</code></pre></div>
+  <p>检索到的片段作为上下文，约束模型“基于这些回答”；答案里可以附“引用 [1][2]”增加可信度。</p>
 
   <h2 id="s4">4. 检索方式</h2>
   <ul>

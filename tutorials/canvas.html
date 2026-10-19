@@ -30,6 +30,7 @@
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 调试</a>
   <a href="#s13">13. 成长路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -129,6 +130,21 @@ ctx.putImageData(data, 0, 0);</code></pre>
   </table>
   <div class="box ok"><span class="bt">练习：</span>① 用 Canvas 做一个弹球动画（含清屏）② 适配 DPR 让文字清晰 ③ 用离屏 canvas 优化静态背景 ④ 实现点击命中一个圆。</div>
   <div class="box ok"><span class="bt">你已进阶：</span>理解命令式绘制的“清屏-重绘”循环、坐标系与性能分层——这是资深图形前端的底色。</div>
+<h2 id="s-deep">完整流程：Canvas 绘图</h2>
+<div class="step"><span class="b">1. 获取上下文</span><pre><code>const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');</code></pre></div>
+<div class="step"><span class="b">2. 绘制基础图形</span><pre><code>ctx.fillStyle = 'red';
+ctx.fillRect(10,10,100,50);
+ctx.beginPath();
+ctx.arc(150,75,30,0,Math.PI*2);
+ctx.fill();</code></pre></div>
+<div class="step"><span class="b">3. 动画</span><pre><code>function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // 更新位置并绘制
+  requestAnimationFrame(loop);
+}
+loop();</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Canvas 是位图，放大模糊；适合游戏、图表、图像处理。</div>
 </main>
 </div>
 <script>

@@ -26,6 +26,7 @@
   <a href="#s7">7. 与 MySQL</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -80,6 +81,17 @@ insertMany([1,2,3]);   // 一个事务，原子且快</code></pre>
     <li>练：用 better-sqlite3 做一个本地任务小应用。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能判断“单文件 SQLite 还是网络 MySQL”，并用事务 + 预处理把嵌入式存储用出性能。</div>
+<h2 id="s-deep">完整流程：Better SQLite3 使用</h2>
+<div class="step"><span class="b">1. 安装与连接</span><pre><code>npm install better-sqlite3
+const Database = require('better-sqlite3');
+const db = new Database('app.db');</code></pre></div>
+<div class="step"><span class="b">2. 建表与插入</span><pre><code>db.exec(`CREATE TABLE user (id INTEGER PRIMARY KEY, name TEXT)`);
+const insert = db.prepare('INSERT INTO user (name) VALUES (?)');
+insert.run('Tom');</code></pre></div>
+<div class="step"><span class="b">3. 查询</span><pre><code>const stmt = db.prepare('SELECT * FROM user WHERE id = ?');
+const row = stmt.get(1);   // 单条
+const rows = stmt.all();   // 全部</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Better SQLite3 是同步 API，适合 Electron/本地服务；注意 SQL 注入用参数化。</div>
 </main>
 </div>
 <script>

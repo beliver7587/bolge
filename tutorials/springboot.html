@@ -31,6 +31,7 @@
   <a href="#s12">12. 常见坑</a>
   <a href="#s13">13. 与 Node 对比</a>
   <a href="#s14">14. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -149,6 +150,17 @@ class UserTest {
     <li>练：用 Spring Boot + JPA 做一个带鉴权与异常的 CRUD 服务。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>理解自动配置原理、能设计分层与事务边界、把安全/测试/多环境当成默认项，而不是事后补。</div>
+<h2 id="s-deep">完整流程：Spring Boot 项目搭建</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>https://start.spring.io 选 Maven + Java 21 + Spring Web + Spring Data JPA + MySQL Driver
+下载解压 → IDEA 打开</code></pre></div>
+<div class="step"><span class="b">2. 写 Controller / Service / Mapper</span><pre><code>@RestController @RequestMapping("/users")
+public class UserController {
+  @Autowired private UserService service;
+  @GetMapping("/{id}") public User get(@PathVariable Long id){ return service.getById(id); }
+}</code></pre></div>
+<div class="step"><span class="b">3. 配置与运行</span><pre><code>application.yml 配置 datasource / server.port
+mvn spring-boot:run 启动</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>约定优于配置；分层清晰，Controller 只处理 HTTP，业务逻辑放 Service。</div>
 </main>
 </div>
 <script>

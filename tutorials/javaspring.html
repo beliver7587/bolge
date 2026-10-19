@@ -26,6 +26,7 @@
   <a href="#s7">7. 配置方式</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 学习路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -93,6 +94,19 @@ public void transfer(Long from, Long to, BigDecimal amt) {
     <li>最后回头理解 IoC/AOP 原理与事务边界。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能说清“容器如何装配 Bean、代理如何实现 AOP/事务”，在调优与排查 Spring 故障时不被黑盒难住。</div>
+<h2 id="s-deep">完整流程：Spring IoC / DI</h2>
+<div class="step"><span class="b">1. 声明 Bean</span><pre><code>@Service
+public class UserService { ... }
+
+@Repository
+public interface UserRepo extends JpaRepository&lt;User,Long&gt; {}</code></pre></div>
+<div class="step"><span class="b">2. 注入使用</span><pre><code>@RestController
+public class UserController {
+  @Autowired private UserService userService;
+}</code></pre></div>
+<div class="step"><span class="b">3. 生命周期</span><pre><code>Spring 启动时扫描@ComponentScan路径
+实例化 → 依赖注入 → 初始化回调(@PostConstruct) → 使用 → 销毁(@PreDestroy)</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>优先用构造器注入；循环依赖要拆分层或用@Lazy。</div>
 </main>
 </div>
 <script>

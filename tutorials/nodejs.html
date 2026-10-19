@@ -30,6 +30,7 @@
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 与 Bun</a>
   <a href="#s13">13. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -115,6 +116,19 @@ console.log('4');   // 输出 1 4 3 2</code></pre>
     <li>练：用 Node 写一个能流式返回文件的 HTTP 服务。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能把“阻塞点”识别出来并移出事件循环，理解微/宏任务顺序，并用流与集群榨干单机性能。</div>
+<h2 id="s-deep">完整流程：Node.js 项目起步</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>mkdir myapp && cd myapp
+npm init -y
+npm install express dotenv</code></pre></div>
+<div class="step"><span class="b">2. 入口文件</span><pre><code>require('dotenv').config();
+const express = require('express');
+const app = express();
+app.use(express.json());
+app.get('/', (req,res)=>res.send('ok'));
+app.listen(process.env.PORT || 3000);</code></pre></div>
+<div class="step"><span class="b">3. 运行</span><pre><code>node index.js
+# 或生产用 PM2：pm2 start index.js --name api</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>异步用 async/await；错误要 catch，避免进程崩溃。</div>
 </main>
 </div>
 <script>

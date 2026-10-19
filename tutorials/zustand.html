@@ -30,6 +30,7 @@
   <a href="#s11">11. 最佳实践</a>
   <a href="#s12">12. 项目实战</a>
   <a href="#s13">13. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -122,6 +123,20 @@ const useStore = create(persist((set) =&gt; ({ token: '', setToken: (t)=&gt;set(
     <li>练：用 persist 做一个刷新不丢的登录态。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能区分“客户端 UI 状态”与“服务端数据”，用精准选择器避免无谓重渲染，并知道何时该上 Redux 而非 Zustand。</div>
+<h2 id="s-deep">完整流程：Zustand 状态管理</h2>
+<div class="step"><span class="b">1. 创建 Store</span><pre><code>import {create} from 'zustand';
+const useStore = create((set)=>({
+  count:0,
+  inc:()=>set(state=>({count:state.count+1})),
+  reset:()=>set({count:0})
+}));</code></pre></div>
+<div class="step"><span class="b">2. 组件使用</span><pre><code>function Counter(){
+  const {count,inc} = useStore();
+  return &lt;button onClick={inc}&gt;{count}&lt;/button&gt;;
+}</code></pre></div>
+<div class="step"><span class="b">3. 持久化</span><pre><code>import {persist} from 'zustand/middleware';
+const useStore = create(persist(..., {name:'my-store'}));</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Zustand 无 Provider；选择器可防不必要的重渲染。</div>
 </main>
 </div>
 <script>

@@ -27,6 +27,7 @@
   <a href="#s8">8. 部署</a>
   <a href="#s9">9. 常见坑</a>
   <a href="#s10">10. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -98,6 +99,16 @@ bun test                                 # 自带测试</code></pre>
     <li>练：用 Elysia 写一个带类型推导的 REST 服务。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能为团队评估“Bun 带来的提速”是否值得“生态风险”，并在合适项目（新服务、内部工具）果断采用。</div>
+<h2 id="s-deep">完整流程：用 Bun 跑 TS 项目</h2>
+<div class="step"><span class="b">1. 安装与初始化</span><pre><code>npm install -g bun
+bun init
+# 自动生成 bun.lockb、tsconfig.json、index.ts</code></pre></div>
+<div class="step"><span class="b">2. 运行与测试</span><pre><code>bun run index.ts          # 直接运行 TypeScript
+bun test                  # 内置测试
+bun build ./index.ts --outdir ./dist</code></pre></div>
+<div class="step"><span class="b">3. 作为运行时替换 Node</span><pre><code>bun 兼容大部分 npm 包
+直接 bun install 替代 npm install，速度更快</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Bun 内置打包器、测试、SQLite；但生产前请确认所有依赖兼容。</div>
 </main>
 </div>
 <script>

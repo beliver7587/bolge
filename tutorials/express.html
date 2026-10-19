@@ -28,6 +28,7 @@
   <a href="#s9">9. 与框架对比</a>
   <a href="#s10">10. 常见坑</a>
   <a href="#s11">11. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -105,6 +106,17 @@ app.post('/api/login', (req, res) =&gt; { /* req.body */ });</code></pre>
     <li>练：用 Express + 中间件做一个带鉴权与全局错误处理的 REST API。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用中间件把横切关注点（日志/鉴权/限流）解耦，理解请求生命周期，并知道何时该换 NestJS 上结构。</div>
+<h2 id="s-deep">完整流程：Express 搭 API 服务</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npm init -y
+npm install express cors helmet morgan</code></pre></div>
+<div class="step"><span class="b">2. 写路由</span><pre><code>const app = express();
+app.use(express.json());
+app.get('/api/users', (req,res)=>{ res.json([{id:1,name:'Tom'}]); });
+app.post('/api/users', (req,res)=>{ const u = req.body; ... });
+app.listen(3000);</code></pre></div>
+<div class="step"><span class="b">3. 中间件</span><pre><code>app.use('/api', authMiddleware);  // 鉴权
+app.use(errorHandler);            // 统一错误处理</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>路由分层到 routes/；错误处理中间件要放最后。</div>
 </main>
 </div>
 <script>

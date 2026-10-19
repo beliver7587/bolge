@@ -26,6 +26,7 @@
   <a href="#s7">7. 性能与调试</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 成长路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -105,6 +106,17 @@ if (aabb(player, enemy)) console.log('撞上了');</code></pre>
   </table>
   <div class="box ok"><span class="bt">练习：</span>① 实现 AABB 并统一坐标系 ② 加扫掠检测修高速穿透 ③ 用网格做宽相位 ④ OBB+SAT 判旋转物体 ⑤ 画包围盒调试 ⑥ 接 <a href="edgeauthority.html">端侧权威</a> 做联机判定。</div>
   <div class="box ok"><span class="bt">你已进阶：</span>理解碰撞检测从“两框重叠”到“宽相位+连续检测+旋转处理”的工程化，能写出又快又准的命中判定——这是资深游戏后端/客户端的基础能力。</div>
+<h2 id="s-deep">完整流程：AABB 碰撞检测</h2>
+<div class="step"><span class="b">1. 定义矩形</span><pre><code>const rect = {x:10, y:20, w:50, h:60}; // 左上角 + 宽高</code></pre></div>
+<div class="step"><span class="b">2. 检测相交</span><pre><code>function intersect(a,b){
+  return a.x &lt; b.x+b.w && a.x+a.w &gt; b.x &&
+         a.y &lt; b.y+b.h && a.y+a.h &gt; b.y;
+}</code></pre></div>
+<div class="step"><span class="b">3. 响应碰撞</span><pre><code>if(intersect(player, enemy)){
+  player.hp -= 10;
+  // 位置修正，防止穿模
+}</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>AABB 只适用于轴对齐矩形；旋转物体用 OBB 或分离轴定理。</div>
 </main>
 </div>
 <script>

@@ -26,6 +26,7 @@
   <a href="#s7">7. 回退与撤销</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -89,6 +90,17 @@ git fetch           # 只拉不合并，先看再合</code></pre>
     <li>团队用 GitHub/GitLab 的 PR/MR 做代码评审。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能设计分支策略（如 Git Flow/Trunk），用 rebase 保持历史干净，并在冲突时判断“该保留哪段逻辑”而非机械接受。</div>
+<h2 id="s-deep">完整流程：Git 协作流程</h2>
+<div class="step"><span class="b">1. 本地工作</span><pre><code>git init / git clone <url>
+git checkout -b feature/login
+git add . && git commit -m "feat: login"</code></pre></div>
+<div class="step"><span class="b">2. 远程同步</span><pre><code>git remote add origin <url>
+git push -u origin feature/login
+git pull origin main --rebase</code></pre></div>
+<div class="step"><span class="b">3. 合并</span><pre><code># 发起 Pull Request / Merge Request
+# 代码审查通过后再合并到 main
+# 冲突解决：git rebase --continue / git merge --abort</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>提交信息要规范；feature 分支小步快跑；不要提交机密。</div>
 </main>
 </div>
 <script>

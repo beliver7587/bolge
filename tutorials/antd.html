@@ -31,6 +31,7 @@
   <a href="#s12">12. 与 Tailwind</a>
   <a href="#s13">13. 最佳实践</a>
   <a href="#s14">14. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -132,6 +133,16 @@ export default () =&gt; &lt;Button type="primary"&gt;提交&lt;/Button&gt;;</cod
     <li>练：用 Layout + Form + Table 搭一个带增删改查的管理页。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用 token 建立团队设计系统、规避样式冲突、把 antd 当“积木”而非“黑盒”——出了问题知道往哪改。</div>
+<h2 id="s-deep">完整流程：Ant Design 中后台开发</h2>
+<div class="step"><span class="b">1. 安装</span><pre><code>npm install antd @ant-design/icons
+# 或 ProComponents：npm install @ant-design/pro-components</code></pre></div>
+<div class="step"><span class="b">2. 使用组件</span><pre><code>import {Button, Table, Form, Input} from 'antd';
+&lt;Form onFinish={onSubmit}&gt;
+  &lt;Form.Item name="name" rules={[{required:true}]}&gt;&lt;Input /&gt;&lt;/Form.Item&gt;
+  &lt;Button type="primary" htmlType="submit"&gt;提交&lt;/Button&gt;
+&lt;/Form&gt;</code></pre></div>
+<div class="step"><span class="b">3. 表格</span><pre><code>&lt;Table columns={columns} dataSource={list} rowKey="id" /&gt;</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Form + Table + Modal 是中后台三件套；ConfigProvider 可改主题/国际化。</div>
 </main>
 </div>
 <script>

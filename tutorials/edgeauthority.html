@@ -28,6 +28,7 @@
   <a href="#s9">9. 房主/中转实战</a>
   <a href="#s10">10. 常见坑</a>
   <a href="#s11">11. 成长路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -106,6 +107,16 @@
   </table>
   <div class="box ok"><span class="bt">练习：</span>① 用 <a href="aabb.html">AABB</a>+本地预测做单机判定 ② 实现预测+和解 ③ 状态同步插值 ④ 服务器用确定性 tick 复核命中 ⑤ 带宽改发输入/增量 ⑥ 用房主/中转架构扛多房间。</div>
   <div class="box ok"><span class="bt">你已进阶：</span>理解网络架构中“权威方”的决策与代价，能设计低延迟、低成本、可反作弊的联机方案——这是资深游戏后端/网络工程师的核心能力。</div>
+<h2 id="s-deep">完整流程：端侧权威运算</h2>
+<div class="step"><span class="b">1. 什么是端侧权威</span><pre><code>把关键逻辑/状态计算放在客户端或服务端可信环境
+防止外挂篡改内存、伪造请求</code></pre></div>
+<div class="step"><span class="b">2. 实现思路</span><pre><code>客户端只负责采集输入与展示
+移动、伤害、掉落等关键判定在服务端验算
+客户端做预测，服务端做校正</code></pre></div>
+<div class="step"><span class="b">3. 防作弊</span><pre><code>关键随机数由服务端生成并下发
+通信包加签名校验
+异常行为检测（速度、频率）</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>不要相信客户端；所有影响胜负的数据必须服务端校验。</div>
 </main>
 </div>
 <script>

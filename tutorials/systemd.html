@@ -25,6 +25,7 @@
   <a href="#s6">6. 开机自启</a>
   <a href="#s7">7. 常见坑</a>
   <a href="#s8">8. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -84,6 +85,27 @@ systemctl enable --now myapi</code></pre>
     <li>练：把一个 Node/Java 服务写成 unit 并配开机自启。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用 unit 把任意进程做成“生产级守护”，设好 Restart/User/日志，让服务在机器重启后自愈。</div>
+<h2 id="s-deep">完整流程：Systemd 托管服务</h2>
+<div class="step"><span class="b">1. 写 unit 文件</span><pre><code>/etc/systemd/system/myapp.service
+[Unit]
+Description=My App
+After=network.target
+
+[Service]
+Type=simple
+User=www
+WorkingDirectory=/opt/myapp
+ExecStart=/usr/bin/node /opt/myapp/index.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code></pre></div>
+<div class="step"><span class="b">2. 启动</span><pre><code>sudo systemctl daemon-reload
+sudo systemctl enable myapp
+sudo systemctl start myapp</code></pre></div>
+<div class="step"><span class="b">3. 查看日志</span><pre><code>sudo systemctl status myapp
+sudo journalctl -u myapp -f</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>ExecStart 要写绝对路径；用非 root 用户运行更安全。</div>
 </main>
 </div>
 <script>

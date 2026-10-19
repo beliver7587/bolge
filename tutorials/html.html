@@ -31,6 +31,7 @@
   <a href="#s12">12. HTML5 新特性</a>
   <a href="#s13">13. 最佳实践</a>
   <a href="#s14">14. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -148,6 +149,27 @@
     <li>练：用语义标签手写一个带表单的落地页。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>写出的 HTML 不仅“能显示”，而且“机器可读、人人可达”——语义化与可访问性成为本能。</div>
+<h2 id="s-deep">完整流程：HTML 页面结构</h2>
+<div class="step"><span class="b">1. 基础骨架</span><pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-CN"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;标题&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;...&lt;/header&gt;
+  &lt;main&gt;...&lt;/main&gt;
+  &lt;footer&gt;...&lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+<div class="step"><span class="b">2. 常用标签</span><pre><code>标题：h1~h6
+段落：p
+列表：ul/ol/li
+表单：form/input/button/textarea</code></pre></div>
+<div class="step"><span class="b">3. 语义化</span><pre><code>用 nav/aside/article/section 替代大量 div
+提升可访问性与 SEO</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>HTML 是骨架；class/id 给 CSS/JS 挂钩；注意闭合标签。</div>
 </main>
 </div>
 <script>

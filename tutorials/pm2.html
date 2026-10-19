@@ -26,6 +26,7 @@
   <a href="#s7">7. 与 systemd</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -82,6 +83,18 @@ pm2 start ecosystem.config.js</code></pre>
     <li>练：用 PM2 集群起一个 Node 服务并配置开机自启。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>用集群 + 内存上限 + 开机自启把服务做成“生产级守护”，而不是 <code>node app.js</code> 裸跑。</div>
+<h2 id="s-deep">完整流程：PM2 管理 Node 进程</h2>
+<div class="step"><span class="b">1. 安装与启动</span><pre><code>npm install -g pm2
+pm2 start index.js --name api
+pm2 start index.js -i max  # 集群模式</code></pre></div>
+<div class="step"><span class="b">2. 常用命令</span><pre><code>pm2 list
+pm2 logs api
+pm2 restart api
+pm2 reload api  # 零停机重载</code></pre></div>
+<div class="step"><span class="b">3. 开机自启</span><pre><code>pm2 startup
+pm2 save
+# 系统重启后自动恢复</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>生产环境用 ecosystem.config.js 管理多应用、环境变量、日志策略。</div>
 </main>
 </div>
 <script>

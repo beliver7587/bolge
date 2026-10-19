@@ -26,6 +26,7 @@
   <a href="#s7">7. 与 Socket.IO</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -92,6 +93,18 @@ wss.on('connection', (ws) =&gt; {
     <li>练：用 ws 写一个服务端主动定时推送的 demo。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能设计心跳/重连/鉴权三件套，理解代理对长连接的限制，并判断“原生 WS 还是 Socket.IO”哪个更合适。</div>
+<h2 id="s-deep">完整流程：WebSocket 实时通信</h2>
+<div class="step"><span class="b">1. 服务端（ws）</span><pre><code>const WebSocket = require('ws');
+const wss = new WebSocket.Server({port:8080});
+wss.on('connection', ws=>{
+  ws.on('message', msg=> ws.send(`收到:${msg}`));
+});</code></pre></div>
+<div class="step"><span class="b">2. 客户端</span><pre><code>const ws = new WebSocket('ws://localhost:8080');
+ws.onopen = ()=>ws.send('hello');
+ws.onmessage = e=>console.log(e.data);</code></pre></div>
+<div class="step"><span class="b">3. 心跳与重连</span><pre><code>setInterval(()=>ws.send('ping'),30000);
+ws.onclose = ()=>setTimeout(()=>connect(),3000);</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>WebSocket 是持久连接；需要处理断线重连、心跳、并发连接数。</div>
 </main>
 </div>
 <script>

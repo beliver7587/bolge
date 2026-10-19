@@ -25,6 +25,7 @@
   <a href="#s6">6. 与运维</a>
   <a href="#s7">7. 常见坑</a>
   <a href="#s8">8. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -71,6 +72,14 @@
     <li>练：做一个“定时拉接口→入库→发通知”的工作流。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用 n8n 把跨系统流程可视化落地，并把凭据/持久化/批量处理当成部署前提，而不是画完就跑。</div>
+<h2 id="s-deep">完整流程：用 n8n 搭自动化</h2>
+<div class="step"><span class="b">1. 触发器</span><pre><code>Webhook / Schedule / 表单提交 / 邮件到达
+→ 触发工作流执行</code></pre></div>
+<div class="step"><span class="b">2. 节点处理</span><pre><code>HTTP Request 拉数据 → Code 节点清洗 → IF 节点分支
+→ 调用 OpenAI / 数据库 / 邮件 / 企业微信</code></pre></div>
+<div class="step"><span class="b">3. 部署运行</span><pre><code>docker run -it --rm -p 5678:5678 n8nio/n8n
+保存工作流后默认自动执行，也可手动触发或定时</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>复杂逻辑用 Code 节点写 JS；注意凭证（Credentials）安全存储。</div>
 </main>
 </div>
 <script>

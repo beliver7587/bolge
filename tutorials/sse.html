@@ -24,6 +24,7 @@
   <a href="#s5">5. 流式 LLM</a>
   <a href="#s6">6. 常见坑</a>
   <a href="#s7">7. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -73,6 +74,21 @@ res.setHeader('Cache-Control','no-cache');
     <li>练：用 SSE 做一个服务端定时推送 + 前端打字机 demo。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能判断“SSE 还是 WebSocket”，并在网关层正确处理缓冲与跨域，把流式延迟压到最低。</div>
+<h2 id="s-deep">完整流程：SSE 服务器推送</h2>
+<div class="step"><span class="b">1. 服务端</span><pre><code>app.get('/stream', (req,res)=>{
+  res.setHeader('Content-Type','text/event-stream');
+  res.setHeader('Cache-Control','no-cache');
+  res.write('data: 开始\n\n');
+  const timer = setInterval(()=>res.write('data: 心跳\n\n'),3000);
+  req.on('close', ()=>clearInterval(timer));
+});</code></pre></div>
+<div class="step"><span class="b">2. 客户端</span><pre><code>const es = new EventSource('/stream');
+es.onmessage = e=>console.log(e.data);</code></pre></div>
+<div class="step"><span class="b">3. 适用场景</span><pre><code>AI 流式回答、股票行情、日志推送
+单向：服务器 → 客户端</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>SSE 是单向的；浏览器自动重连；数据格式必须是 data: ...
+
+。</div>
 </main>
 </div>
 <script>

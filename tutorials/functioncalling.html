@@ -23,6 +23,7 @@
   <a href="#s4">4. 与 Agent</a>
   <a href="#s5">5. 常见坑</a>
   <a href="#s6">6. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -63,6 +64,14 @@
     <li>练：给模型加一个“查天气”函数，完整跑通调用闭环。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能给模型设计“干净且受约束”的工具集，做好参数校验与权限边界，让 Agent 既强大又安全。</div>
+<h2 id="s-deep">完整流程：Function Calling</h2>
+<div class="step"><span class="b">1. 声明函数</span><pre><code>{"name":"get_weather","description":"查天气",
+ "parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}</code></pre></div>
+<div class="step"><span class="b">2. 调用 LLM</span><pre><code>LLM 不直接回答，而是返回 function_call:
+{"name":"get_weather","arguments":"{\"city\":\"北京\"}"}</code></pre></div>
+<div class="step"><span class="b">3. 执行与回填</span><pre><code>解析参数 → 调用 get_weather("北京") → 得到 25℃
+→ 把 function 结果以 role=tool 写回消息 → 再次调用 LLM → 得到自然语言答案</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>一定要校验/消毒 LLM 给的参数；错误处理要返回给模型，让它重试。</div>
 </main>
 </div>
 <script>

@@ -32,6 +32,7 @@
   <a href="#s13">13. 常见坑</a>
   <a href="#s14">14. 与 Tailwind</a>
   <a href="#s15">15. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -140,6 +141,19 @@
     <li>进阶：BEM 命名、CSS 架构、与 <a href="react.html">React</a> 的 CSS Modules。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>看到设计稿能立刻判断“Flex 还是 Grid”、预知塌陷/溢出风险，并用变量与架构让样式可维护。</div>
+<h2 id="s-deep">完整流程：CSS 样式开发</h2>
+<div class="step"><span class="b">1. 引入方式</span><pre><code>行内：style="color:red"
+内部：&lt;style&gt;...&lt;/style&gt;
+外部：&lt;link rel="stylesheet" href="style.css"&gt;</code></pre></div>
+<div class="step"><span class="b">2. 选择器</span><pre><code>元素：div
+类：.card
+ID：#header
+后代：.card p
+伪类：a:hover</code></pre></div>
+<div class="step"><span class="b">3. 布局</span><pre><code>Flex：display:flex; justify-content:center; align-items:center
+Grid：display:grid; grid-template-columns:repeat(3,1fr)
+响应式：@media (max-width:768px){ ... }</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>盒模型注意 padding/border 是否算进 width；优先级用具体选择器或 !important。</div>
 </main>
 </div>
 <script>

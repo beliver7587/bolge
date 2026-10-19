@@ -24,6 +24,7 @@
   <a href="#s5">5. 与 RAG</a>
   <a href="#s6">6. 常见坑</a>
   <a href="#s7">7. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -72,6 +73,14 @@ const hits = index.search("React 缓存策略");</code></pre>
     <li>练：用 BM25 给一份中文文档做关键词检索，再与向量检索对比。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>知道 BM25 与向量各管什么，并用分词 + 混合 + 融合把召回率做扎实，而不是单路上线。</div>
+<h2 id="s-deep">完整流程：BM25 索引与查询</h2>
+<div class="step"><span class="b">1. 建倒排索引</span><pre><code>对每篇文档分词 → 统计每个词在该文档出现次数（tf）
+→ 统计包含该词的文档数（df）→ 计算 IDF = log((N - df + 0.5)/(df + 0.5) + 1)</code></pre></div>
+<div class="step"><span class="b">2. 算 BM25 分</span><pre><code>score = IDF * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * docLen/avgLen))
+k1=1.5, b=0.75 为常用参数</code></pre></div>
+<div class="step"><span class="b">3. 实际使用</span><pre><code>Elasticsearch/Meilisearch/OpenSearch 默认已集成 BM25
+查询时直接 q=关键词，引擎会按 BM25 排序返回</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>BM25 适合专有名词、ID、型号；对同义词不敏感，常与向量检索混合使用。</div>
 </main>
 </div>
 <script>

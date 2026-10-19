@@ -27,6 +27,7 @@
   <a href="#s8">8. 其他用途</a>
   <a href="#s9">9. 常见坑</a>
   <a href="#s10">10. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -99,6 +100,16 @@ if (!hit) { const v = await db.query(); redis.set(key, v, 'EX', 60); }</code></p
     <li>练：用 Redis 给接口加缓存，并模拟击穿/穿透做防护。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能设计缓存分层与一致性策略，并提前布防击穿/穿透/雪崩三大坑，而不是线上炸了才补。</div>
+<h2 id="s-deep">完整流程：Redis 缓存实战</h2>
+<div class="step"><span class="b">1. 连接</span><pre><code>const redis = require('redis');
+const client = redis.createClient({url:'redis://localhost:6379'});
+await client.connect();</code></pre></div>
+<div class="step"><span class="b">2. 常用操作</span><pre><code>await client.set('user:1', JSON.stringify(user), {EX:3600}); // 1小时过期
+const val = await client.get('user:1');
+await client.del('user:1');</code></pre></div>
+<div class="step"><span class="b">3. 缓存模式</span><pre><code>Cache-Aside：先读缓存，没命中再读数据库并回写
+Set NX EX 做分布式锁：SET lock:order123 nx ex 10</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>设置 TTL 防雪崩；重要数据加互斥锁或逻辑过期。</div>
 </main>
 </div>
 <script>

@@ -35,6 +35,7 @@
   <a href="#s16">16. 类型体操入门</a>
   <a href="#s17">17. 工具链</a>
   <a href="#s18">18. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -192,6 +193,18 @@ type IsString&lt;T&gt; = T extends string ? true : false;     // 条件类型</c
     <li>进阶：读懂 <code>ReturnType</code>、<code>Parameters</code>、<code>Awaited</code> 的实现。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>不是“会用类型注解”，而是能用类型<strong>给团队画出数据契约</strong>，把模糊的边界变成编译器能验证的红线。</div>
+<h2 id="s-deep">完整流程：TypeScript 类型化开发</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npm init -y
+npx tsc --init
+npm install typescript -D</code></pre></div>
+<div class="step"><span class="b">2. 基本类型</span><pre><code>type User = { id:number; name:string; role?:'admin'|'user' };
+function greet(user:User):string {
+  return `Hi, ${user.name}`;
+}</code></pre></div>
+<div class="step"><span class="b">3. 编译</span><pre><code>npx tsc
+# 或 watch 模式
+npx tsc --watch</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>接口优先用 interface，联合类型用 |，泛型让函数更通用。</div>
 </main>
 </div>
 <script>

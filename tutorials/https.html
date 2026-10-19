@@ -26,6 +26,7 @@
   <a href="#s7">7. HSTS</a>
   <a href="#s8">8. 常见坑</a>
   <a href="#s9">9. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -79,6 +80,19 @@ ssl_certificate_key /etc/letsencrypt/live/x.com/privkey.pem;</code></pre>
     <li>练：给一个域名申请证书并配强制 HTTPS + HSTS。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能把证书生命周期、强制跳转、HSTS 与续期监控一体化，让 HTTPS 成为部署的默认项而非事后补。</div>
+<h2 id="s-deep">完整流程：HTTPS/TLS 部署</h2>
+<div class="step"><span class="b">1. 申请证书</span><pre><code>certbot certonly --standalone -d example.com
+# 或使用 Let’s Encrypt + Nginx 插件
+# 国内云服务也提供免费 DV 证书</code></pre></div>
+<div class="step"><span class="b">2. Nginx 配置</span><pre><code>server {
+  listen 443 ssl;
+  server_name example.com;
+  ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+}</code></pre></div>
+<div class="step"><span class="b">3. 自动续期</span><pre><code>certbot renew --dry-run
+# 加入 cron 每月执行一次</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>443 端口放行；HTTP 301 跳 HTTPS；HSTS 可进一步加强。</div>
 </main>
 </div>
 <script>

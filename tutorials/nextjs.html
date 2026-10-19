@@ -37,6 +37,7 @@
   <a href="#s18">18. 何时不用</a>
   <a href="#s19">19. 调试监控</a>
   <a href="#s20">20. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -247,6 +248,18 @@ export async function POST(req: Request) {
     <li>进阶：RSC 流式、中间件鉴权、standalone 自托管。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能为每个页面<strong>明确选择渲染策略并说清理由</strong>，理解四层缓存与 client/server 边界——而不是“create-next-app 一把梭”。</div>
+<h2 id="s-deep">完整流程：Next.js 全栈开发</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npx create-next-app@latest myapp --typescript --tailwind --eslint
+cd myapp && npm run dev</code></pre></div>
+<div class="step"><span class="b">2. 页面与路由</span><pre><code>app/page.tsx          # /
+app/about/page.tsx    # /about
+app/api/hello/route.ts # API 路由</code></pre></div>
+<div class="step"><span class="b">3. 数据获取</span><pre><code>export default async function Page(){
+  const data = await fetch('https://api.example.com/data',{cache:'no-store'});
+  const json = await data.json();
+  return &lt;List items={json} /&gt;;
+}</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Server Component 默认在服务端渲染；Client Component 顶部加 'use client'。</div>
 </main>
 </div>
 <script>

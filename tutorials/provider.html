@@ -24,6 +24,7 @@
   <a href="#s5">5. 选型与切换</a>
   <a href="#s6">6. 常见坑</a>
   <a href="#s7">7. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -68,6 +69,17 @@ const client = new OpenAI({ baseURL: 'https://gw.internal/v1', apiKey: 'x' });</
     <li>练：用 one-api 接两家 Provider，代码零改切换。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>把“模型供应”做成可替换的基础设施，用网关 + 限额 + 重试把成本与可用性都控住。</div>
+<h2 id="s-deep">完整流程：封装多 Provider</h2>
+<div class="step"><span class="b">1. 统一配置</span><pre><code>providers:
+  openai: {base_url:"https://api.openai.com/v1", key:"sk-..."}
+  deepseek: {base_url:"https://api.deepseek.com/v1", key:"sk-..."}
+  qwen: {base_url:"https://dashscope.aliyuncs.com/compatible-mode/v1", key:"sk-..."}</code></pre></div>
+<div class="step"><span class="b">2. 统一调用接口</span><pre><code>function chat(provider, model, messages) {
+  return axios.post(cfg[provider].base_url + '/chat/completions', {...}, headers)
+}</code></pre></div>
+<div class="step"><span class="b">3. 路由与降级</span><pre><code>按模型名或成本路由；失败时自动切换备用 provider
+记录 token 消耗与响应时间</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>OpenAI SDK 兼容格式最通用，统一 base_url 即可切换多家。</div>
 </main>
 </div>
 <script>

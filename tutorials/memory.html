@@ -23,6 +23,7 @@
   <a href="#s4">4. 与 RAG 的区别</a>
   <a href="#s5">5. 常见坑</a>
   <a href="#s6">6. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -65,6 +66,16 @@
     <li>练：给聊天机器人加“记住用户名”的长期记忆。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用分层记忆把“上下文管理”做对——既不溢出也不丢关键信息，并处理好隐私与删除。</div>
+<h2 id="s-deep">完整流程：给 AI 加记忆</h2>
+<div class="step"><span class="b">1. 短期记忆</span><pre><code>会话开始时加载最近 10 轮对话
+每次 LLM 输出后追加 assistant 消息
+超过窗口时做摘要（summarization）</code></pre></div>
+<div class="step"><span class="b">2. 长期记忆</span><pre><code>提取关键事实："用户是 Java 后端"、"偏好简洁回答"
+→ Embedding → 写入向量库
+→ 下次提问前先检索相关记忆 → 拼进 system prompt</code></pre></div>
+<div class="step"><span class="b">3. 数据库存储</span><pre><code>表：memories(user_id, content, embedding, created_at)
+查询：SELECT content FROM memories WHERE user_id=? ORDER BY embedding &lt;-> ? LIMIT 3</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>记忆要分层，短期保证上下文连贯，长期保存用户画像与事实。</div>
 </main>
 </div>
 <script>

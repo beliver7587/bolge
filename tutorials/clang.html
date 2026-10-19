@@ -28,6 +28,7 @@
   <a href="#s9">9. 常见坑</a>
   <a href="#s10">10. 与高级语言</a>
   <a href="#s11">11. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -103,6 +104,19 @@ struct User *p = &amp;u; printf("%d", p-&gt;id);</code></pre>
     <li>进而学操作系统/数据结构，理解底层。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>把指针与内存当成直觉，能分析“这段 C 为什么崩/漏”，并理解高级语言 GC 背后的取舍。</div>
+<h2 id="s-deep">完整流程：C 语言程序开发</h2>
+<div class="step"><span class="b">1. 编写</span><pre><code>#include &lt;stdio.h&gt;
+int main(){
+  int a=10, b=20;
+  printf("%d\n", a+b);
+  return 0;
+}</code></pre></div>
+<div class="step"><span class="b">2. 编译</span><pre><code>gcc hello.c -o hello
+./hello</code></pre></div>
+<div class="step"><span class="b">3. 调试</span><pre><code>gcc -g hello.c -o hello
+gdb ./hello
+# 或 valgrind ./hello 检查内存泄漏</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>C 手动管理内存；数组越界、野指针、内存泄漏是常见坑。</div>
 </main>
 </div>
 <script>

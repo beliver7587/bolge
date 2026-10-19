@@ -28,6 +28,7 @@
   <a href="#s9">9. 与虚拟机</a>
   <a href="#s10">10. 常见坑</a>
   <a href="#s11">11. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -100,6 +101,19 @@ services:
     <li>练：把你的 Node/Java 服务 Docker 化并跑通。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>写多阶段 Dockerfile 控体积、用卷管持久化、用 Compose 编排多服务，并把“构建/运行分离”当成常识。</div>
+<h2 id="s-deep">完整流程：Docker 打包与运行</h2>
+<div class="step"><span class="b">1. 写 Dockerfile</span><pre><code>FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+EXPOSE 3000
+CMD ["node","index.js"]</code></pre></div>
+<div class="step"><span class="b">2. 构建镜像</span><pre><code>docker build -t myapp:1.0 .</code></pre></div>
+<div class="step"><span class="b">3. 运行容器</span><pre><code>docker run -d -p 3000:3000 --name myapp myapp:1.0
+docker logs myapp
+docker exec -it myapp sh</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>镜像要小用 alpine；多阶段构建可进一步瘦身；数据用 volume 持久化。</div>
 </main>
 </div>
 <script>

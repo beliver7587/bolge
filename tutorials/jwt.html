@@ -25,6 +25,7 @@
   <a href="#s6">6. 与 Session</a>
   <a href="#s7">7. 常见坑</a>
   <a href="#s8">8. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -79,6 +80,13 @@ const ok = await bcrypt.compare(pwd, hash); // 登录时比对</code></pre>
     <li>练：用 bcrypt + JWT 实现一个登录接口与鉴权中间件。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能把“无状态令牌 + 密码哈希 + 过期续期 + 安全存储”串成一套稳固的认证方案，而不是只贴一段 jwt.sign。</div>
+<h2 id="s-deep">完整流程：JWT 鉴权</h2>
+<div class="step"><span class="b">1. 签发 Token</span><pre><code>const jwt = require('jsonwebtoken');
+const token = jwt.sign({userId:1,role:'user'}, SECRET, {expiresIn:'2h'});</code></pre></div>
+<div class="step"><span class="b">2. 客户端携带</span><pre><code>Authorization: Bearer &lt;token&gt;</code></pre></div>
+<div class="step"><span class="b">3. 服务端校验</span><pre><code>const payload = jwt.verify(token, SECRET);
+if (!payload) return 401;</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>SECRET 要复杂且保密；敏感信息不要放 payload；刷新 Token 用 refreshToken。</div>
 </main>
 </div>
 <script>

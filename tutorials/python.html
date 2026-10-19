@@ -29,6 +29,7 @@
   <a href="#s10">10. 与 AI/数据</a>
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -109,6 +110,19 @@ def f(*args, **kwargs): ...</code></pre>
     <li>进 AI：学 numpy/PyTorch，再接 <a href="llm.html">大模型</a> API。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>用虚拟环境 + 类型注解（<code>mypy</code>）补强 Python 的“弱类型”，理解 GIL 与深浅拷贝，并把脚本工程化。</div>
+<h2 id="s-deep">完整流程：Python 项目开发</h2>
+<div class="step"><span class="b">1. 环境</span><pre><code>python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate   # Windows
+pip install -r requirements.txt</code></pre></div>
+<div class="step"><span class="b">2. 写脚本</span><pre><code>def main():
+    print("hello")
+if __name__ == '__main__':
+    main()</code></pre></div>
+<div class="step"><span class="b">3. 常用库</span><pre><code>Web: Flask/FastAPI/Django
+数据: pandas/numpy
+AI: openai/httpx/requests</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>用虚拟环境隔离依赖；Python 动态类型，大型项目建议加类型注解。</div>
 </main>
 </div>
 <script>

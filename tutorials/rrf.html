@@ -23,6 +23,7 @@
   <a href="#s4">4. 与加权对比</a>
   <a href="#s5">5. 常见坑</a>
   <a href="#s6">6. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -65,6 +66,13 @@
     <li>练：写一个小函数，把两路排名用 RRF 融合。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用 RRF 把异构召回稳健融合，理解“排名比分数更可靠”，并据此提升 RAG 召回质量。</div>
+<h2 id="s-deep">完整流程：RRF 倒数排名融合</h2>
+<div class="step"><span class="b">1. 多路召回</span><pre><code>向量检索返回：[A, B, C, D]
+关键词检索返回：[B, A, E, F]</code></pre></div>
+<div class="step"><span class="b">2. 计算 RRF 分</span><pre><code>score(doc) = Σ 1 / (k + rank_i(doc))
+k 常取 60；doc 未出现在某一路时，该路不参与</code></pre></div>
+<div class="step"><span class="b">3. 合并排序</span><pre><code>按 RRF 分从高到低取 TopN，兼顾语义与词面匹配</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>RRF 不需要归一化原始分数，只用排名，适合异构检索结果融合。</div>
 </main>
 </div>
 <script>

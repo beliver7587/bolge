@@ -25,6 +25,7 @@
   <a href="#s6">6. 与 RAG</a>
   <a href="#s7">7. 常见坑</a>
   <a href="#s8">8. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -73,6 +74,16 @@ const vec = await embedModel.embed("用户的问题");
     <li>练：把一段文档切块向量化，用 FAISS 做语义检索 demo。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能设计分块策略、选对向量库与距离度量，并理解“检索质量决定了 RAG 上限”。</div>
+<h2 id="s-deep">完整流程：如何生成与使用 Embedding</h2>
+<div class="step"><span class="b">1. 选模型</span><pre><code>中文场景：BGE-M3、text-embedding-v3、OpenAI text-embedding-3-small
+英文/多语言：text-embedding-ada-002、sentence-transformers/all-MiniLM-L6-v2</code></pre></div>
+<div class="step"><span class="b">2. 生成向量</span><pre><code>POST /v1/embeddings
+{"input":"你的文本","model":"text-embedding-v3"}
+返回：{data:[{embedding:[0.1,-0.2,...]}]}</code></pre></div>
+<div class="step"><span class="b">3. 存储与检索</span><pre><code>CREATE TABLE docs(id, text, source, embedding vector(1024));
+INSERT INTO docs VALUES(..., '[0.1,...]'::vector);
+SELECT text FROM docs ORDER BY embedding &lt;-> query_vec LIMIT 5;</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>长文本要先切片；做 L2/余弦距离检索前，向量维度必须一致。</div>
 </main>
 </div>
 <script>

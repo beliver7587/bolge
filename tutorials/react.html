@@ -37,6 +37,7 @@
   <a href="#s18">18. 调试与剖析</a>
   <a href="#s19">19. 成长路线</a>
   <a href="#s20">20. 资源与下一步</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -261,6 +262,18 @@ const onSubmit = (v) =&gt; save(v);
     <li>读源码：<code>react-query</code>、<code>zustand</code> 都很小，是理解“Hooks + 设计”的好样本。</li>
   </ol>
   <div class="box ok"><span class="bt">你已经不是小白：</span>理解原理、会做性能与架构取舍、有测试与安全意识——这就是资深前端的起点。剩下的靠真实项目里“踩坑→复盘”积累。</div>
+<h2 id="s-deep">完整流程：React 组件开发</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npx create-react-app myapp
+# 或 Vite：npm create vite@latest myapp -- --template react</code></pre></div>
+<div class="step"><span class="b">2. 写组件</span><pre><code>import {useState} from 'react';
+export default function Counter(){
+  const [count,setCount] = useState(0);
+  return &lt;button onClick={()=>setCount(c=>c+1)}&gt;{count}&lt;/button&gt;;
+}</code></pre></div>
+<div class="step"><span class="b">3. 数据流</span><pre><code>父组件通过 props 传数据
+子组件通过回调函数通知父组件
+跨组件用 Context 或状态管理库</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>useEffect 注意依赖数组；组件尽量纯函数；状态提升解决兄弟组件通信。</div>
 </main>
 </div>
 <script>

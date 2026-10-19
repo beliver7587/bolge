@@ -27,6 +27,7 @@
   <a href="#s8">8. 与部署</a>
   <a href="#s9">9. 常见坑</a>
   <a href="#s10">10. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -89,6 +90,20 @@ ssl_certificate_key /path/privkey.pem;</code></pre>
     <li>练：用 Nginx 反代一个本地 Node 服务并加静态托管。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能用反代/负载均衡设计可扩展部署，正确处理长连接与缓存，并把 TLS 终止统一收在 Nginx 层。</div>
+<h2 id="s-deep">完整流程：Nginx 反向代理与静态托管</h2>
+<div class="step"><span class="b">1. 安装</span><pre><code>sudo apt install nginx
+# 或 docker run -p 80:80 nginx</code></pre></div>
+<div class="step"><span class="b">2. 配置反向代理</span><pre><code>server {
+  listen 80;
+  server_name api.example.com;
+  location / {
+    proxy_pass http://localhost:3000;
+    proxy_set_header Host $host;
+  }
+}</code></pre></div>
+<div class="step"><span class="b">3. 静态文件与负载均衡</span><pre><code>location / { root /var/www/html; try_files $uri $uri/ /index.html; }
+upstream backend { server 127.0.0.1:3000; server 127.0.0.1:3001; }</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>改配置后 nginx -s reload；日志可配 access_log / error_log。</div>
 </main>
 </div>
 <script>

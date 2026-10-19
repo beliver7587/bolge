@@ -30,6 +30,7 @@
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 实战</a>
   <a href="#s13">13. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -115,6 +116,19 @@ loop();</code></pre>
     <li>练：写一个“移动方块 + 键盘控制 + 计分”的小 demo。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>懂得用离屏/分层把帧率稳住、理解 Canvas 与 WebGL 的能力边界，并能把游戏逻辑与渲染解耦。</div>
+<h2 id="s-deep">完整流程：Canvas 2D 游戏基础</h2>
+<div class="step"><span class="b">1. 游戏循环</span><pre><code>function gameLoop(){
+  update();   // 更新位置、碰撞检测
+  draw();     // 清屏 + 重绘
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();</code></pre></div>
+<div class="step"><span class="b">2. 碰撞检测</span><pre><code>AABB：rect1.x &lt; rect2.x+rect2.w && rect1.x+rect1.w &gt; rect2.x && ...
+圆形：两圆心距离 &lt; 半径之和</code></pre></div>
+<div class="step"><span class="b">3. 输入处理</span><pre><code>window.addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft') player.vx = -5;
+});</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>游戏核心是循环 + 输入 + 更新 + 渲染；注意性能，避免每帧创建对象。</div>
 </main>
 </div>
 <script>

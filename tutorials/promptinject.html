@@ -23,6 +23,7 @@
   <a href="#s4">4. 与 Agent</a>
   <a href="#s5">5. 常见坑</a>
   <a href="#s6">6. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -66,6 +67,14 @@
     <li>练：构造注入样本，验证你的护栏是否挡得住。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>把“提示注入”当成架构问题而非提示问题，用最小权限 + 分隔 + 确认 + 沙箱把风险压到可接受。</div>
+<h2 id="s-deep">完整流程：防御 Prompt Injection</h2>
+<div class="step"><span class="b">1. 输入过滤</span><pre><code>黑名单："忽略之前指令"、"ignore previous instructions"
+白名单：正则/模型判定是否允许的问题域</code></pre></div>
+<div class="step"><span class="b">2. 权限隔离</span><pre><code>用户输入与系统指令用特殊分隔符区分
+不允许用户消息覆盖 system prompt</code></pre></div>
+<div class="step"><span class="b">3. 输出审查与最小权限</span><pre><code>敏感工具调用需要二次确认
+输出内容过一轮内容安全检测（如敏感词、PII）</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>不要完全信任 LLM 输出；关键操作走人工或硬编码规则。</div>
 </main>
 </div>
 <script>

@@ -25,6 +25,7 @@
   <a href="#s6">6. 安全加固</a>
   <a href="#s7">7. 常见坑</a>
   <a href="#s8">8. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -72,6 +73,20 @@ scp -r ./dist user@host:/var/www/</code></pre>
     <li>练：生成密钥、禁用密码登录、用 scp 部署一个静态站。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>用密钥 + 改端口 + 防爆破把 SSH 锁死，并熟练用隧道/rsync 做安全高效的运维。</div>
+<h2 id="s-deep">完整流程：SSH 登录与免密</h2>
+<div class="step"><span class="b">1. 连接</span><pre><code>ssh user@server -p 22
+# 指定私钥
+ssh -i ~/.ssh/id_rsa user@server</code></pre></div>
+<div class="step"><span class="b">2. 配置免密</span><pre><code>ssh-keygen -t ed25519 -C "your@email.com"
+ssh-copy-id user@server
+# 之后直接 ssh user@server 无需密码</code></pre></div>
+<div class="step"><span class="b">3. 配置 config</span><pre><code>~/.ssh/config
+Host myserver
+  HostName 1.2.3.4
+  User root
+  Port 22
+  IdentityFile ~/.ssh/id_ed25519</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>禁用 root 密码登录；改用密钥 + 修改默认 22 端口更安全。</div>
 </main>
 </div>
 <script>

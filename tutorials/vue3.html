@@ -34,6 +34,7 @@
   <a href="#s15">15. 生态与 SSR</a>
   <a href="#s16">16. 调试</a>
   <a href="#s17">17. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -181,6 +182,20 @@ export function useFetch&lt;T&gt;(url: string) {
     <li>练：用 Pinia + 组合式函数 + 路由守卫做一个带鉴权的 Todo。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能设计清晰的组合式函数边界、用 Pinia 管理“真正的全局状态”，并解释 Proxy 响应式为什么比 React 的 setState 更“无感”。</div>
+<h2 id="s-deep">完整流程：Vue 3 项目开发</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npm create vue@latest myapp
+# 选 TypeScript / Pinia / Vue Router
+cd myapp && npm install && npm run dev</code></pre></div>
+<div class="step"><span class="b">2. 单文件组件</span><pre><code>&lt;script setup&gt;
+import {ref} from 'vue';
+const count = ref(0);
+&lt;/script&gt;
+&lt;template&gt;
+  &lt;button @click="count++"&gt;{{ count }}&lt;/button&gt;
+&lt;/template&gt;</code></pre></div>
+<div class="step"><span class="b">3. 路由与状态</span><pre><code>Vue Router 配置路由
+Pinia 定义 store：defineStore('user', ()=>{ ... })</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>ref/reactive 管理响应式；computed 缓存派生状态；watch 处理副作用。</div>
 </main>
 </div>
 <script>

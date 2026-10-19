@@ -32,6 +32,7 @@
   <a href="#s13">13. 常见坑</a>
   <a href="#s14">14. 优化手段</a>
   <a href="#s15">15. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -149,6 +150,16 @@ const api = import.meta.env.VITE_API;</code></pre>
     <li>练：配 alias + proxy + manualChunks，分析产物体积。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能解释 Vite 为什么快、知道构建慢该查预构建还是 chunk 拆分——而不只是 <code>npm run dev</code> 一把梭。</div>
+<h2 id="s-deep">完整流程：Vite 项目构建</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npm create vite@latest myapp -- --template react-ts
+cd myapp && npm install && npm run dev</code></pre></div>
+<div class="step"><span class="b">2. 配置</span><pre><code>vite.config.ts
+import {defineConfig} from 'vite';
+import react from '@vitejs/plugin-react';
+export default defineConfig({ plugins:[react()], server:{port:3000} });</code></pre></div>
+<div class="step"><span class="b">3. 生产构建</span><pre><code>npm run build  # 输出 dist/
+npm run preview</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>开发用原生 ESM，启动快；生产用 Rollup 打包；插件生态与 Rollup 兼容。</div>
 </main>
 </div>
 <script>

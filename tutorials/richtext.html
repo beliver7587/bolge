@@ -29,6 +29,7 @@
   <a href="#s10">10. 常见坑</a>
   <a href="#s11">11. 最佳实践</a>
   <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -108,6 +109,14 @@ html2pdf().set({ filename:'resume.pdf', jsPDF:{ format:'a4' } }).from(el).save()
     <li>练：用 TipTap 做一个能存草稿、能导出 A4 PDF 的简历编辑器。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>区分“编辑态 HTML”和“导出态 HTML”，用结构化文档模型保证跨端一致，并把安全（sanitize）当成第一优先级。</div>
+<h2 id="s-deep">完整流程：富文本编辑器实现</h2>
+<div class="step"><span class="b">1. 方案选型</span><pre><code>contenteditable + document.execCommand（简单但兼容性差）
+自定义数据模型：Slate、ProseMirror、Quill、Tiptap</code></pre></div>
+<div class="step"><span class="b">2. 数据结构</span><pre><code>[{type:'paragraph',children:[{text:'Hello ',bold:true},{text:'world'}]}]</code></pre></div>
+<div class="step"><span class="b">3. 渲染与交互</span><pre><code>把 JSON 渲染成 DOM
+监听选区变化，给选中文本加 marks
+撤销重做维护操作历史栈</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>状态与视图分离；操作可序列化；协同编辑用 OT/CRDT。</div>
 </main>
 </div>
 <script>

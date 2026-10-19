@@ -29,6 +29,7 @@
   <a href="#s10">10. 与 Spring</a>
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -111,6 +112,18 @@
     <li>练：用集合 + 异常 + 泛型写一个简单学生管理系统。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>理解 JVM 内存与 GC、用接口与并发容器写出线程安全代码，并知道何时该上 Spring 而非裸写。</div>
+<h2 id="s-deep">完整流程：Java 程序开发与运行</h2>
+<div class="step"><span class="b">1. 编写</span><pre><code>public class Hello {
+  public static void main(String[] args){
+    System.out.println("Hello Java");
+  }
+}</code></pre></div>
+<div class="step"><span class="b">2. 编译运行</span><pre><code>javac Hello.java
+java Hello</code></pre></div>
+<div class="step"><span class="b">3. Maven 项目</span><pre><code>mvn archetype:generate -DgroupId=com.example -DartifactId=demo -DarchetypeArtifactId=maven-archetype-quickstart
+mvn package
+java -jar target/demo-1.0-SNAPSHOT.jar</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Java 是编译型语言；JVM 让字节码跨平台；包名通常用反域名。</div>
 </main>
 </div>
 <script>

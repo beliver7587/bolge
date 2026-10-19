@@ -29,6 +29,7 @@
   <a href="#s10">10. 与 Canvas2D</a>
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -111,6 +112,18 @@ sprite.on('pointerdown', () =&gt; { /* 点击 */ });</code></pre>
     <li>练：做“精灵移动 + 点击 + 对象池子弹”的小游戏原型。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>懂得用图集/批处理把绘制调用压到最低、用对象池避免 GC 卡顿，并知道何时 Pixi 也扛不住要上 WebGL 自定义 shader。</div>
+<h2 id="s-deep">完整流程：PixiJS 高性能渲染</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>import * as PIXI from 'pixi.js';
+const app = new PIXI.Application({width:800,height:600});
+document.body.appendChild(app.view);</code></pre></div>
+<div class="step"><span class="b">2. 创建精灵</span><pre><code>const texture = PIXI.Texture.from('player.png');
+const sprite = new PIXI.Sprite(texture);
+sprite.x = 100; sprite.y = 100;
+app.stage.addChild(sprite);</code></pre></div>
+<div class="step"><span class="b">3. 动画</span><pre><code>app.ticker.add((delta)=>{
+  sprite.x += 2 * delta;
+});</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>PixiJS 用 WebGL 渲染大量精灵；适合做弹幕、游戏、数据可视化。</div>
 </main>
 </div>
 <script>

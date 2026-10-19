@@ -29,6 +29,7 @@
   <a href="#s10">10. 常见坑</a>
   <a href="#s11">11. 最佳实践</a>
   <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -118,6 +119,18 @@ Page&lt;User&gt; p = userMapper.selectPage(new Page&lt;&gt;(1,10), w);</code></p
     <li>练：用 MP 搭一个分页 + 条件查询的用户管理。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>清楚“MP 管单表、XML 管复杂”的边界，把分页/逻辑删除/乐观锁作为默认配置，而不是出事才加。</div>
+<h2 id="s-deep">完整流程：MyBatis-Plus CRUD</h2>
+<div class="step"><span class="b">1. 引入依赖</span><pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+  &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt;
+  &lt;version&gt;3.5.5&lt;/version&gt;
+&lt;/dependency&gt;</code></pre></div>
+<div class="step"><span class="b">2. 建实体与 Mapper</span><pre><code>@Data @TableName("user")
+public class User { @TableId private Long id; private String name; }
+public interface UserMapper extends BaseMapper&lt;User&gt; {}</code></pre></div>
+<div class="step"><span class="b">3. 使用</span><pre><code>userMapper.insert(user);
+userMapper.selectList(Wrappers.&lt;User&gt;lambdaQuery().eq(User::getName,"Tom"));</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>复杂 SQL 仍可写 @Select 自定义；分页要配 PaginationInterceptor。</div>
 </main>
 </div>
 <script>

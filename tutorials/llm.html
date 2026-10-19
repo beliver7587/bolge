@@ -25,6 +25,7 @@
   <a href="#s6">6. 局限</a>
   <a href="#s7">7. 常见坑</a>
   <a href="#s8">8. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -81,6 +82,14 @@ console.log(res.choices[0].message.content);</code></pre>
     <li>练：用 API 做一个带 system prompt 的问答机器人。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能把 LLM 当“不确定但强大”的组件，用 RAG/工具/护栏把它约束到可靠，而不是无脑当真理源。</div>
+<h2 id="s-deep">完整流程：调用 LLM</h2>
+<div class="step"><span class="b">1. 构造消息</span><pre><code>[{"role":"system","content":"你是 helpful 助手"},
+ {"role":"user","content":"你好"}]</code></pre></div>
+<div class="step"><span class="b">2. 调用接口</span><pre><code>POST /v1/chat/completions
+{"model":"gpt-4o","messages":messages,"temperature":0.7}</code></pre></div>
+<div class="step"><span class="b">3. 处理响应与流式</span><pre><code>非流式：choices[0].message.content
+流式：SSE，每次收到 delta，拼接成完整文本</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>system prompt 决定角色与约束；temperature 越低越稳定，越高越有创意。</div>
 </main>
 </div>
 <script>

@@ -27,6 +27,7 @@
   <a href="#s8">8. 与 WebSocket</a>
   <a href="#s9">9. 常见坑</a>
   <a href="#s10">10. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -99,6 +100,20 @@ socket.to(room).emit('y', data);          // 房间内</code></pre>
     <li>练：做一个“进房间 + 实时聊天 + 在线人数”的小 demo。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>会设计房间与广播边界、用 Redis 适配器横向扩展、并把“服务端权威”作为实时游戏的安全基线。</div>
+<h2 id="s-deep">完整流程：Socket.IO 实时房间</h2>
+<div class="step"><span class="b">1. 服务端</span><pre><code>const {Server} = require('socket.io');
+const io = new Server(server);
+io.on('connection', socket=>{
+  socket.join('room1');
+  io.to('room1').emit('msg','欢迎');
+  socket.on('chat', data=> io.to(data.room).emit('chat', data));
+});</code></pre></div>
+<div class="step"><span class="b">2. 客户端</span><pre><code>const socket = io('/');
+socket.emit('join','room1');
+socket.on('chat', data=>appendMessage(data));</code></pre></div>
+<div class="step"><span class="b">3. 适配器</span><pre><code>多机部署用 redis-adapter，让消息跨实例广播
+npm install @socket.io/redis-adapter</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>Socket.IO 自动降级；房间适合做群聊；命名空间隔离不同业务。</div>
 </main>
 </div>
 <script>

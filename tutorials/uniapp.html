@@ -29,6 +29,7 @@
   <a href="#s10">10. 与 Vue</a>
   <a href="#s11">11. 常见坑</a>
   <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
   <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
 </nav>
 <main class="tmain">
@@ -110,6 +111,15 @@ console.log('只在 H5 执行');
     <li>练：做一个能跑在 H5 和小程序的待办，体验条件编译。</li>
   </ol>
   <div class="box ok"><span class="bt">资深标志：</span>能清晰划分“跨端共用逻辑”与“端差异代码”，用条件编译把平台耦合降到最低，而不是满屏 <code>ifdef</code>。</div>
+<h2 id="s-deep">完整流程：uni-app 跨端开发</h2>
+<div class="step"><span class="b">1. 初始化</span><pre><code>npx degit dcloudio/uni-preset-vue#vite-ts myapp
+cd myapp && npm install</code></pre></div>
+<div class="step"><span class="b">2. 页面与路由</span><pre><code>pages/index/index.vue
+pages.json 配置 pages 列表与 tabBar</code></pre></div>
+<div class="step"><span class="b">3. 运行与发布</span><pre><code>npm run dev:h5
+npm run build:mp-weixin  # 微信小程序
+HBuilderX 可一键打包 App</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>一套 Vue 语法适配多平台；条件编译处理平台差异。</div>
 </main>
 </div>
 <script>

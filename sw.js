@@ -1,4 +1,4 @@
-const CACHE = 'bolge-cache-v1';
+const CACHE = 'bolge-cache-v2';
 const CORE = [
     '/',
     '/index.html',

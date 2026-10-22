@@ -24,6 +24,8 @@ window.TECH_TUTORIALS = [
     tags:['组合式API','响应式','SFC','渐进'], summary:'渐进式前端框架，用组合式 API 与响应式数据构建界面，国内项目常用。' },
   { id:'html', title:'HTML', category:'前端', file:'tutorials/html.html',
     tags:['结构','语义化','标签','网页骨架'], summary:'网页的结构语言，用标签搭出页面骨架，是一切前端的基础。' },
+  { id:'h5', title:'H5 移动端', category:'前端', file:'tutorials/h5.html',
+    tags:['移动端','viewport','rem','touch','活动页'], summary:'国内常说的 H5 = 手机里的 HTML5 互动页：视口适配、rem/vw、触摸手势、微信分享到上线一条龙。' },
   { id:'css', title:'CSS', category:'前端', file:'tutorials/css.html',
     tags:['样式','布局','Flex','响应式'], summary:'控制网页外观与布局的样式表，从盒模型到 Flex/Grid 一站式。' },
   { id:'uniapp', title:'uni-app', category:'前端', file:'tutorials/uniapp.html',

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H5 移动端开发 · 从零做一个可分享的手机页</title>
+<script src="../assets/js/theme.js"></script>
+<link rel="stylesheet" href="../assets/css/tech.css">
+</head><body>
+<canvas id="bg"></canvas>
+<div class="tbar">
+    <a class="tback-m" href="../index.html">← 返回</a>
+    <button class="tburger" id="tburger"><span class="b">☰</span> 目录</button>
+  </div>
+<div class="tscrim" id="tscrim"></div>
+<div class="wrap">
+<nav class="tside" id="tside">
+  <a class="tback-dt" href="../index.html">← 返回教程库</a>
+
+  <div class="tbrand">H5 移动端开发<small>从零做一个可分享的手机页</small></div>
+  <a href="#s1">1. 它是什么</a>
+  <a href="#s2">2. 为什么叫 H5</a>
+  <a href="#s3">3. 视口与适配</a>
+  <a href="#s4">4. 尺寸单位 rem/vw</a>
+  <a href="#s5">5. 触摸事件</a>
+  <a href="#s6">6. 动画与交互</a>
+  <a href="#s7">7. 微信与分享</a>
+  <a href="#s8">8. 常见 H5 组件</a>
+  <a href="#s9">9. 性能与首屏</a>
+  <a href="#s10">10. H5 vs 小程序 vs App</a>
+  <a href="#s11">11. 常见坑</a>
+  <a href="#s12">12. 资源与路线</a>
+  <a href="#s-deep">深入实现</a>
+  <div class="thint">手机点 ☰ 展开目录 · Ctrl+P 可打印</div>
+</nav>
+<main class="tmain">
+  <h1>H5 移动端开发：从零做一个可分享的手机页</h1>
+  <p class="tsub">在国内，“<strong>H5</strong>”一般指<strong>运行在手机浏览器里的 HTML5 互动页面</strong>——邀请函、营销活动、小游戏、问卷都算。它本质是 <a href="html.html">HTML</a> + <a href="css.html">CSS</a> + JS，但多了“移动适配、触摸交互、微信分享”这套手机专属玩法。本教程带你从 viewport 适配到上线一个可分享的活动页。</p>
+
+  <h2 id="s1">1. 它是什么</h2>
+  <p>H5 页面 = 一个针对手机屏幕优化的单页 Web 应用。它不在应用商店上架，靠二维码/链接在微信、浏览器里打开，用完即走。</p>
+  <div class="box"><span class="bt">一句话：</span>H5 = 手机上的“即点即用”网页，重点在<strong>移动适配 + 触摸交互 + 社交分享</strong>。</div>
+
+  <h2 id="s2">2. 为什么叫 H5</h2>
+  <ul>
+    <li>源自 HTML5 的简称，当年 HTML5 让网页能离线、能绘图、能交互，手机页正好吃这波红利。</li>
+    <li>行业约定俗成：凡是“手机里点开的那张网页”都叫 H5，不管它用没用 Canvas。</li>
+    <li>和“小程序/App”区分开：H5 不需要安装，扫码即开。</li>
+  </ul>
+
+  <h2 id="s3">3. 视口与适配</h2>
+  <p>手机浏览器默认会把页面当成 ~980px 宽再缩放到屏幕，所以<strong>必须声明 viewport</strong>：</p>
+  <pre><code>&lt;meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"&gt;</code></pre>
+  <ul>
+    <li><code>width=device-width</code>：页面宽度等于设备宽度（关键）。</li>
+    <li><code>user-scalable=no</code>：禁止双指缩放，做“像 App”的体验（视场景取舍）。</li>
+  </ul>
+  <div class="box warn"><span class="bt">坑：</span>忘了 viewport，页面会被缩成一张小图，字小到看不清。</div>
+
+  <h2 id="s4">4. 尺寸单位 rem/vw</h2>
+  <p>手机屏幕宽度从 320 到 430px 不等，写死 px 会错乱，常用两种方案：</p>
+  <div class="step"><span class="b">方案 A：vw（最简单）</span><pre><code>/* 设计稿宽 375px，则 1px = 100/375 vw ≈ 0.2667vw */
+.box { width: 50vw; font-size: 4vw; }</code></pre></div>
+  <div class="step"><span class="b">方案 B：rem + 动态根字号</span><pre><code>/* JS 按屏宽设 html 的 font-size：设计稿 375 时 1rem=37.5px */
+function setRem(){
+  var w = document.documentElement.clientWidth;
+  document.documentElement.style.fontSize = (w/10) + 'px';
+}
+setRem();
+window.addEventListener('resize', setRem);
+/* 之后 CSS 里 1rem = 屏宽的 1/10，写 .title{font-size:.36rem} */</code></pre></div>
+  <div class="box tip"><span class="bt">要点：</span>vw 零依赖、所见即所得；rem 兼容更老设备，二者都能做等比缩放。</div>
+
+  <h2 id="s5">5. 触摸事件</h2>
+  <p>手机没有鼠标，交互靠 Touch 事件（或现代 <code>Pointer Events</code>）：</p>
+  <pre><code>var box = document.querySelector('.box');
+box.addEventListener('touchstart', function(e){ /* 手指按下 */ });
+box.addEventListener('touchmove',  function(e){ /* 手指滑动 */ e.preventDefault(); });
+box.addEventListener('touchend',   function(e){ /* 手指抬起 */ });
+// 滑动方向判断
+var dx = e.changedTouches[0].clientX - startX;
+if (dx &gt; 40) swipeLeft();</code></pre>
+  <ul>
+    <li><code>touchmove</code> 默认会滚动页面，需要阻止时用 <code>e.preventDefault()</code>（注意 passive 监听）。</li>
+    <li>点击建议用 <code>click</code> 或 <code>touchend</code>，别用 hover（手机没悬停）。</li>
+  </ul>
+
+  <h2 id="s6">6. 动画与交互</h2>
+  <ul>
+    <li><strong>CSS 动画</strong>：<code>transition</code> 做过渡、<code>@keyframes</code> + <code>animation</code> 做循环/入场。</li>
+    <li><strong>JS 动画</strong>：<a href="canvas2d.html">requestAnimationFrame</a> 驱动逐帧，适合游戏/粒子。</li>
+    <li><strong>入场动效</strong>：监听滚动用 <code>IntersectionObserver</code> 触发“元素进入视口再播动画”，首屏更顺。</li>
+  </ul>
+  <pre><code>.fade-up { opacity:0; transform:translateY(20px); transition:.4s; }
+.fade-up.in { opacity:1; transform:none; }</code></pre>
+
+  <h2 id="s7">7. 微信与分享</h2>
+  <p>H5 大多在微信里传播，想自定义“标题/缩略图/描述”要接<strong>微信 JS-SDK</strong>：</p>
+  <pre><code>// 1. 后端用 access_token 算 signature，前端注入
+wx.config({ appId, timestamp, nonceStr, signature, jsApiList:['updateAppMessageShareData'] });
+// 2. 自定义分享卡片
+wx.ready(function(){
+  wx.updateAppMessageShareData({ title:'邀请你参加', desc:'…', link:location.href, imgUrl:'…' });
+});</code></pre>
+  <div class="box warn"><span class="bt">坑：</span>签名必须用<strong>当前页面 URL（不含 # 后的部分）</strong>去算，否则 iOS 分享失效。</div>
+
+  <h2 id="s8">8. 常见 H5 组件</h2>
+  <ul>
+    <li><strong>轮播图</strong>：touch 横滑 + 自动播放 + 指示点。</li>
+    <li><strong>下拉刷新 / 上拉加载</strong>：监听 <code>touchmove</code> 到顶/到底触发。</li>
+    <li><strong>弹层 / Toast</strong>：轻提示与模态框，注意遮罩穿透滚动。</li>
+    <li><strong>九宫格抽奖 / 大转盘</strong>：CSS 旋转 + 随机角度，H5 活动常客。</li>
+  </ul>
+
+  <h2 id="s9">9. 性能与首屏</h2>
+  <ul>
+    <li><strong>首屏直出</strong>：HTML 里直接写首屏内容，别等 JS 渲染。</li>
+    <li><strong>图片优化</strong>：用 <code>webp</code>、按屏宽取图、<code>loading="lazy"</code> 懒加载。</li>
+    <li><strong>体积</strong>：骨架屏 + 按需加载，首屏 JS 别超过 100KB 量级。</li>
+    <li><strong>真机测</strong>：安卓/iOS 各测一遍，低端机才暴露卡顿。</li>
+  </ul>
+
+  <h2 id="s10">10. H5 vs 小程序 vs App</h2>
+  <table>
+    <tr><th>维度</th><th>H5</th><th>小程序</th><th>App</th></tr>
+    <tr><td>入口</td><td>链接/二维码</td><td>微信内搜索</td><td>应用商店</td></tr>
+    <tr><td>安装</td><td>不用装</td><td>不用装</td><td>要装</td></tr>
+    <tr><td>能力</td><td>受浏览器限制</td><td>微信 API 多</td><td>系统级最强</td></tr>
+    <tr><td>传播</td><td>最易分享</td><td>中等</td><td>最难</td></tr>
+  </table>
+  <div class="box ok"><span class="bt">选型：</span>要“扫码即看、病毒传播”选 H5；要“更强能力+留存”选小程序；要“深度体验”才上 App。</div>
+
+  <h2 id="s11">11. 常见坑</h2>
+  <div class="box warn"><span class="bt">坑 1 1px 边框：</span>Retina 屏 1px 仍显粗，用 <code>transform:scaleY(.5)</code> 或 <code>0.5px</code> 处理。</div>
+  <div class="box warn"><span class="bt">坑 2 300ms 点击延迟：</span>老浏览器点击有延迟，加 <code>touch-action:manipulation</code> 或 <code>viewport</code> 禁缩放即可消除。</div>
+  <div class="box warn"><span class="bt">坑 3 iOS 滚动回弹：</span>局部滚动容器加 <code>-webkit-overflow-scrolling:touch</code>。</div>
+
+  <h2 id="s12">12. 资源与路线</h2>
+  <ol>
+    <li>先打牢 <a href="html.html">HTML</a>、<a href="css.html">CSS</a>、<a href="vue3.html">Vue/React</a> 基础。</li>
+    <li>做动画看 <a href="canvas2d.html">Canvas 2D</a> 与 CSS <code>@keyframes</code>。</li>
+    <li>练：用 <a href="vite.html">Vite</a> 起一个移动项目，做一个“点击抽奖 + 分享”的活动页。</li>
+  </ol>
+  <div class="box ok"><span class="bt">资深标志：</span>能把“移动适配、触摸手感、首屏性能、微信分享”整套链路跑通，且真机多机型验证过关。</div>
+
+<h2 id="s-deep">完整流程：搭一个可分享的 H5 活动页</h2>
+<div class="step"><span class="b">1. 初始化项目</span><pre><code>npm create vite@latest h5-demo -- --template vue
+# 入口 index.html 加 viewport：
+&lt;meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"&gt;</code></pre></div>
+<div class="step"><span class="b">2. 移动适配</span><pre><code>// main.js 里注入动态根字号（1rem = 屏宽/10）
+function setRem(){ document.documentElement.style.fontSize = (innerWidth/10)+'px'; }
+setRem(); addEventListener('resize', setRem);
+// 组件里 .title{ font-size:.4rem } 即屏宽的 4%</code></pre></div>
+<div class="step"><span class="b">3. 页面与手势</span><pre><code>&lt;div class="card" @touchstart="down" @touchmove="move" @touchend="up"&gt;刮一刮&lt;/div&gt;
+// 在 move 里记录 clientX/Y，touchend 判断滑动方向触发动画</code></pre></div>
+<div class="step"><span class="b">4. 动画与分享</span><pre><code>// 入场：IntersectionObserver 给元素加 .in 触发 CSS 动画
+// 分享：后端算微信 signature → wx.config → wx.updateAppMessageShareData 自定义卡片</code></pre></div>
+<div class="step"><span class="b">5. 构建与部署</span><pre><code>npm run build        # 产出 dist/
+# 丢到 Nginx / 对象存储 / CDN，配 HTTPS（微信要求）
+# 生成二维码指向该 URL，扫码即开</code></pre></div>
+<div class="box tip"><span class="bt">要点：</span>viewport 是地基，适配决定“不变形”，分享决定“传得开”，真机多机型测试决定“稳不稳”。</div>
+</main>
+</div>
+<script>
+(function(){
+  var side=document.getElementById('tside'),burger=document.getElementById('tburger'),scrim=document.getElementById('tscrim');
+  if(burger)burger.addEventListener('click',function(){side.classList.toggle('open');scrim.classList.toggle('show');});
+  if(scrim)scrim.addEventListener('click',function(){side.classList.remove('open');scrim.classList.remove('show');});
+  var links=[].slice.call(document.querySelectorAll('.tside a'));
+  var secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));}).filter(Boolean);
+  function onScroll(){var pos=window.scrollY+window.innerHeight*0.3,cur=secs.length?secs[0].id:null;secs.forEach(function(s){if(s.offsetTop<=pos)cur=s.id;});links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href').slice(1)===cur);});}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
+</script>
+<script src="../assets/js/tech-bg.js"></script>
+<script src="../assets/js/glossary.js"></script>
+</body></html>

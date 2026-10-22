@@ -100,7 +100,14 @@
     "vite-plugin-pwa": "把 Vite 项目变成渐进式 Web 应用（PWA）的插件。",
     "vite-tsconfig-paths": "让 Vite 读取 tsconfig.json 里的路径别名，支持 @/ 导入。",
     "PWA": "Progressive Web App，可离线、可安装、体验接近原生 App 的 Web 应用。",
-    "tsconfig.json": "TypeScript 配置文件，声明编译选项、路径别名与包含的文件。"
+    "tsconfig.json": "TypeScript 配置文件，声明编译选项、路径别名与包含的文件。",
+    "H5": "在国内指运行在手机浏览器里的 HTML5 互动页面（活动页/小游戏等），重点在移动适配、触摸交互与微信分享。",
+    "viewport": "视口：移动端必须的 meta 声明，width=device-width 让页面宽度等于设备宽度，是 H5 适配的地基。",
+    "rem": "CSS 相对单位，1rem = 根元素(html)的 font-size；配合 JS 动态设根字号可做整页等比缩放。",
+    "vw": "视口宽度单位，1vw = 视口宽度的 1%，无需 JS 即可做移动端等比适配。",
+    "touch": "触摸事件：手机交互靠 touchstart/touchmove/touchend 等，替代鼠标的 hover/click 场景。",
+    "微信 JS-SDK": "微信网页开发工具包，H5 用它自定义分享卡片、调起支付/拍照等微信能力，需后端算签名。",
+    "IntersectionObserver": "浏览器 API，监听元素是否进入视口，常用于 H5 的滚动入场动画与懒加载。"
   };
 
   var main = document.querySelector('.tmain');

@@ -1,4 +1,4 @@
-const CACHE = 'bolge-cache-v2';
+const CACHE = 'bolge-cache-v3';
 const CORE = [
     '/',
     '/index.html',
@@ -28,6 +28,7 @@ const TUTORIALS = [
     '/tutorials/express.html',
     '/tutorials/functioncalling.html',
     '/tutorials/git.html',
+    '/tutorials/h5.html',
     '/tutorials/html.html',
     '/tutorials/https.html',
     '/tutorials/java.html',
@@ -98,18 +99,34 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  e.respondWith(
-    caches.match(req).then(function (cached) {
-      if (cached) return cached;
-      return fetch(req).then(function (res) {
+
+  // 导航页与教程清单：网络优先，保证内容更新立即可见；离线时回退缓存
+  if (req.mode === 'navigate' || url.pathname.indexOf('manifest.js') !== -1) {
+    e.respondWith(
+      fetch(req).then(function (res) {
         if (res && res.status === 200 && res.type === 'basic') {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(req, copy); });
         }
         return res;
       }).catch(function () {
-        return cached;
-      });
+        return caches.match(req);
+      })
+    );
+    return;
+  }
+
+  // 其余静态资源：缓存优先，后台静默更新（保证离线可用且不过时）
+  e.respondWith(
+    caches.match(req).then(function (cached) {
+      var network = fetch(req).then(function (res) {
+        if (res && res.status === 200 && res.type === 'basic') {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, copy); });
+        }
+        return res;
+      }).catch(function () { return cached; });
+      return cached || network;
     })
   );
 });
